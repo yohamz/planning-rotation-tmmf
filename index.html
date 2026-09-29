@@ -1,0 +1,1095 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>PLANNING CH2-2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --bg:#F1F2F4; --surface:#FFFFFF; --surface-2:#F7F8F9; --line:#DADDE1; --line-2:#BEC3C9;
+  --ink:#1E2125; --ink-2:#4A4F56; --muted:#7B8189;
+  --red:#EB0A1E; --red-ink:#FFFFFF; --red-soft:#FDE8EA;
+  --mark:#5B6067; --tl:#ECEEF1;
+  --vert:#2E9A58; --orange:#EE8A00; --rouge:#D3203A;
+  --f-ui:"Barlow","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --f-cond:"Barlow Condensed","Arial Narrow",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#131517; --surface:#1C1F22; --surface-2:#222629; --line:#32373C; --line-2:#474D54;
+    --ink:#ECEEF0; --ink-2:#B5BBC1; --muted:#868D94;
+    --red:#FF3347; --red-ink:#FFFFFF; --red-soft:#3A161A;
+    --mark:#A9AEB4; --tl:#262A2E;
+    --vert:#4CC07C; --orange:#FFA630; --rouge:#FF5A6E;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#131517; --surface:#1C1F22; --surface-2:#222629; --line:#32373C; --line-2:#474D54;
+  --ink:#ECEEF0; --ink-2:#B5BBC1; --muted:#868D94;
+  --red:#FF3347; --red-ink:#FFFFFF; --red-soft:#3A161A;
+  --mark:#A9AEB4; --tl:#262A2E;
+  --vert:#4CC07C; --orange:#FFA630; --rouge:#FF5A6E;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.35}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--red);outline-offset:2px}
+h1,h2{font-family:var(--f-cond);font-weight:700;margin:0;letter-spacing:.01em}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-top:4px solid var(--red);border-bottom:1px solid var(--line)}
+.top-in{max-width:1280px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-cond);font-weight:700;font-size:22px;white-space:nowrap}
+.brand i{width:14px;height:14px;background:var(--red);border-radius:3px;display:block}
+.brand span{color:var(--muted);font-weight:600}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tabs button{border:0;background:none;padding:10px 16px;border-radius:9px;font-weight:600;color:var(--ink-2);min-height:46px;font-size:16px}
+.tabs button[aria-current="page"]{background:var(--ink);color:var(--surface)}
+main{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:14px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:8px 16px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-weight:600;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn-red{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.btn-red:hover{background:var(--red);filter:brightness(1.07)}
+.btn-sm{min-height:38px;padding:6px 12px;font-size:15px}
+.icon{width:46px;height:46px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-size:24px;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none}
+input[type=date],input[type=text],select{min-height:46px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);padding:6px 10px}
+input[type=text]{width:100%}
+
+.bar{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap}
+.bar .grow{flex:1}
+.night{font-family:var(--f-cond);font-size:26px;font-weight:700}
+
+.scroll{overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:min(78vh,1100px)}
+table{border-collapse:separate;border-spacing:0}
+.plan{width:100%;min-width:640px}
+.plan th,.plan td{border-bottom:1px solid var(--line)}
+.plan thead th{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:2px solid var(--ink);padding:12px 10px;text-align:left;font-family:var(--f-cond);font-size:20px;white-space:nowrap}
+.plan thead th:first-child{left:0;z-index:4}
+.plan thead th .ot{display:block;font-family:var(--f-ui);font-size:13px;font-weight:600;color:var(--red)}
+.plan .ph{position:sticky;left:0;z-index:2;background:var(--surface);border-right:1px solid var(--line);padding:6px 10px;text-align:left;font-weight:400;min-width:190px;width:230px}
+.plan td{padding:3px 4px;min-width:130px}
+.grp th{position:sticky;left:0;background:var(--surface-2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:7px 10px;font-weight:700}
+.grp td{background:var(--surface-2)}
+.post{display:flex;align-items:center;gap:8px}
+.code{font-family:var(--f-cond);font-weight:700;font-size:19px;min-width:30px;font-variant-numeric:tabular-nums}
+.pname{font-size:15px;color:var(--ink-2)}
+.dot{width:11px;height:11px;border-radius:50%;flex:none;border:1.5px dashed var(--line-2);display:inline-block}
+.dot.vert{background:var(--vert);border:0}.dot.orange{background:var(--orange);border:0}.dot.rouge{background:var(--rouge);border:0}
+.cell{width:100%;min-height:48px;border:1px solid transparent;border-radius:9px;background:transparent;text-align:left;padding:6px 10px;font-weight:600;font-size:16px;display:flex;align-items:center;gap:6px}
+.cell:hover{border-color:var(--line-2);background:var(--surface-2)}
+.cell .empty{color:var(--muted);font-weight:400}
+.cell.locked{box-shadow:inset 4px 0 0 var(--red);background:var(--red-soft)}
+.force{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 12px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-weight:600;width:100%;text-align:left}
+.force .sw2{width:44px;height:26px;border-radius:99px;background:var(--line-2);position:relative;flex:none}
+.force .sw2::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .12s}
+.force[aria-pressed="true"]{border-color:var(--red)}
+.force[aria-pressed="true"] .sw2{background:var(--red)}
+.force[aria-pressed="true"] .sw2::after{left:21px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.05em;border-radius:5px;padding:1px 5px;background:var(--ink);color:var(--surface)}
+.tag.h{background:var(--orange)}
+.opt-row{display:flex;gap:6px;align-items:stretch;width:100%}
+.opt-row .opt{flex:1}
+.frm{flex:none;min-width:96px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--muted);font-weight:700;font-size:13px;padding:0 10px}
+.frm[aria-pressed="true"]{background:var(--orange);border-color:var(--orange);color:#fff}
+.frm[disabled]{opacity:.4}
+.start{background:var(--surface);border:1px dashed var(--line-2);border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.start p{margin:0;flex:1;min-width:220px;color:var(--ink-2)}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;font-size:15px;color:var(--ink-2)}
+.legend label,.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend input{width:20px;height:20px;accent-color:var(--red)}
+.kpi{font-size:15px;color:var(--ink-2)}
+.kpi b{font-family:var(--f-cond);font-size:22px;color:var(--ink);margin-left:4px}
+.mx{min-width:max-content}
+.mx th,.mx td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0}
+.mx thead th{position:sticky;top:0;z-index:3;background:var(--surface);vertical-align:bottom}
+.mx .corner{position:sticky;left:0;z-index:4;background:var(--surface);min-width:240px}
+.mx .ph{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;padding:3px 8px;font-weight:400;min-width:240px}
+.mx .who{width:38px;min-width:38px;padding:6px 0 4px}
+.mx .who button{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
+.mx .vname{writing-mode:vertical-rl;transform:rotate(180deg);font-size:14px;font-weight:600;white-space:nowrap;max-height:140px;overflow:hidden;text-overflow:ellipsis}
+.mx .role{font-size:10px;font-weight:700;color:var(--muted)}
+.mx .tlc{background:var(--tl)}
+.mx .grp th{position:sticky;left:0}
+.m{width:38px;height:36px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:4px}
+.m:hover{outline:2px solid var(--red);outline-offset:-2px}
+.sym{display:block;width:100%;height:100%;border-radius:2px}
+.sym.G{background:var(--mark)}
+.sym.H{background:repeating-linear-gradient(135deg,var(--mark) 0 2px,transparent 2px 6px)}
+.sym.X{background:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:var(--ink)}
+.sw{display:inline-block;width:22px;height:18px;border:1px solid var(--line-2);border-radius:3px;padding:2px}
+.cnt{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 6px;border-radius:99px;background:var(--ink);color:var(--surface);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.mx .ph .cnt{margin-left:auto}
+.tot{text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;background:var(--surface-2);padding:6px 2px!important}
+.dotbtn{border:0;background:none;padding:10px 6px;display:inline-flex}
+.linkbtn{border:0;background:none;padding:6px 0;text-align:left;display:flex;align-items:center;gap:8px;min-height:36px}
+
+.back{position:fixed;inset:0;background:rgba(12,14,16,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:min(620px,100%);max-height:88vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (min-width:760px){.back{align-items:center}.sheet{border-radius:16px;max-height:84vh}}
+.sheet.wide{width:min(1100px,100%)}
+.sh{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.sh h2{flex:1;font-size:22px}
+.sb{overflow:auto;padding:12px 16px 20px;display:grid;gap:10px;align-content:start}
+.sf{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line)}
+.opt{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);text-align:left;font-weight:600;font-size:16px}
+.opt:hover{background:var(--surface-2);border-color:var(--line-2)}
+.opt[aria-current="true"]{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red)}
+.opt small{margin-left:auto;color:var(--muted);font-weight:500;font-size:14px}
+.lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.tog{min-height:48px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-weight:600;padding:6px 10px;text-align:left}
+.tog.off{background:var(--surface-2);color:var(--muted);text-decoration:line-through}
+.tlrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line)}
+.tlrow b{min-width:90px}
+.qb{min-width:52px;min-height:44px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);font-weight:700}
+.qb[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.field{display:grid;gap:6px}
+.field span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.eq{min-width:max-content}
+.eq th,.eq td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center;font-variant-numeric:tabular-nums}
+.eq thead th{position:sticky;top:0;background:var(--surface);font-family:var(--f-cond);font-size:17px;z-index:1}
+.eq th.n{position:sticky;left:0;background:var(--surface);text-align:left;white-space:nowrap}
+.eq td.z{color:var(--line-2)}
+.eq td.c{font-weight:700}
+.eq td.no{background:var(--surface-2);color:var(--line-2)}
+/* ---- téléphone ---- */
+.m-head{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;gap:8px}
+.m-head .night{text-align:center;font-size:21px}
+.m-acts{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.m-acts .btn{min-height:44px;padding:6px 4px;font-size:14px;white-space:normal;line-height:1.1;text-align:center}
+.m-gen{width:100%}
+.qtabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:var(--surface-3,var(--surface));padding:4px;border-radius:12px;border:1px solid var(--line)}
+.qtabs button{min-height:48px;border:0;border-radius:9px;background:transparent;font-weight:700;font-size:17px;color:var(--ink-2)}
+.qtabs button small{display:block;font-size:11px;font-weight:600;color:var(--red)}
+.qtabs button[aria-pressed="true"]{background:var(--red);color:var(--red-ink)}
+.qtabs button[aria-pressed="true"] small{color:var(--red-ink)}
+.mlist{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.mlist .g{padding:8px 14px;background:var(--surface-2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.mrow{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:8px 14px;border:0;border-top:1px solid var(--line);background:var(--surface);text-align:left}
+.mrow:first-child{border-top:0}
+.mrow .who{margin-left:auto;font-weight:700;font-size:17px;text-align:right}
+.mrow .who .empty{color:var(--muted);font-weight:400}
+.mrow.locked{box-shadow:inset 4px 0 0 var(--red);background:var(--red-soft)}
+.mrow.split{padding:0;display:flex;align-items:stretch}
+.mrow.split .linkbtn{padding:8px 14px;flex:none;min-height:56px}
+.mrow.split .pickbtn{flex:1;border:0;background:none;padding:8px 14px;min-height:56px;text-align:right;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.mrow.split .pickbtn:hover{background:var(--surface-2)}
+.mrow.split .pickbtn .empty{color:var(--muted);font-weight:400}
+.mrow .pname{display:inline!important;font-size:14px}
+.pp-sel{width:100%;font-size:17px;font-weight:600}
+.st3{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;margin-left:auto;flex:none}
+.st3 button{min-width:46px;min-height:44px;border:0;background:var(--surface);display:flex;align-items:center;justify-content:center;padding:6px}
+.st3 button+button{border-left:1px solid var(--line-2)}
+.st3 button[aria-pressed="true"]{background:var(--red-soft);box-shadow:inset 0 0 0 2px var(--red)}
+.st3 .sw{width:24px;height:20px}
+.mrow.static{cursor:default}
+.bal .mrow .cntv{margin-left:auto;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:10px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+.muted{color:var(--muted)}
+.note{margin:0;font-size:14px;color:var(--muted)}
+@media (max-width:700px){.top{position:static}.top-in{gap:6px 12px}.tabs{width:100%}.tabs button{flex:1}}
+@media (max-width:560px){.night{font-size:22px}.tabs{margin-left:0}.plan .ph{min-width:120px;width:130px}.pname{display:none}.plan td{min-width:110px}}
+/* ---- logo animé ---- */
+.brandbtn{position:relative;border:0;background:none;padding:2px 4px;border-radius:8px;overflow:hidden}
+.brand{position:relative;z-index:1;display:flex;align-items:center;gap:10px;font-family:var(--f-cond);font-weight:700;font-size:22px;white-space:nowrap;letter-spacing:.01em}
+.brand i{width:14px;height:14px;background:var(--red);border-radius:3px;display:block}
+.brand span{color:var(--muted);font-weight:600}
+.road{position:absolute;left:0;right:0;bottom:2px;height:6px;pointer-events:none;overflow:hidden;opacity:.55}
+.road::before{content:"";position:absolute;inset:2px 0;background:repeating-linear-gradient(90deg,var(--line-2) 0 10px,transparent 10px 20px)}
+.car{position:absolute;bottom:-2px;left:-40px;width:26px;height:12px;opacity:0}
+.car svg{width:100%;height:100%;display:block}
+.brandbtn.play .car.c1{animation:drive 1.6s ease-in-out 1}
+.brandbtn.play .car.c2{animation:drive 1.6s ease-in-out .35s 1}
+@keyframes drive{0%{opacity:0;transform:translateX(0)}6%{opacity:1}92%{opacity:1}100%{opacity:0;transform:translateX(160px)}}
+/* ---- astuces & aide ---- */
+.hint{display:block;font-size:12.5px;color:var(--muted);font-weight:500;margin-top:2px;white-space:normal}
+.helpbtn{border-radius:99px}
+/* ---- compte / connexion ---- */
+.acct{display:flex;align-items:center;gap:8px;margin-left:8px;font-size:14px;color:var(--ink-2);font-weight:600}
+.acct .role{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--tl);color:var(--ink-2)}
+.acct .role.admin{background:var(--red);color:var(--red-ink)}
+.authwrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.authcard{width:min(460px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px;display:grid;gap:14px}
+.authcard h1{font-size:24px}
+.namegrid{display:grid;gap:8px}
+.namebtn{display:flex;align-items:center;gap:10px;min-height:54px;padding:8px 14px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);font-weight:700;font-size:17px;text-align:left}
+.namebtn:hover{background:var(--surface-2)}
+.namebtn small{margin-left:auto;color:var(--muted);font-weight:600}
+.setuprow{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px}
+.recap{border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;display:grid;gap:2px;background:var(--surface-2)}
+.recap b{font-size:16px}
+.recap .code2{font-family:var(--f-cond);font-size:18px;letter-spacing:.04em}
+/* ---- effectifs ---- */
+.eff-row{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;padding:10px 14px;border:0;border-top:1px solid var(--line);background:var(--surface);text-align:left;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.eff-row:first-child{border-top:0}
+.eff-row.pressing{background:var(--red-soft)}
+.eff-row.off{background:var(--surface-2);color:var(--muted)}
+.eff-row .pname{font-size:16px;font-weight:600}
+.eff-row .absbadge{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--red)}
+[data-long]{cursor:pointer}
+@media print{
+  html,body{background:#fff!important}
+  body *{visibility:hidden}
+  #printzone,#printzone *{visibility:visible}
+  #printzone{display:block!important;position:absolute;left:0;top:0;width:100%}
+  #printzone table{width:100%;border-collapse:collapse}
+  #printzone th,#printzone td{border:1px solid #000!important;color:#000!important;background:#fff!important;padding:4px 6px;font-size:12px}
+  #printzone .dot{border-color:#000!important;background:#fff!important}
+  #printzone .dot.vert,#printzone .dot.orange,#printzone .dot.rouge{background:#fff!important;border:1.5px solid #000!important}
+  #printzone h1{color:#000!important;font-size:18px;margin-bottom:6px}
+}
+</style>
+
+<header class="top"><div class="top-in">
+  <button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation">
+    <div class="road" aria-hidden="true">
+      <div class="car c1" title="Toyota Yaris"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M4 20 Q4 10 14 9 L20 9 Q26 3 34 3 L42 9 L52 9 Q58 10 58 16 L58 20 Z" fill="var(--red)"/><circle cx="16" cy="21" r="5" fill="var(--ink)"/><circle cx="46" cy="21" r="5" fill="var(--ink)"/></svg></div>
+      <div class="car c2" title="Toyota Yaris Cross"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M3 21 Q3 9 13 8 L19 8 Q25 1 35 1 L44 8 L53 8 Q59 9 59 15 L59 21 Z" fill="var(--ink-2)"/><rect x="16" y="4" width="26" height="2.4" rx="1.2" fill="var(--ink-2)"/><circle cx="15" cy="22" r="5.5" fill="var(--ink)"/><circle cx="47" cy="22" r="5.5" fill="var(--ink)"/></svg></div>
+    </div>
+    <div class="brand"><i aria-hidden="true"></i>PLANNING <span id="teamName">CH2-2</span></div>
+  </button>
+  <nav class="tabs" aria-label="Pages">
+    <button type="button" data-act="tab" data-tab="plan">Planning du jour</button>
+    <button type="button" data-act="tab" data-tab="effectifs">Effectifs</button>
+    <button type="button" data-act="tab" data-tab="poly">Polyvalence</button>
+  </nav>
+  <button type="button" class="icon helpbtn" data-act="help" aria-label="Aide">?</button>
+  <div id="acctBar"></div>
+</div></header>
+<main id="main"><p class="muted">Chargement…</p></main>
+<div id="sheet"></div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const pad = n => String(n).padStart(2, '0');
+const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const today = () => iso(new Date());
+const addDays = (s, n) => { const a = s.split('-').map(Number); return iso(new Date(a[0], a[1] - 1, a[2] + n)); };
+const fmt = s => { const a = s.split('-').map(Number); const t = new Date(a[0], a[1] - 1, a[2]).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'}); return t.charAt(0).toUpperCase() + t.slice(1); };
+const LS = { get(k, d){ try { const v = localStorage.getItem('rot2.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v){ try { localStorage.setItem('rot2.' + k, JSON.stringify(v)); } catch (e) {} } };
+const MARKS = ['', 'G', 'H'];
+const DIFF = ['', 'vert', 'orange', 'rouge'];
+const HIST_NIGHTS = 30;
+const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
+const ROLE_LABEL = {admin:'Admin', tl:'TL'};
+const ONBOARD_MS = 3 * 60 * 60 * 1000; /* 3h d’astuces au premier lancement sur cet appareil */
+
+/* ---------- Supabase ---------- */
+const SUPABASE_URL = 'https://ahadzvgtlwfjaoigvyxw.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ltaNA7nnVozoSCOcZIjg'; // clé publique — volontairement publique, protégée par les policies RLS
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {persistSession:true, autoRefreshToken:true}
+});
+
+const S = { ready:false, people:{}, posts:{}, nights:{}, cfg:Object.assign({}, DEFAULT_CFG), profiles:{},
+  tab: LS.get('tab', 'plan'), date: today(), sheet:null, qk:0, person:null, balPerson:null,
+  authUser:null, authReady:false,
+  loginPick:null, loginPass:'', loginErr:'', loginBusy:false,
+  newPass:'', newPass2:'', newPassErr:'', newPassBusy:false,
+  accountsErr:'', newTLName:'' };
+const mq = window.matchMedia ? window.matchMedia('(max-width: 700px)') : null;
+const phone = () => !!(mq && mq.matches);
+if (mq) { const f = () => { render(); if (S.sheet) renderSheet(); }; if (mq.addEventListener) mq.addEventListener('change', f); else if (mq.addListener) mq.addListener(f); }
+if (!['plan', 'effectifs', 'poly'].includes(S.tab)) S.tab = 'plan';
+
+/* ---------- astuces temporaires (3h) ---------- */
+let onboardEnd = LS.get('onboardEnd', 0);
+if (!onboardEnd) { onboardEnd = Date.now() + ONBOARD_MS; LS.set('onboardEnd', onboardEnd); }
+const hintsOn = () => Date.now() < onboardEnd;
+const hint = txt => hintsOn() ? '<small class="hint">' + esc(txt) + '</small>' : '';
+
+/* ---------- comptes (Supabase Auth + table profiles ; les vraies permissions
+   sont imposées côté serveur par les policies RLS, ceci ne sert qu'à l'affichage) ---------- */
+const profile = () => (S.authUser && S.profiles[S.authUser.id]) || null;
+const isAdmin = () => { const p = profile(); return !!(p && p.role === 'admin' && p.active); };
+/* Fenêtre d'accès TL, heure de Paris — purement indicatif côté écran : la
+   vraie limite est appliquée par la fonction SQL tl_window_ok() via RLS. */
+function parisParts(){
+  const f = new Intl.DateTimeFormat('fr-FR', {timeZone:'Europe/Paris', hour:'2-digit', minute:'2-digit', hour12:false});
+  const parts = f.formatToParts(new Date());
+  const get = t => Number(parts.find(p => p.type === t).value);
+  return {h:get('hour'), m:get('minute')};
+}
+function tlWindowOk(){ const {h, m} = parisParts(); const mins = h * 60 + m; return mins >= 20 * 60 + 30 || mins < 6 * 60 + 45; }
+function appOpenForMe(){ const p = profile(); if (!p) return true; return p.role === 'admin' || tlWindowOk(); }
+async function callAdminAction(payload){
+  const {data, error} = await sb.functions.invoke('admin-actions', {body: payload});
+  if (error) { let msg = error.message || 'Erreur.'; try { const ctx = await error.context.json(); if (ctx && ctx.error) msg = ctx.error; } catch (e) {} throw new Error(msg); }
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
+/* ---------- data helpers ---------- */
+const byOrder = a => a.sort((x, y) => ((x.order || 0) - (y.order || 0)) || String(x.code || x.name).localeCompare(String(y.code || y.name), 'fr', {numeric:true}));
+const people = () => byOrder(Object.values(S.people));
+const activePeople = () => people().filter(p => p.active !== false); /* exclut les personnes parties, garde l'historique intact */
+const posts = () => byOrder(Object.values(S.posts));
+const zones = ps => { const z = []; ps.forEach(p => { const k = p.zone || 'Autres'; if (!z.includes(k)) z.push(k); }); return z; };
+const mark = (per, pid) => { const m = (per && per.marks && per.marks[pid]) || ''; return m === 'X' ? 'G' : m; };
+const canHold = (per, pid) => { const m = mark(per, pid); return m === 'G' || m === 'H'; };
+const isTL = per => per && per.role === 'TL';
+const isTemp = per => !!(per && per.temp);
+const nightOf = d => S.nights[d || S.date] || null;
+const generated = n => !!(n && n.generated);
+const nq = n => (n && n.ot) ? 5 : 4;
+
+/* ---------- engine ---------- */
+function hungarian(cost){
+  const n = cost.length, INF = 1e18;
+  const u = new Float64Array(n + 1), v = new Float64Array(n + 1), p = new Int32Array(n + 1), way = new Int32Array(n + 1);
+  for (let i = 1; i <= n; i++) {
+    p[0] = i; let j0 = 0;
+    const minv = new Float64Array(n + 1).fill(INF), used = new Uint8Array(n + 1);
+    do {
+      used[j0] = 1; const i0 = p[j0]; let delta = INF, j1 = 0;
+      for (let j = 1; j <= n; j++) if (!used[j]) {
+        const cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+        if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+      }
+      for (let j = 0; j <= n; j++) { if (used[j]) { u[p[j]] += delta; v[j] -= delta; } else minv[j] -= delta; }
+      j0 = j1;
+    } while (p[j0] !== 0);
+    do { const j1 = way[j0]; p[j0] = p[j1]; j0 = j1; } while (j0);
+  }
+  const res = new Array(n).fill(-1);
+  for (let j = 1; j <= n; j++) if (p[j]) res[p[j] - 1] = j - 1;
+  return res;
+}
+/* what each person did on the previous nights: used to share posts fairly */
+function history(date){
+  const count = {}, red = {};
+  const past = Object.values(S.nights).filter(n => n.date < date && generated(n)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, HIST_NIGHTS);
+  past.forEach(n => (n.q || []).forEach((q, k) => Object.keys(q || {}).forEach(pid => {
+    const who = q[pid]; if (!who) return;
+    const w = (n.manual && n.manual[k] && n.manual[k][pid]) ? 0.4 : 1; /* une affectation faite à la main compense moins pour l’équilibre futur */
+    count[who + '|' + pid] = (count[who + '|' + pid] || 0) + w;
+    if (S.posts[pid] && S.posts[pid].diff === 'rouge') red[who] = (red[who] || 0) + w;
+  })));
+  return {count, red};
+}
+function holderMap(q){ const m = {}; Object.keys(q || {}).forEach(pid => { if (q[pid]) m[q[pid]] = pid; }); return m; }
+/* one quart = best assignment of people to posts, given the other quarts of the night */
+function buildQuart(k, night, hist){
+  const absent = new Set(night.absent || []);
+  Object.keys((night.qAbsent && night.qAbsent[k]) || {}).forEach(id => absent.add(id));
+  const fixed = {}, fixedPeople = new Set();
+  const lk = (night.lock && night.lock[k]) || {};
+  Object.keys(lk).forEach(pid => { const who = lk[pid]; if (S.posts[pid] && S.people[who] && !absent.has(who) && !fixedPeople.has(who)) { fixed[pid] = who; fixedPeople.add(who); } });
+  const ps = posts().filter(p => !fixed[p.id]);
+  const cands = activePeople().filter(per => !absent.has(per.id) && !fixedPeople.has(per.id) && ((!isTL(per) && !isTemp(per)) || (night.tl && night.tl[per.id] && night.tl[per.id][k])));
+  const P = ps.length, N = cands.length, n = P + N, BAN = 1e7, EMPTY = 5000;
+  const others = [];
+  for (let j = 0; j < nq(night); j++) if (j !== k && night.q[j] && Object.keys(night.q[j]).length) others.push({j, m:holderMap(night.q[j])});
+  const M = [];
+  for (let i = 0; i < n; i++) {
+    const row = new Array(n);
+    for (let j = 0; j < n; j++) {
+      let c;
+      if (i < P && j < N) {
+        const p = ps[i], per = cands[j];
+        if (!canHold(per, p.id)) c = BAN;
+        else {
+          c = 15 * (hist.count[per.id + '|' + p.id] || 0) + Math.random() * 12;
+          others.forEach(o => { if (o.m[per.id] === p.id) c += 600; });
+          if (p.diff === 'rouge') {
+            c += 6 * (hist.red[per.id] || 0);
+            others.forEach(o => { if (Math.abs(o.j - k) === 1 && S.posts[o.m[per.id]] && S.posts[o.m[per.id]].diff === 'rouge') c += 150; });
+          }
+        }
+      } else if (i < P) c = (j - N === i) ? EMPTY : BAN;
+      else if (j < N) {
+        const per = cands[j];
+        if (isTL(per)) c = 3000;
+        else { c = 0; others.forEach(o => { if (!o.m[per.id]) c += 60; }); }
+      } else c = 0;
+      row[j] = c;
+    }
+    M.push(row);
+  }
+  const a = hungarian(M), out = Object.assign({}, fixed);
+  for (let i = 0; i < P; i++) { const j = a[i]; if (j >= 0 && j < N && M[i][j] < BAN) out[ps[i].id] = cands[j].id; }
+  return out;
+}
+function freshNight(date){ return {date, ot:0, generated:false, q:[{}, {}, {}, {}, {}], lock:[{}, {}, {}, {}, {}], train:[{}, {}, {}, {}, {}], manual:[{}, {}, {}, {}, {}], qAbsent:[{}, {}, {}, {}, {}], absent:[], tl:{}}; }
+function editable(date){ const n = nightOf(date); const c = n ? clone(n) : freshNight(date || S.date); c.q = [0, 1, 2, 3, 4].map(k => (c.q && c.q[k]) || {}); c.lock = [0, 1, 2, 3, 4].map(k => (c.lock && c.lock[k]) || {}); c.train = [0, 1, 2, 3, 4].map(k => (c.train && c.train[k]) || {}); c.manual = [0, 1, 2, 3, 4].map(k => (c.manual && c.manual[k]) || {}); c.qAbsent = [0, 1, 2, 3, 4].map(k => (c.qAbsent && c.qAbsent[k]) || {}); c.absent = c.absent || []; c.tl = c.tl || {}; return c; }
+function generateAll(night){
+  const hist = history(night.date);
+  night.q = [{}, {}, {}, {}, {}];
+  for (let k = 0; k < nq(night); k++) night.q[k] = buildQuart(k, night, hist);
+  night.lock = [{}, {}, {}, {}, {}]; /* un forçage ne vaut que pour la génération qui vient de tourner */
+  night.manual = [{}, {}, {}, {}, {}]; /* une fois régénéré, l’affectation redevient « générée » pour l’équilibre futur */
+  night.generated = true;
+}
+function regenQuart(night, k){ night.q[k] = {}; night.q[k] = buildQuart(k, night, history(night.date)); night.lock[k] = {}; night.manual[k] = {}; }
+
+/* ---------- persistence (Supabase Postgres ; la vraie protection est faite
+   côté serveur par les policies RLS — voir supabase_schema.sql) ---------- */
+function nightToRow(n){ return {date:n.date, ot:n.ot || 0, generated:!!n.generated, q:n.q, lock:n.lock, train:n.train, manual:n.manual, q_absent:n.qAbsent, absent:n.absent || [], tl:n.tl || {}}; }
+function rowToNight(r){ return {date:r.date, ot:r.ot || 0, generated:!!r.generated, q:r.q || [{}, {}, {}, {}, {}], lock:r.lock || [{}, {}, {}, {}, {}], train:r.train || [{}, {}, {}, {}, {}], manual:r.manual || [{}, {}, {}, {}, {}], qAbsent:r.q_absent || [{}, {}, {}, {}, {}], absent:r.absent || [], tl:r.tl || {}}; }
+function personToRow(p){ return {id:p.id, name:p.name, role:p.role || 'TM', temp:!!p.temp, order_num:p.order || 0, marks:p.marks || {}, active:p.active !== false}; }
+function rowToPerson(r){ return {id:r.id, name:r.name, role:r.role || 'TM', temp:!!r.temp, order:r.order_num || 0, marks:r.marks || {}, active:r.active !== false}; }
+function postToRow(p){ return {id:p.id, code:p.code, name:p.name, zone:p.zone || '', diff:p.diff || '', order_num:p.order || 0}; }
+function rowToPost(r){ return {id:r.id, code:r.code, name:r.name, zone:r.zone || '', diff:r.diff || '', order:r.order_num || 0}; }
+const queues = {};
+function queued(key, fn){ const run = () => fn().catch(e => toast('Enregistrement impossible, réessaie.')); queues[key] = (queues[key] || Promise.resolve()).then(run, run); }
+function saveNight(n){ n.updatedAt = new Date().toISOString(); S.nights[n.date] = n; render(); queued('night:' + n.date, () => sb.from('nights').upsert(nightToRow(n))); }
+function savePerson(per){ S.people[per.id] = per; render(); queued('person:' + per.id, () => sb.from('people').upsert(personToRow(per))); }
+function savePost(p){ S.posts[p.id] = p; render(); queued('post:' + p.id, () => sb.from('posts').upsert(postToRow(p))); }
+function saveCfg(){ render(); queued('cfg', () => sb.from('config').upsert({key:'main', value:S.cfg})); }
+function deletePersonRow(id){ delete S.people[id]; render(); queued('person:' + id, () => sb.from('people').delete().eq('id', id)); }
+function deletePostRow(id){ delete S.posts[id]; render(); queued('post:' + id, () => sb.from('posts').delete().eq('id', id)); }
+const newId = pre => pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+
+let tt = null;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 2800); }
+
+/* ---------- render ---------- */
+let rq = false;
+function later(){ if (rq) return; rq = true; requestAnimationFrame(() => { rq = false; render(); if (S.sheet && !S.sheet.form) renderSheet(); }); }
+function render(){
+  const header = $('header.top'), main = $('#main');
+  if (!S.authReady) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement…</p>'; return; }
+  if (!S.authUser) { if (header) header.hidden = true; main.innerHTML = viewLogin(); return; }
+  const p = profile();
+  if (!p) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement du profil…</p>'; return; }
+  if (p.active === false) { if (!S._forcedOut) { S._forcedOut = true; sb.auth.signOut(); } if (header) header.hidden = true; main.innerHTML = '<p class="muted">Ce compte a été désactivé. Contacte l’Admin.</p>'; return; }
+  if (p.must_change_password) { if (header) header.hidden = true; main.innerHTML = viewChangePass(); return; }
+  if (p.role === 'tl' && !tlWindowOk()) { if (header) header.hidden = true; main.innerHTML = viewClosed(); return; }
+  if (!S.ready) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement…</p>'; return; }
+  if (header) header.hidden = false;
+  $('#teamName').textContent = S.cfg.team || '';
+  renderAcct();
+  document.querySelectorAll('.tabs button').forEach(b => { if (b.dataset.tab === S.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  const keep = {}; main.querySelectorAll('[data-scroll]').forEach(el => { keep[el.dataset.scroll] = [el.scrollLeft, el.scrollTop]; });
+  main.innerHTML = S.tab === 'poly' ? (phone() ? viewPolyPhone() : viewPoly()) : S.tab === 'effectifs' ? viewEffectifs() : (phone() ? viewPlanPhone() : viewPlan());
+  main.querySelectorAll('[data-scroll]').forEach(el => { const k = keep[el.dataset.scroll]; if (k) { el.scrollLeft = k[0]; el.scrollTop = k[1]; } });
+}
+function renderAcct(){
+  const bar = $('#acctBar'); if (!bar) return;
+  const p = profile(); if (!p) { bar.innerHTML = ''; return; }
+  bar.innerHTML = '<div class="acct"><span>' + esc(p.name) + '</span><span class="role' + (p.role === 'admin' ? ' admin' : '') + '">' + esc(ROLE_LABEL[p.role] || p.role) + '</span>'
+    + (p.role === 'admin' ? '<button type="button" class="btn btn-sm" data-act="accounts">Comptes</button>' : '')
+    + '<button type="button" class="btn btn-sm" data-act="logout">Se déconnecter</button></div>';
+}
+function postHead(p){ return '<button type="button" class="post linkbtn" data-act="trainees" data-id="' + esc(p.id) + '"><span class="dot ' + esc(p.diff || '') + '" aria-hidden="true"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button>'; }
+function viewPlan(){
+  const n = nightOf(), gen = generated(n), Q = nq(n), ps = posts();
+  const absent = n ? (n.absent || []).length : 0;
+  const tlOn = n ? Object.values(n.tl || {}).filter(a => a && a.some(Boolean)).length : 0;
+  const crewInfo = [absent ? absent + ' absent' + (absent > 1 ? 's' : '') : '', tlOn ? tlOn + ' TL' : ''].filter(Boolean).join(' · ');
+  let html = '<div class="bar"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button>'
+    + '<span class="night">' + esc(fmt(S.date)) + '</span>'
+    + '<button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button>'
+    + '<input type="date" id="date" data-chg="date" value="' + S.date + '" aria-label="Choisir la date">'
+    + '<span class="grow"></span>'
+    + '<button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? ' · ' + crewInfo : '') + '</button>'
+    + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>')
+    + '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>'
+    + (gen ? '<button type="button" class="btn" data-act="print">🖨️ Imprimer</button>' : '') + '</div>';
+  if (!gen) html += '<div class="start"><p>Pas encore de planning pour cette nuit. Indique les absents et les TL dans « Effectifs », puis génère.' + hint(' Astuce : reste appuyé sur un nom dans Effectifs pour plus d’options (absence longue, par quart…).') + '</p><button type="button" class="btn btn-red" data-act="gen">Générer la rotation</button></div>';
+  let head = '<tr><th scope="col">Poste</th>';
+  for (let k = 0; k < Q; k++) head += '<th scope="col">Quart ' + (k + 1) + (k === 4 ? '<span class="ot">Overtime</span>' : '') + '</th>';
+  head += '</tr>';
+  let body = '';
+  zones(ps).forEach(z => {
+    body += '<tr class="grp"><th scope="rowgroup">' + esc(z) + '</th><td colspan="' + Q + '"></td></tr>';
+    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
+      body += '<tr><th class="ph" scope="row">' + postHead(p) + '</th>';
+      for (let k = 0; k < Q; k++) {
+        const who = n && n.q && n.q[k] ? n.q[k][p.id] : null;
+        const per = who ? S.people[who] : null;
+        const trainId = n && n.train && n.train[k] ? n.train[k][p.id] : null;
+        const trainPer = trainId ? S.people[trainId] : null;
+        const locked = !!(n && n.lock && n.lock[k] && n.lock[k][p.id] && n.lock[k][p.id] === who);
+        body += '<td><button type="button" class="cell' + (locked ? ' locked' : '') + '" data-act="pick" data-k="' + k + '" data-post="' + esc(p.id) + '" aria-label="' + esc('Poste ' + p.code + ', quart ' + (k + 1) + ' : ' + (per ? per.name : 'vide')) + '">'
+          + (per ? esc(per.name) + (isTL(per) ? ' <span class="tag">TL</span>' : '') + (mark(per, p.id) === 'H' ? ' <span class="tag h">🎓 Formation</span>' : '') : '<span class="empty">—</span>')
+          + (trainPer ? ' <span class="tag h">+ ' + esc(trainPer.name) + ' 🎓</span>' : '') + '</button></td>';
+      }
+      body += '</tr>';
+    });
+  });
+  return html + '<div class="scroll" data-scroll="plan"><table class="plan"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div><p class="note">Touche le nom d’un poste pour voir qui est en formation dessus. Case avec une barre rouge : personne forcée, gardée quand tu régénères.' + hint(' Astuce : le bouton « 🖨️ Imprimer » sort toujours un tableau en noir et blanc, même si l’écran est en couleur.') + '</p>' + printZone(n, Q, ps);
+}
+function printZone(n, Q, ps){
+  let head = '<tr><th>Poste</th>';
+  for (let k = 0; k < Q; k++) head += '<th>Quart ' + (k + 1) + (k === 4 ? ' (OT)' : '') + '</th>';
+  head += '</tr>';
+  let body = '';
+  zones(ps).forEach(z => {
+    body += '<tr><th colspan="' + (Q + 1) + '" style="text-align:left">' + esc(z) + '</th></tr>';
+    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
+      body += '<tr><td>' + esc(p.code) + ' · ' + esc(p.name) + '</td>';
+      for (let k = 0; k < Q; k++) {
+        const who = n && n.q && n.q[k] ? n.q[k][p.id] : null;
+        const per = who ? S.people[who] : null;
+        body += '<td>' + (per ? esc(per.name) : '—') + '</td>';
+      }
+      body += '</tr>';
+    });
+  });
+  return '<div id="printzone" hidden><h1>PLANNING CH2-2 — ' + esc(fmt(S.date)) + '</h1><table>' + head + body + '</table></div>';
+}
+function viewPlanPhone(){
+  const n = nightOf(), gen = generated(n), Q = nq(n), ps = posts();
+  if (S.qk >= Q) S.qk = 0;
+  const k = S.qk;
+  const absent = n ? (n.absent || []).length : 0;
+  const tlOn = n ? Object.values(n.tl || {}).filter(a => a && a.some(Boolean)).length : 0;
+  const crewInfo = [absent ? absent + ' abs.' : '', tlOn ? tlOn + ' TL' : ''].filter(Boolean).join(' · ');
+  const a = S.date.split('-').map(Number);
+  const short = new Date(a[0], a[1] - 1, a[2]).toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
+  let html = '<div class="m-head"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button><span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span><button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button></div>'
+    + '<div class="m-acts"><button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? '<br><small class="muted">' + crewInfo + '</small>' : '') + '</button>'
+    + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>') + '</div>'
+    + '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>'
+    + (gen ? '<button type="button" class="btn m-gen" data-act="print">🖨️ Imprimer</button>' : '');
+  html += '<div class="qtabs" role="group" aria-label="Quart">';
+  for (let j = 0; j < Q; j++) html += '<button type="button" data-act="qk" data-k="' + j + '" aria-pressed="' + (j === k) + '">Q' + (j + 1) + (j === 4 ? '<small>OT</small>' : '') + '</button>';
+  html += '</div><div class="mlist">';
+  zones(ps).forEach(z => {
+    html += '<div class="g">' + esc(z) + '</div>';
+    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
+      const who = n && n.q && n.q[k] ? n.q[k][p.id] : null;
+      const per = who ? S.people[who] : null;
+      const trainId = n && n.train && n.train[k] ? n.train[k][p.id] : null;
+      const trainPer = trainId ? S.people[trainId] : null;
+      const locked = !!(n && n.lock && n.lock[k] && n.lock[k][p.id] && n.lock[k][p.id] === who);
+      html += '<div class="mrow split' + (locked ? ' locked' : '') + '"><button type="button" class="linkbtn" data-act="trainees" data-id="' + esc(p.id) + '"><span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button>'
+        + '<button type="button" class="pickbtn" data-act="pick" data-k="' + k + '" data-post="' + esc(p.id) + '">' + (per ? esc(per.name) + (isTL(per) ? ' <span class="tag">TL</span>' : '') + (mark(per, p.id) === 'H' ? ' <span class="tag h">🎓</span>' : '') : '<span class="empty">—</span>') + (trainPer ? ' <span class="tag h">+' + esc(trainPer.name) + ' 🎓</span>' : '') + '</button></div>';
+    });
+  });
+  return html + '</div>' + printZone(n, Q, ps);
+}
+function viewPolyPhone(){
+  const ps = posts(), pp = activePeople().filter(p => !isTemp(p));
+  if (!S.person || !S.people[S.person]) S.person = pp.length ? pp[0].id : null;
+  const per = S.people[S.person];
+  const opts = pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.person ? ' selected' : '') + '>' + esc(x.name) + ' · ' + esc(x.role || 'TM') + (isTL(x) ? '' : ' · ' + ps.filter(p => mark(x, p.id) === 'G').length + ' postes') + '</option>').join('');
+  let html = '<h1>Polyvalence</h1><select class="pp-sel" id="ppSel" data-chg="person" aria-label="Personne">' + opts + '</select>'
+    + '<div class="bar"><button type="button" class="btn btn-sm" data-act="editPerson" data-id="' + esc(S.person || '') + '">Modifier la personne</button><button type="button" class="btn btn-sm" data-act="addPost">+ Ajouter un poste</button></div>'
+    + '<div class="legend"><span><span class="sw"><span class="sym G"></span></span>Tient le poste</span><span><span class="sw"><span class="sym H"></span></span>En formation</span></div>';
+  if (!per) return html;
+  html += '<div class="mlist">';
+  zones(ps).forEach(z => {
+    html += '<div class="g">' + esc(z) + '</div>';
+    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
+      const m = mark(per, p.id);
+      const b = (v, inner, lbl) => '<button type="button" data-act="setMark" data-per="' + esc(per.id) + '" data-post="' + esc(p.id) + '" data-m="' + v + '" aria-pressed="' + (m === v) + '" aria-label="' + lbl + '">' + inner + '</button>';
+      html += '<div class="mrow static"><button type="button" class="dotbtn" data-act="diff" data-id="' + esc(p.id) + '" aria-label="Difficulté du poste ' + esc(p.code) + '"><span class="dot ' + esc(p.diff || '') + '"></span></button><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span>'
+        + '<span class="st3">' + b('', '—', 'Ne tient pas') + b('G', '<span class="sw"><span class="sym G"></span></span>', 'Tient le poste') + b('H', '<span class="sw"><span class="sym H"></span></span>', 'En formation') + '</span></div>';
+    });
+  });
+  return html + '</div><p class="note">Touche la pastille ronde pour la difficulté du poste.</p>';
+}
+function viewPoly(){
+  const ps = posts(), pp = activePeople().filter(p => !isTemp(p));
+  const non = pp.filter(p => !isTL(p));
+  let held = 0; non.forEach(per => ps.forEach(p => { if (mark(per, p.id) === 'G') held++; }));
+  const rate = non.length && ps.length ? Math.floor(100 * held / (non.length * ps.length)) : 0;
+  let html = '<div class="bar"><h1>Polyvalence · ' + esc(S.cfg.team) + '</h1><span class="grow"></span>'
+    + '<span class="kpi">Taux de polyvalence<b>' + rate + ' %</b></span>'
+    + '<button type="button" class="btn btn-sm" data-act="addPost">+ Ajouter un poste</button></div>'
+    + '<div class="bar legend">'
+    + '<span><span class="sw"><span class="sym G"></span></span>Tient le poste</span>'
+    + '<span><span class="sw"><span class="sym H"></span></span>En formation</span>'
+    + '<span><span class="dot vert"></span><span class="dot orange"></span><span class="dot rouge"></span>Difficulté</span>'
+    + '</div>';
+  const head = '<tr><th class="corner" scope="col"></th>' + pp.map(per => '<th class="who' + (isTL(per) ? ' tlc' : '') + '" scope="col"><button type="button" data-act="editPerson" data-id="' + esc(per.id) + '" title="' + esc(per.name) + '"><span class="role">' + esc(per.role || 'TM') + '</span><span class="vname">' + esc(per.name) + '</span>' + (isTL(per) ? '<span class="cnt" style="visibility:hidden">0</span>' : '<span class="cnt" title="Postes tenus">' + ps.filter(p => mark(per, p.id) === 'G').length + '</span>') + '</button></th>').join('') + '</tr>';
+  let body = '';
+  zones(ps).forEach(z => {
+    body += '<tr class="grp"><th scope="rowgroup">' + esc(z) + '</th><td colspan="' + pp.length + '"></td></tr>';
+    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
+      const tot = pp.filter(per => !isTL(per) && mark(per, p.id) === 'G').length;
+      body += '<tr><th class="ph" scope="row"><div class="post"><button type="button" class="dotbtn" data-act="diff" data-id="' + esc(p.id) + '" aria-label="Difficulté du poste ' + esc(p.code) + '"><span class="dot ' + esc(p.diff || '') + '"></span></button><button type="button" class="linkbtn" data-act="editPost" data-id="' + esc(p.id) + '"><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button><span class="cnt" title="Personnes qui tiennent le poste">' + tot + '</span></div></th>';
+      pp.forEach(per => {
+        const m = mark(per, p.id);
+        body += '<td class="' + (isTL(per) ? 'tlc' : '') + '"><button type="button" class="m" data-act="cycle" data-per="' + esc(per.id) + '" data-post="' + esc(p.id) + '" aria-label="' + esc(per.name + ', poste ' + p.code) + '">' + (m ? '<span class="sym ' + m + '"></span>' : '') + '</button></td>';
+      });
+      body += '</tr>';
+    });
+  });
+  return html + '<div class="scroll" data-scroll="poly"><table class="mx"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>'
+    + '<p class="note">Touche une case : vide → tient le poste → en formation → vide. Pastille noire : nombre de postes tenus (personne) ou de personnes qui tiennent le poste, sans les TL ni les formations. Touche la pastille d’un poste pour sa difficulté, un nom ou un poste pour le modifier.</p>';
+}
+
+/* ---------- sheets ---------- */
+function open(s){ S.sheet = s; renderSheet(); }
+function close(){ S.sheet = null; $('#sheet').innerHTML = ''; }
+function renderSheet(){
+  const s = S.sheet; if (!s) return;
+  const c = ({pick:shPick, balance:shBalance, person:shPerson, post:shPost, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts})[s.type](s);
+  if (!c) { close(); return; }
+  const prev = $('#sheet .sb'); const st = prev ? prev.scrollTop : 0;
+  $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
+  const b = $('#sheet .sb'); if (b) b.scrollTop = st;
+}
+function shPick(s){
+  const p = S.posts[s.post]; if (!p) return null;
+  const n = nightOf(), q = n && n.q && n.q[s.k] ? n.q[s.k] : {};
+  const cur = q[p.id], where = holderMap(q), absent = new Set(n ? n.absent || [] : []);
+  const curPer = cur ? S.people[cur] : null;
+  const pres = activePeople().filter(per => !absent.has(per.id));
+  const onQuart = per => !isTemp(per) || (n && n.tl && n.tl[per.id] && n.tl[per.id][s.k]);
+  /* un échange n'est proposé que si le titulaire actuel connaît aussi l'autre poste : les 2 doivent savoir faire les 2 process */
+  const swappable = per => { const w = where[per.id]; if (!w || w === p.id || !cur) return true; return !!(curPer && canHold(curPer, w)); };
+  const othersAll = pres.filter(per => !isTL(per) && onQuart(per));
+  const tls = pres.filter(per => isTL(per) && canHold(per, p.id) && swappable(per));
+  const others = othersAll.filter(per => canHold(per, p.id) && swappable(per));
+  const locked = !!(n && n.lock && n.lock[s.k] && n.lock[s.k][p.id]);
+  if (s.force == null) s.force = locked;
+  const Q = n ? nq(n) : 4;
+  const adjRepeat = per => [s.k - 1, s.k + 1].some(kk => kk >= 0 && kk < Q && n && n.q && n.q[kk] && n.q[kk][p.id] === per.id);
+  const warn = per => adjRepeat(per) ? ' <small class="muted">⚠️ déjà ce poste au quart voisin</small>' : '';
+  let body = '<button type="button" class="force" data-act="force" aria-pressed="' + !!s.force + '"><span class="sw2" aria-hidden="true"></span>Forcer : garder cette personne ici à la prochaine génération</button>';
+  if (locked && cur) body += '<button type="button" class="opt" data-act="unlock">Retirer le forçage (' + esc((S.people[cur] || {}).name || '') + ')</button>';
+  body += '<div class="lbl">TL</div>' + (tls.length ? tls.map(per => '<button type="button" class="opt" data-act="choose" data-id="' + esc(per.id) + '"' + (cur === per.id ? ' aria-current="true"' : '') + '>' + esc(per.name) + ' <span class="tag">TL</span>' + (where[per.id] && where[per.id] !== p.id && S.posts[where[per.id]] ? '<small>sur ' + esc(S.posts[where[per.id]].code) + '</small>' : '') + warn(per) + '</button>').join('') : '<p class="note">Aucun TL habilité et présent.</p>');
+  body += '<div class="lbl">Autres membres habilités</div><select class="pp-sel" data-chg="pickPerson" aria-label="Choisir une personne"><option value="">— choisir —</option>' + others.map(per => {
+    const m = mark(per, p.id), tag = m === 'H' ? ' — en formation' : '';
+    return '<option value="' + esc(per.id) + '"' + (cur === per.id ? ' selected' : '') + '>' + esc(per.name) + esc(tag) + (where[per.id] && where[per.id] !== p.id && S.posts[where[per.id]] ? ' (sur ' + esc(S.posts[where[per.id]].code) + ')' : '') + (adjRepeat(per) ? ' ⚠️ déjà ce poste au quart voisin' : '') + '</option>';
+  }).join('') + '</select>' + (!others.length ? '<p class="note">Personne d’autre d’habilité et disponible pour un échange sur ce poste.</p>' : '');
+  body += '<button type="button" class="opt" data-act="choose" data-id="">Laisser vide</button>';
+  const curTrain = n && n.train && n.train[s.k] ? n.train[s.k][p.id] : null;
+  body += '<button type="button" class="force" data-act="toggleFrm" aria-pressed="' + !!s.showFrm + '">🎓 Ajouter quelqu’un en formation avec ' + (cur && S.people[cur] ? esc(S.people[cur].name) : 'le titulaire') + '</button>';
+  if (s.showFrm) {
+    if (!cur) body += '<p class="note">Choisis d’abord qui tient le poste : la formation s’ajoute en plus de lui, pas à sa place.</p>';
+    const trainable = othersAll.filter(per => mark(per, p.id) === 'H' && per.id !== cur);
+    if (curTrain && S.people[curTrain]) body += '<button type="button" class="opt" data-act="unTrain" data-k="' + s.k + '" data-post="' + esc(p.id) + '">Retirer ' + esc(S.people[curTrain].name) + ' de la formation</button>';
+    body += trainable.length ? trainable.map(per => '<button type="button" class="opt" data-act="chooseTrain" data-k="' + s.k + '" data-post="' + esc(p.id) + '" data-id="' + esc(per.id) + '"' + (curTrain === per.id ? ' aria-current="true"' : '') + '>' + esc(per.name) + (where[per.id] && where[per.id] !== p.id && S.posts[where[per.id]] ? '<small>sur ' + esc(S.posts[where[per.id]].code) + '</small>' : '') + '</button>').join('') : '<p class="note">Personne en formation sur ce poste (coché hachuré dans Polyvalence).</p>';
+  }
+  return {title:'Poste ' + esc(p.code) + ' · Quart ' + (s.k + 1), body};
+}
+function shTrainees(s){
+  const p = S.posts[s.id]; if (!p) return null;
+  const pp = activePeople().filter(per => !isTL(per));
+  const training = pp.filter(per => mark(per, p.id) === 'H');
+  const holders = pp.filter(per => mark(per, p.id) === 'G');
+  const row = per => '<div class="mrow static"><span class="pname">' + esc(per.name) + '</span></div>';
+  let body = '<div class="lbl">En formation (hachuré)</div>' + (training.length ? training.map(row).join('') : '<p class="note">Personne en formation sur ce poste.</p>');
+  body += '<div class="lbl">Tient le poste</div>' + (holders.length ? holders.map(row).join('') : '<p class="note">Personne ne tient encore ce poste.</p>');
+  return {title:'Poste ' + esc(p.code) + ' · ' + esc(p.name), body, foot:'<button type="button" class="btn" data-act="editPost" data-id="' + esc(p.id) + '">Modifier le poste</button><button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+}
+function viewEffectifs(){
+  const n = nightOf() || freshNight(S.date), Q = nq(n), absent = new Set(n.absent || []);
+  const pp = activePeople();
+  const byAbsentFirst = (a, b) => (absent.has(b.id) ? 1 : 0) - (absent.has(a.id) ? 1 : 0);
+  const ad = S.date.split('-').map(Number);
+  const short = new Date(ad[0], ad[1] - 1, ad[2]).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+  let html = '<div class="bar"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button>'
+    + '<span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span>'
+    + '<button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button>'
+    + '<span class="grow"></span><button type="button" class="btn btn-red btn-sm" data-act="addPerson">+ Ajouter une personne</button></div>';
+  html += '<p class="note">Touche un nom pour le marquer présent/absent cette nuit.' + hint(' Reste appuyé sur un nom pour plus d’options : absence sur certains quarts, absence de plusieurs jours, modifier ou supprimer.') + '</p>';
+  html += '<div class="lbl">TL · touche les quarts où il tient un poste, ou « Absent »</div><div class="mlist">';
+  pp.filter(isTL).sort(byAbsentFirst).forEach(per => {
+    const at = (n.tl && n.tl[per.id]) || [];
+    const off = absent.has(per.id);
+    html += '<div class="tlrow" data-long="openPersonMenu" data-id="' + esc(per.id) + '"><b>' + esc(per.name) + '</b>';
+    if (!off) for (let k = 0; k < Q; k++) html += '<button type="button" class="qb" data-act="tlq" data-id="' + esc(per.id) + '" data-k="' + k + '" aria-pressed="' + !!at[k] + '">Q' + (k + 1) + '</button>';
+    html += '<button type="button" class="qb" data-act="abs" data-id="' + esc(per.id) + '" aria-pressed="' + off + '" style="margin-left:auto' + (off ? ';background:var(--red-soft);border-color:var(--red)' : '') + '">Absent</button>';
+    html += '</div>';
+  });
+  html += '</div>';
+  const temps = pp.filter(isTemp);
+  html += '<div class="lbl">Renfort d’une autre équipe · touche le(s) quart(s) où il est là, puis « Postes » pour dire ce qu’il sait tenir</div><div class="mlist">';
+  html += temps.map(per => {
+    const at = (n.tl && n.tl[per.id]) || [];
+    const nbPostes = posts().filter(p => canHold(per, p.id)).length;
+    let row = '<div class="tlrow"><b>' + esc(per.name) + '</b>';
+    for (let k = 0; k < Q; k++) row += '<button type="button" class="qb" data-act="tlq" data-id="' + esc(per.id) + '" data-k="' + k + '" aria-pressed="' + !!at[k] + '">Q' + (k + 1) + '</button>';
+    row += '<button type="button" class="btn btn-sm" data-act="renfortPosts" data-id="' + esc(per.id) + '">Postes' + (nbPostes ? ' (' + nbPostes + ')' : ' ⚠️') + '</button>';
+    row += '<button type="button" class="qb" data-act="delRenfort" data-id="' + esc(per.id) + '" style="margin-left:auto">Retirer</button></div>';
+    return row;
+  }).join('') + '</div>';
+  html += '<button type="button" class="btn btn-sm" data-act="addRenfort">+ Renfort</button>';
+  html += '<div class="lbl">Équipe</div><div class="mlist">' + pp.filter(p => !isTL(p) && !isTemp(p)).sort(byAbsentFirst).map(per => {
+    const off = absent.has(per.id);
+    const qa = [0, 1, 2, 3, 4].filter(k => k < Q && ((n.qAbsent[k] || {})[per.id]));
+    const badge = off ? 'Absent cette nuit' : (qa.length ? 'Absent Q' + qa.map(k => k + 1).join(', Q') : '');
+    return '<button type="button" class="eff-row' + (off ? ' off' : '') + '" data-act="abs" data-id="' + esc(per.id) + '" data-long="openPersonMenu"><span class="pname">' + esc(per.name) + (isTL(per) ? '' : '') + '</span>' + (badge ? '<span class="absbadge">' + esc(badge) + '</span>' : '') + '</button>';
+  }).join('') + '</div>';
+  return html;
+}
+function shPersonMenu(s){
+  const per = S.people[s.id]; if (!per) return null;
+  const n = nightOf() || freshNight(S.date), Q = nq(n);
+  const off = (n.absent || []).includes(s.id);
+  let body = '<button type="button" class="opt" data-act="abs" data-id="' + esc(s.id) + '" aria-current="' + off + '">' + (off ? '✓ Absent cette nuit — touche pour annuler' : 'Marquer absent cette nuit') + '</button>';
+  body += '<button type="button" class="force" data-act="toggleQAbs" aria-pressed="' + !!s.showQ + '">Absent seulement sur certains quarts cette nuit</button>';
+  if (s.showQ) body += '<div class="opt-row">' + [0, 1, 2, 3, 4].filter(k => k < Q).map(k => '<button type="button" class="qb" data-act="qAbsToggle" data-id="' + esc(s.id) + '" data-k="' + k + '" aria-pressed="' + !!((n.qAbsent[k] || {})[s.id]) + '">Q' + (k + 1) + '</button>').join('') + '</div>';
+  body += '<button type="button" class="opt" data-act="openAbsRange" data-id="' + esc(s.id) + '">Absent sur plusieurs jours (période)</button>';
+  body += '<button type="button" class="opt" data-act="editPerson" data-id="' + esc(s.id) + '">Modifier / supprimer cette personne</button>';
+  return {title:esc(per.name) + (isTL(per) ? ' · TL' : ''), body, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+}
+function shAbsPeriod(s){
+  const per = S.people[s.id]; if (!per) return null;
+  if (!s.from) s.from = S.date;
+  if (!s.to) s.to = S.date;
+  const body = '<p class="note">' + esc(per.name) + ' sera marqué(e) absent(e) chaque nuit entre ces deux dates (bornes incluses). Un planning déjà généré sur cette période sera recalculé.</p>'
+    + '<label class="field" for="fFrom"><span>Du</span><input type="date" id="fFrom" data-chg="absFrom" value="' + s.from + '"></label>'
+    + '<label class="field" for="fTo"><span>Au</span><input type="date" id="fTo" data-chg="absTo" value="' + s.to + '"></label>';
+  return {title:'Absence plusieurs jours', body, foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="absRangeGo" data-id="' + esc(s.id) + '">Confirmer l’absence</button>'};
+}
+function shAccounts(){
+  const meId = S.authUser && S.authUser.id;
+  const rows = Object.values(S.profiles).sort((x, y) => (x.role === y.role ? x.name.localeCompare(y.name, 'fr') : x.role === 'admin' ? -1 : 1));
+  let body = S.accountsErr ? '<p class="note" style="color:var(--red)">' + esc(S.accountsErr) + '</p>' : '';
+  body += rows.map(a => '<div class="tlrow"><b>' + esc(a.name) + '</b><span class="tag' + (a.role === 'admin' ? '' : ' h') + '">' + esc(ROLE_LABEL[a.role] || a.role) + '</span>'
+    + (a.must_change_password ? '<small class="muted">mot de passe provisoire</small>' : '') + (a.active === false ? '<small class="muted">désactivé</small>' : '')
+    + '<span class="grow"></span><button type="button" class="btn btn-sm" data-act="resetPass" data-id="' + esc(a.id) + '">Réinitialiser le mot de passe</button>'
+    + (a.id !== meId ? '<button type="button" class="btn btn-sm" data-act="toggleActive" data-id="' + esc(a.id) + '">' + (a.active === false ? 'Réactiver' : 'Désactiver') + '</button>' : '') + '</div>').join('');
+  body += '<div class="lbl">Ajouter un compte TL</div><label class="field" for="fNewTL"><span>Nom</span><input type="text" id="fNewTL" data-chg="newTLName" value="' + esc(S.newTLName || '') + '" placeholder="Nom du TL" autocomplete="off"></label><button type="button" class="btn btn-sm" data-act="addTL">+ Créer ce compte</button>';
+  body += '<div class="lbl">Équipe</div><label class="field" for="fTeam"><span>Nom affiché à côté du logo</span><input type="text" id="fTeam" data-chg="teamName" value="' + esc(S.cfg.team || '') + '" autocomplete="off"></label>';
+  return {title:'Comptes', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+}
+function shRenfortPosts(s){
+  const per = S.people[s.id]; if (!per) return null;
+  const ps = posts();
+  let body = '<p class="note">Coche les postes que ' + esc(per.name) + ' sait tenir pour ce renfort. Tant qu’aucun poste n’est coché, il ne pourra être placé nulle part à la génération — la répartition reste ensuite équitable, comme pour le reste de l’équipe.</p>';
+  zones(ps).forEach(z => {
+    body += '<div class="lbl">' + esc(z) + '</div>';
+    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
+      const m = mark(per, p.id);
+      body += '<button type="button" class="opt" data-act="renfortMark" data-id="' + esc(per.id) + '" data-post="' + esc(p.id) + '" aria-current="' + (m === 'G') + '"><span class="code">' + esc(p.code) + '</span>&nbsp;' + esc(p.name) + '<small>' + (m === 'H' ? '🎓 en formation' : m === 'G' ? '✓ sait tenir' : 'ne tient pas') + '</small></button>';
+    });
+  });
+  return {title:'Postes · ' + esc(per.name), body, foot:'<button type="button" class="btn btn-red" data-act="close">Terminé</button>'};
+}
+function shHelp(){
+  const body = '<div class="lbl">Planning du jour</div><p class="note">Choisis la nuit, va dans « Effectifs » pour les absences, puis touche « Générer ». Touche une case du tableau pour changer qui tient le poste.</p>'
+    + '<div class="lbl">Effectifs</div><p class="note">Toute l’équipe en un coup d’œil. Touche un nom pour le mettre présent/absent cette nuit. Reste appuyé sur un nom pour : absence sur certains quarts seulement, absence sur plusieurs jours, ou modifier/supprimer la personne.</p>'
+    + '<div class="lbl">Polyvalence</div><p class="note">Qui sait tenir quel poste. Touche une case pour faire tourner : vide → tient le poste → en formation → vide.</p>'
+    + '<div class="lbl">Imprimer</div><p class="note">Le bouton « 🖨️ Imprimer » sort toujours le planning en noir et blanc, même si l’écran est en couleur.</p>';
+  return {title:'Aide', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+}
+function viewLogin(){
+  const rows = Object.values(S.profiles).filter(a => a.active !== false).sort((x, y) => (x.role === y.role ? x.name.localeCompare(y.name, 'fr') : x.role === 'admin' ? 1 : -1));
+  if (!S.loginPick) {
+    return '<div class="authwrap"><div class="authcard"><h1>PLANNING CH2-2</h1>'
+      + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
+      + '<p class="note">Touche ton nom pour te connecter.</p><div class="namegrid">'
+      + (rows.length ? rows.map(a => '<button type="button" class="namebtn" data-act="pickAccount" data-id="' + esc(a.id) + '">' + esc(a.name) + (a.role === 'admin' ? '<small>Admin</small>' : '') + '</button>').join('') : '<p class="note">Chargement des comptes…</p>')
+      + '</div></div></div>';
+  }
+  const acc = S.profiles[S.loginPick];
+  return '<div class="authwrap"><div class="authcard"><h1>' + esc(acc ? acc.name : '') + '</h1>'
+    + '<label class="field" for="loPass"><span>Mot de passe</span><input type="text" id="loPass" data-chg="loginPass" autocomplete="off" value="' + esc(S.loginPass || '') + '"></label>'
+    + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
+    + '<div class="bar">' + (S.loginBusy ? '<span class="muted">Connexion…</span>' : '<button type="button" class="btn" data-act="loginBack">‹ Retour</button><button type="button" class="btn btn-red grow" data-act="doLogin">Se connecter</button>') + '</div></div></div>';
+}
+function viewChangePass(){
+  const p = profile();
+  return '<div class="authwrap"><div class="authcard"><h1>Choisis ton mot de passe</h1><p class="note">' + esc(p ? p.name : '') + ', c’est ta première connexion (ou ton mot de passe vient d’être réinitialisé). Choisis un mot de passe personnel, 6 caractères minimum.</p>'
+    + '<label class="field" for="npPass"><span>Nouveau mot de passe</span><input type="text" id="npPass" data-chg="newPass" value="' + esc(S.newPass) + '" autocomplete="off"></label>'
+    + '<label class="field" for="npPass2"><span>Confirmer</span><input type="text" id="npPass2" data-chg="newPass2" value="' + esc(S.newPass2) + '" autocomplete="off"></label>'
+    + (S.newPassErr ? '<p class="note" style="color:var(--red)">' + esc(S.newPassErr) + '</p>' : '')
+    + '<button type="button" class="btn btn-red" data-act="doChangePass"' + (S.newPassBusy ? ' disabled' : '') + '>' + (S.newPassBusy ? 'Enregistrement…' : 'Valider') + '</button></div></div>';
+}
+function viewClosed(){
+  return '<div class="authwrap"><div class="authcard"><h1>Application fermée</h1><p class="note">PLANNING CH2-2 est accessible aux TL uniquement de 20h30 à 6h45. Reviens pendant ces horaires — l’Admin peut y accéder à tout moment.</p><button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
+}
+function shRegen(){ return {title:'Régénérer la nuit ?', body:'<p style="margin:0">Le planning de cette nuit sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>', foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="genGo">Régénérer</button>'}; }
+function shBalancePhone(s, list){
+  const ps = posts(), pp = activePeople().filter(per => !isTL(per));
+  if (!S.balPerson || !S.people[S.balPerson]) S.balPerson = pp.length ? pp[0].id : null;
+  const count = {};
+  list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { if (q[pid] === S.balPerson) count[pid] = (count[pid] || 0) + 1; })));
+  const per = S.people[S.balPerson];
+  let body = '<select class="pp-sel" id="balSel" data-chg="balPerson" aria-label="Personne">' + pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.balPerson ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select>';
+  body += '<div class="bar"><button type="button" class="btn btn-sm' + (s.span === 7 ? ' btn-red' : '') + '" data-act="span" data-v="7">7 jours</button><button type="button" class="btn btn-sm' + (s.span !== 7 ? ' btn-red' : '') + '" data-act="span" data-v="30">30 jours</button><span class="muted">' + list.length + ' nuit' + (list.length > 1 ? 's' : '') + '</span></div><div class="mlist bal">';
+  ps.filter(p => (per && canHold(per, p.id)) || count[p.id]).forEach(p => { body += '<div class="mrow static"><span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span><span class="cntv">' + (count[p.id] || 0) + '</span></div>'; });
+  return {title:'Équilibre', body:body + '</div><p class="note">Nombre de quarts faits sur chaque poste qu\u2019il tient.</p>'};
+}
+function shBalance(s){
+  if (phone()) { const span0 = s.span || 30; const from0 = addDays(S.date, -(span0 - 1)); return shBalancePhone(s, Object.values(S.nights).filter(n => generated(n) && n.date >= from0 && n.date <= S.date)); }
+  const span = s.span || 30;
+  const from = addDays(S.date, -(span - 1));
+  const list = Object.values(S.nights).filter(n => generated(n) && n.date >= from && n.date <= S.date);
+  const ps = posts(), count = {}, tot = {};
+  list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { const w = q[pid]; if (!w) return; count[w + '|' + pid] = (count[w + '|' + pid] || 0) + 1; tot[w] = (tot[w] || 0) + 1; })));
+  const pp = people().filter(per => !isTL(per) || tot[per.id]);
+  let t = '<table class="eq"><thead><tr><th class="n" scope="col"></th>' + ps.map(p => '<th scope="col"><span class="dot ' + esc(p.diff || '') + '" style="margin-right:3px"></span>' + esc(p.code) + '</th>').join('') + '<th scope="col">Total</th></tr></thead><tbody>';
+  pp.forEach(per => {
+    t += '<tr><th class="n" scope="row">' + esc(per.name) + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c">' + (tot[per.id] || 0) + '</td></tr>';
+  });
+  t += '</tbody></table>';
+  const body = '<div class="bar"><button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="span" data-v="7">7 derniers jours</button><button type="button" class="btn btn-sm' + (span === 30 ? ' btn-red' : '') + '" data-act="span" data-v="30">30 derniers jours</button><span class="muted">' + list.length + ' nuit' + (list.length > 1 ? 's' : '') + '</span></div><div class="scroll" data-scroll="eq" style="max-height:60vh">' + t + '</div><p class="note">Nombre de quarts faits sur chaque poste. « · » : poste qu’il ne tient pas.</p>';
+  return {title:'Équilibre', body, wide:true};
+}
+function shPerson(s){
+  const per = S.people[s.id]; if (!per) return null; s.form = true;
+  const left = per.active === false;
+  const body = '<label class="field" for="fName"><span>Nom</span><input type="text" id="fName" data-chg="pName" value="' + esc(per.name) + '" autocomplete="off"></label>'
+    + '<label class="field" for="fRole"><span>Rôle</span><select id="fRole" data-chg="pRole">' + ['TM', 'TL', 'GLP', 'ASP'].map(r => '<option' + ((per.role || 'TM') === r ? ' selected' : '') + '>' + r + '</option>').join('') + '</select></label>'
+    + (left ? '<p class="note">Cette personne a été retirée de l’équipe active (démission). Son historique des nuits déjà planifiées est conservé.</p>' : '<p class="note">Un TL n’est placé que sur les quarts cochés dans « Effectifs ».</p>');
+  let foot;
+  if (s.del) foot = '<button type="button" class="btn" data-act="delNo">Annuler</button><button type="button" class="btn btn-red" data-act="delPerson">Confirmer le retrait de l’équipe</button>';
+  else if (left) foot = '<button type="button" class="btn" data-act="reactivatePerson" style="margin-right:auto">Réactiver dans l’équipe</button><button type="button" class="btn btn-red" data-act="close">Terminé</button>';
+  else foot = '<button type="button" class="btn" data-act="delAsk" style="margin-right:auto">Retirer de l’équipe (démission)</button><button type="button" class="btn btn-red" data-act="close">Terminé</button>';
+  return {title:'Personne', body, foot};
+}
+function shPost(s){
+  const p = S.posts[s.id]; if (!p) return null; s.form = true;
+  const body = '<label class="field" for="fCode"><span>Code</span><input type="text" id="fCode" data-chg="poCode" value="' + esc(p.code) + '"></label>'
+    + '<label class="field" for="fPName"><span>Nom</span><input type="text" id="fPName" data-chg="poName" value="' + esc(p.name) + '"></label>'
+    + '<label class="field" for="fZone"><span>Team</span><input type="text" id="fZone" data-chg="poZone" value="' + esc(p.zone || '') + '"></label>';
+  const foot = s.del ? '<button type="button" class="btn" data-act="delNo">Annuler</button><button type="button" class="btn btn-red" data-act="delPost">Confirmer la suppression</button>' : '<button type="button" class="btn" data-act="delAsk" style="margin-right:auto">Supprimer</button><button type="button" class="btn btn-red" data-act="close">Terminé</button>';
+  return {title:'Poste', body, foot};
+}
+
+/* ---------- actions ---------- */
+const A = {
+  qk(d){ S.qk = Number(d.k); render(); },
+  setMark(d){ const per = clone(S.people[d.per]); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); },
+  tab(d){ S.tab = d.tab; LS.set('tab', d.tab); close(); render(); window.scrollTo(0, 0); },
+  day(d){ S.date = addDays(S.date, Number(d.d)); render(); },
+  close(){ close(); },
+  gen(){ if (generated(nightOf())) { open({type:'regen'}); return; } const n = editable(); generateAll(n); saveNight(n); toast('Rotation générée'); },
+  genGo(){ close(); const n = editable(); generateAll(n); saveNight(n); toast('Rotation recalculée'); },
+  pick(d){ open({type:'pick', k:Number(d.k), post:d.post}); },
+  trainees(d){ open({type:'trainees', id:d.id}); },
+  toggleFrm(){ S.sheet.showFrm = !S.sheet.showFrm; renderSheet(); },
+  choose(d){
+    const s = S.sheet, n = editable(), q = n.q[s.k];
+    const lk = n.lock[s.k], mn = n.manual[s.k];
+    const who = d.id || null, old = q[s.post] || null;
+    if (who) {
+      const where = holderMap(q)[who];
+      if (where && where !== s.post) { if (old) { q[where] = old; mn[where] = true; } else { delete q[where]; delete mn[where]; } if (lk[where] === who) delete lk[where]; }
+      Object.keys(lk).forEach(pid => { if (pid !== s.post && lk[pid] === who) delete lk[pid]; });
+      q[s.post] = who; mn[s.post] = true;
+      if (s.force) lk[s.post] = who; else delete lk[s.post];
+    } else { delete q[s.post]; delete lk[s.post]; delete mn[s.post]; }
+    close(); saveNight(n);
+  },
+  addRenfort(){
+    const cnt = Object.values(S.people).filter(isTemp).length + 1;
+    const id = newId('re');
+    savePerson({id, name:'Renfort ' + cnt, role:'TM', temp:true, order:9000 + cnt, marks:{}});
+    renderSheet();
+  },
+  delRenfort(d){
+    deletePersonRow(d.id);
+    renderSheet();
+  },
+  force(){ S.sheet.force = !S.sheet.force; renderSheet(); },
+  unlock(){ const s = S.sheet, n = editable(); delete n.lock[s.k][s.post]; close(); saveNight(n); },
+  chooseTrain(d){ const n = editable(); const k = Number(d.k); n.train[k][d.post] = d.id; saveNight(n); renderSheet(); },
+  unTrain(d){ const n = editable(); const k = Number(d.k); delete n.train[k][d.post]; saveNight(n); renderSheet(); },
+  abs(d){
+    const n = editable(); const set = new Set(n.absent);
+    if (set.has(d.id)) set.delete(d.id); else set.add(d.id);
+    n.absent = [...set];
+    n.train = n.train.map(m => { const c = Object.assign({}, m); Object.keys(c).forEach(pid => { if (c[pid] === d.id) delete c[pid]; }); return c; });
+    if (n.generated) generateAll(n);
+    saveNight(n); renderSheet();
+  },
+  tlq(d){
+    const n = editable(); const k = Number(d.k);
+    const a = (n.tl[d.id] || [false, false, false, false, false]).slice(); a[k] = !a[k]; n.tl[d.id] = a;
+    if (n.generated) regenQuart(n, k);
+    saveNight(n); renderSheet();
+  },
+  otOn(){ const n = editable(); n.ot = 1; if (n.generated) regenQuart(n, 4); saveNight(n); },
+  otOff(){ const n = editable(); n.ot = 0; n.q[4] = {}; n.lock[4] = {}; saveNight(n); },
+  balance(){ open({type:'balance', span:30}); },
+  span(d){ S.sheet.span = Number(d.v); renderSheet(); },
+  cycle(d){ const per = clone(S.people[d.per]); per.marks = per.marks || {}; const m = per.marks[d.post] || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); },
+  diff(d){ const p = clone(S.posts[d.id]); p.diff = DIFF[(DIFF.indexOf(p.diff || '') + 1) % DIFF.length]; savePost(p); },
+  editPerson(d){ open({type:'person', id:d.id}); },
+  editPost(d){ open({type:'post', id:d.id}); },
+  addPerson(){ const id = newId('pe'); const order = Math.max(0, ...people().map(p => p.order || 0)) + 1; savePerson({id, name:'Nouvelle personne', role:'TM', order, marks:{}}); open({type:'person', id}); setTimeout(() => { const i = $('#fName'); if (i) { i.focus(); i.select(); } }, 30); },
+  addPost(){ const id = newId('po'); const ps = posts(); const order = Math.max(0, ...ps.map(p => p.order || 0)) + 1; savePost({id, code:'?', name:'Nouveau poste', zone:ps.length ? ps[ps.length - 1].zone : 'Team', diff:'', order}); open({type:'post', id}); setTimeout(() => { const i = $('#fCode'); if (i) { i.focus(); i.select(); } }, 30); },
+  delAsk(){ S.sheet.del = true; renderSheet(); },
+  delNo(){ S.sheet.del = false; renderSheet(); },
+  delPerson(){ const id = S.sheet.id; const per = clone(S.people[id]); per.active = false; close(); savePerson(per); },
+  reactivatePerson(){ const per = clone(S.people[S.sheet.id]); per.active = true; savePerson(per); renderSheet(); },
+  delPost(){ deletePostRow(S.sheet.id); close(); },
+  print(){ window.print(); },
+  playRoad(){ const btn = document.querySelector('.brandbtn'); if (!btn) return; btn.classList.remove('play'); void btn.offsetWidth; btn.classList.add('play'); setTimeout(() => btn.classList.remove('play'), 1700); },
+  help(){ open({type:'help'}); },
+  accounts(){ if (!isAdmin()) return; S.accountsErr = ''; open({type:'accounts'}); },
+  openPersonMenu(d){ open({type:'personMenu', id:d.id}); },
+  renfortPosts(d){ open({type:'renfortPosts', id:d.id}); },
+  renfortMark(d){ const per = clone(S.people[d.id]); per.marks = per.marks || {}; const m = per.marks[d.post] || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
+  toggleQAbs(){ S.sheet.showQ = !S.sheet.showQ; renderSheet(); },
+  qAbsToggle(d){ const n = editable(); const k = Number(d.k); const c = Object.assign({}, n.qAbsent[k]); if (c[d.id]) delete c[d.id]; else c[d.id] = true; n.qAbsent[k] = c; if (n.generated) regenQuart(n, k); saveNight(n); renderSheet(); },
+  openAbsRange(d){ open({type:'absPeriod', id:d.id}); },
+  absRangeGo(d){
+    const s = S.sheet, id = d.id;
+    let from = s.from || S.date, to = s.to || S.date;
+    if (from > to) { const t = from; from = to; to = t; }
+    let cur = from, guard = 0;
+    while (cur <= to && guard < 400) {
+      const n = editable(cur);
+      if (!n.absent.includes(id)) n.absent.push(id);
+      if (n.generated) generateAll(n);
+      saveNight(n);
+      cur = addDays(cur, 1); guard++;
+    }
+    close();
+    toast('Absence enregistrée du ' + fmt(from) + ' au ' + fmt(to) + '.');
+  },
+  logout(){ sb.auth.signOut(); S.loginPick = null; S.loginPass = ''; S.loginErr = ''; close(); },
+  pickAccount(d){ S.loginPick = d.id; S.loginPass = ''; S.loginErr = ''; render(); },
+  loginBack(){ S.loginPick = null; render(); },
+  async doLogin(){
+    const acc = S.profiles[S.loginPick]; if (!acc) return;
+    if (acc.active === false) { S.loginErr = 'Ce compte est désactivé, contacte l’Admin.'; render(); return; }
+    S.loginBusy = true; S.loginErr = ''; render();
+    const {error} = await sb.auth.signInWithPassword({email:acc.login_email, password:S.loginPass || ''});
+    S.loginBusy = false;
+    if (error) { S.loginErr = 'Mot de passe incorrect.'; S.loginPass = ''; render(); return; }
+    S.loginPick = null; S.loginPass = ''; S.loginErr = '';
+    render();
+  },
+  async doChangePass(){
+    const p1 = (S.newPass || '').trim(), p2 = (S.newPass2 || '').trim();
+    if (p1.length < 6) { S.newPassErr = 'Le mot de passe doit faire au moins 6 caractères.'; render(); return; }
+    if (p1 !== p2) { S.newPassErr = 'Les deux mots de passe ne sont pas identiques.'; render(); return; }
+    S.newPassBusy = true; S.newPassErr = ''; render();
+    const {error} = await sb.auth.updateUser({password:p1});
+    if (error) { S.newPassBusy = false; S.newPassErr = 'Erreur : ' + error.message; render(); return; }
+    const uid = S.authUser.id;
+    const {error:e2} = await sb.from('profiles').update({must_change_password:false}).eq('id', uid);
+    S.newPassBusy = false;
+    if (e2) { S.newPassErr = 'Mot de passe changé, mais le profil n’a pas pu être mis à jour — reconnecte-toi.'; render(); return; }
+    if (S.profiles[uid]) S.profiles[uid].must_change_password = false;
+    S.newPass = ''; S.newPass2 = ''; S.newPassErr = '';
+    render();
+  },
+  async addTL(){
+    const nm = (S.newTLName || '').trim(); if (!nm) return;
+    S.accountsErr = 'Création en cours…'; renderSheet();
+    try {
+      const r = await callAdminAction({action:'createTL', name:nm});
+      S.newTLName = '';
+      S.accountsErr = r.name + ' créé — mot de passe provisoire : ' + r.tempPassword + ' (note-le et transmets-le au TL, il ne sera plus réaffiché ; il devra le changer à sa première connexion).';
+    } catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
+    renderSheet();
+  },
+  async resetPass(d){
+    const acc = S.profiles[d.id]; if (!acc) return;
+    S.accountsErr = 'Réinitialisation en cours…'; renderSheet();
+    try {
+      const r = await callAdminAction({action:'resetPassword', id:d.id});
+      S.accountsErr = acc.name + ' — nouveau mot de passe provisoire : ' + r.tempPassword + ' (note-le, il ne sera réaffiché qu’une fois).';
+    } catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
+    renderSheet();
+  },
+  async toggleActive(d){
+    try { await callAdminAction({action:'toggleActive', id:d.id}); S.accountsErr = ''; }
+    catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
+    renderSheet();
+  }
+};
+const C = {
+  person(el){ S.person = el.value; render(); },
+  balPerson(el){ S.balPerson = el.value; renderSheet(); },
+  pickPerson(el){ A.choose({id:el.value}); },
+  date(el){ S.date = el.value || today(); render(); },
+  countH(el){ S.cfg.countH = el.checked; saveCfg(); },
+  countX(el){ S.cfg.countX = el.checked; saveCfg(); },
+  pName(el){ const v = el.value.trim(); if (!v) return; const per = clone(S.people[S.sheet.id]); per.name = v; savePerson(per); },
+  pRole(el){ const per = clone(S.people[S.sheet.id]); per.role = el.value; savePerson(per); },
+  poCode(el){ const v = el.value.trim(); if (!v) return; const p = clone(S.posts[S.sheet.id]); p.code = v; savePost(p); },
+  poName(el){ const v = el.value.trim(); if (!v) return; const p = clone(S.posts[S.sheet.id]); p.name = v; savePost(p); },
+  poZone(el){ const p = clone(S.posts[S.sheet.id]); p.zone = el.value.trim(); savePost(p); },
+  loginPass(el){ S.loginPass = el.value; },
+  newPass(el){ S.newPass = el.value; },
+  newPass2(el){ S.newPass2 = el.value; },
+  newTLName(el){ S.newTLName = el.value; },
+  teamName(el){ S.cfg.team = el.value; saveCfg(); },
+  absFrom(el){ S.sheet.from = el.value; },
+  absTo(el){ S.sheet.to = el.value; }
+};
+let pressTimer = null, suppressClick = false;
+function cancelPress(){ clearTimeout(pressTimer); pressTimer = null; }
+document.addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-long]'); if (!el) return;
+  cancelPress();
+  pressTimer = setTimeout(() => {
+    suppressClick = true;
+    const f = A[el.dataset.long]; if (f) f(el.dataset);
+    if (navigator.vibrate) try { navigator.vibrate(10); } catch (e2) {}
+  }, 480);
+});
+['pointerup', 'pointercancel', 'pointermove', 'pointerleave'].forEach(ev => document.addEventListener(ev, cancelPress));
+document.addEventListener('click', e => {
+  if (suppressClick) { suppressClick = false; return; }
+  if (e.target.classList && e.target.classList.contains('back')) { close(); return; }
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const f = A[el.dataset.act]; if (f) f(el.dataset);
+});
+document.addEventListener('change', e => { const el = e.target.closest('[data-chg]'); if (el && C[el.dataset.chg]) C[el.dataset.chg](el); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.sheet) close(); });
+
+/* ---------- boot (Supabase : chargement + temps réel) ---------- */
+let profileChannel = null, bizChannels = [];
+function teardownBiz(){ bizChannels.forEach(ch => { try { sb.removeChannel(ch); } catch (e) {} }); bizChannels = []; }
+function subscribeTable(list, table, pk, onUpsert, onDelete){
+  const ch = sb.channel('rt:' + table + ':' + Math.random().toString(36).slice(2))
+    .on('postgres_changes', {event:'*', schema:'public', table}, payload => {
+      if (payload.eventType === 'DELETE') onDelete((payload.old || {})[pk]); else onUpsert(payload.new);
+    })
+    .subscribe();
+  list.push(ch);
+  return ch;
+}
+async function loadProfiles(){
+  const {data, error} = await sb.from('profiles').select('*');
+  if (!error) { const o = {}; (data || []).forEach(r => { o[r.id] = r; }); S.profiles = o; }
+  if (!profileChannel) profileChannel = subscribeTable([], 'profiles', 'id', r => { S.profiles[r.id] = r; later(); }, id => { delete S.profiles[id]; later(); });
+  later();
+}
+async function loadBusinessData(){
+  const [ppl, pst, nts, cfgRow] = await Promise.all([
+    sb.from('people').select('*'),
+    sb.from('posts').select('*'),
+    sb.from('nights').select('*').order('date', {ascending:false}).limit(400),
+    sb.from('config').select('*').eq('key', 'main').maybeSingle()
+  ]);
+  S.people = {}; (ppl.data || []).forEach(r => { S.people[r.id] = rowToPerson(r); });
+  S.posts = {}; (pst.data || []).forEach(r => { S.posts[r.id] = rowToPost(r); });
+  S.nights = {}; (nts.data || []).forEach(r => { S.nights[r.date] = rowToNight(r); });
+  S.cfg = Object.assign({}, DEFAULT_CFG, (cfgRow.data && cfgRow.data.value) || {});
+  S.ready = true;
+  teardownBiz();
+  subscribeTable(bizChannels, 'people', 'id', r => { S.people[r.id] = rowToPerson(r); later(); }, id => { delete S.people[id]; later(); });
+  subscribeTable(bizChannels, 'posts', 'id', r => { S.posts[r.id] = rowToPost(r); later(); }, id => { delete S.posts[id]; later(); });
+  subscribeTable(bizChannels, 'nights', 'date', r => { S.nights[r.date] = rowToNight(r); later(); }, date => { delete S.nights[date]; later(); });
+  subscribeTable(bizChannels, 'config', 'key', r => { if (r.key === 'main') S.cfg = Object.assign({}, DEFAULT_CFG, r.value || {}); later(); }, () => {});
+  render();
+}
+async function boot(){
+  await loadProfiles();
+  const {data:{session}} = await sb.auth.getSession();
+  S.authUser = session ? session.user : null;
+  S.authReady = true;
+  if (S.authUser) { await loadBusinessData(); } else { render(); }
+  sb.auth.onAuthStateChange(async (event, session) => {
+    const newUser = session ? session.user : null;
+    const changed = (newUser && newUser.id) !== (S.authUser && S.authUser.id);
+    S.authUser = newUser; S.authReady = true;
+    if (newUser) { S._forcedOut = false; if (changed) await loadBusinessData(); else render(); }
+    else { teardownBiz(); S.people = {}; S.posts = {}; S.nights = {}; S.ready = false; S._forcedOut = false; render(); }
+  });
+  /* tient à jour l'écran « fermé hors horaires » sans que le TL ait à recharger */
+  setInterval(() => { if (S.authUser && profile()) render(); }, 60000);
+}
+render();
+boot();
+})();
+</script>
+
+</body></html>
