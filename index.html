@@ -217,6 +217,11 @@ table{border-collapse:separate;border-spacing:0}
 .authcard{width:min(460px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px;display:grid;gap:14px}
 .authcard h1{font-size:24px}
 .namegrid{display:grid;gap:8px}
+.authhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.gearbtn{background:none;border:1px solid var(--line-2);border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted);cursor:pointer;flex:none}
+.namebtn.admin{border-color:var(--red)}
+.verbadge{font-size:10px;font-weight:400;color:var(--muted);letter-spacing:.02em;margin-left:6px;vertical-align:middle}
+.provisional{background:var(--red-soft);border:1px solid var(--red);border-radius:10px;padding:10px 14px;margin-bottom:10px}
 .namebtn{display:flex;align-items:center;gap:10px;min-height:54px;padding:8px 14px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);font-weight:700;font-size:17px;text-align:left}
 .namebtn:hover{background:var(--surface-2)}
 .namebtn small{margin-left:auto;color:var(--muted);font-weight:600}
@@ -251,7 +256,7 @@ table{border-collapse:separate;border-spacing:0}
       <div class="car c1" title="Toyota Yaris"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M4 20 Q4 10 14 9 L20 9 Q26 3 34 3 L42 9 L52 9 Q58 10 58 16 L58 20 Z" fill="var(--red)"/><circle cx="16" cy="21" r="5" fill="var(--ink)"/><circle cx="46" cy="21" r="5" fill="var(--ink)"/></svg></div>
       <div class="car c2" title="Toyota Yaris Cross"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M3 21 Q3 9 13 8 L19 8 Q25 1 35 1 L44 8 L53 8 Q59 9 59 15 L59 21 Z" fill="var(--ink-2)"/><rect x="16" y="4" width="26" height="2.4" rx="1.2" fill="var(--ink-2)"/><circle cx="15" cy="22" r="5.5" fill="var(--ink)"/><circle cx="47" cy="22" r="5.5" fill="var(--ink)"/></svg></div>
     </div>
-    <div class="brand"><i aria-hidden="true"></i>PLANNING <span id="teamName">CH2-2</span></div>
+    <div class="brand"><i aria-hidden="true"></i>PLANNING <span id="teamName">CH2-2</span><span class="verbadge">V0.1 test</span></div>
   </button>
   <nav class="tabs" aria-label="Pages">
     <button type="button" data-act="tab" data-tab="plan">Planning du jour</button>
@@ -576,7 +581,9 @@ function viewPolyPhone(){
   if (!S.person || !S.people[S.person]) S.person = pp.length ? pp[0].id : null;
   const per = S.people[S.person];
   const opts = pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.person ? ' selected' : '') + '>' + esc(x.name) + ' · ' + esc(x.role || 'TM') + (isTL(x) ? '' : ' · ' + ps.filter(p => mark(x, p.id) === 'G').length + ' postes') + '</option>').join('');
-  let html = '<h1>Polyvalence</h1><select class="pp-sel" id="ppSel" data-chg="person" aria-label="Personne">' + opts + '</select>'
+  let html = '<h1>Polyvalence</h1>'
+    + (S.cfg.provisionalRoster ? '<div class="provisional"><span>⚠️ Données provisoires à vérifier.</span>' + (isAdmin() ? '<div class="bar"><button type="button" class="btn btn-sm" data-act="clearProvisional">Marquer comme validé</button></div>' : '') + '</div>' : '')
+    + '<select class="pp-sel" id="ppSel" data-chg="person" aria-label="Personne">' + opts + '</select>'
     + '<div class="bar"><button type="button" class="btn btn-sm" data-act="editPerson" data-id="' + esc(S.person || '') + '">Modifier la personne</button><button type="button" class="btn btn-sm" data-act="addPost">+ Ajouter un poste</button></div>'
     + '<div class="legend"><span><span class="sw"><span class="sym G"></span></span>Tient le poste</span><span><span class="sw"><span class="sym H"></span></span>En formation</span></div>';
   if (!per) return html;
@@ -597,7 +604,8 @@ function viewPoly(){
   const non = pp.filter(p => !isTL(p));
   let held = 0; non.forEach(per => ps.forEach(p => { if (mark(per, p.id) === 'G') held++; }));
   const rate = non.length && ps.length ? Math.floor(100 * held / (non.length * ps.length)) : 0;
-  let html = '<div class="bar"><h1>Polyvalence · ' + esc(S.cfg.team) + '</h1><span class="grow"></span>'
+  let html = (S.cfg.provisionalRoster ? '<div class="provisional bar"><span>⚠️ Données provisoires (postes/personnes/polyvalence) à vérifier.</span><span class="grow"></span>' + (isAdmin() ? '<button type="button" class="btn btn-sm" data-act="clearProvisional">Marquer comme validé</button>' : '') + '</div>' : '')
+    + '<div class="bar"><h1>Polyvalence · ' + esc(S.cfg.team) + '</h1><span class="grow"></span>'
     + '<span class="kpi">Taux de polyvalence<b>' + rate + ' %</b></span>'
     + '<button type="button" class="btn btn-sm" data-act="addPost">+ Ajouter un poste</button></div>'
     + '<div class="bar legend">'
@@ -773,16 +781,20 @@ function shHelp(){
   return {title:'Aide', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
 function viewLogin(){
-  const rows = Object.values(S.profiles).filter(a => a.active !== false).sort((x, y) => x.name.localeCompare(y.name, 'fr'));
+  const rows = Object.values(S.profiles).filter(a => a.active !== false && a.role !== 'admin').sort((x, y) => x.name.localeCompare(y.name, 'fr'));
+  const adminRows = Object.values(S.profiles).filter(a => a.active !== false && a.role === 'admin');
   if (!S.loginPick) {
-    return '<div class="authwrap"><div class="authcard"><h1>PLANNING CH2-2</h1>'
+    return '<div class="authwrap"><div class="authcard"><div class="authhead"><h1>PLANNING CH2-2 <span class="verbadge">V0.1 test</span></h1><button type="button" class="gearbtn" data-act="toggleAdminMenu" aria-label="Réglages">⚙</button></div>'
       + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
       + '<p class="note">Touche ton nom pour te connecter.</p><div class="namegrid">'
       + (rows.length ? rows.map(a => '<button type="button" class="namebtn" data-act="pickAccount" data-id="' + esc(a.id) + '">' + esc(a.name) + '</button>').join('') : '<p class="note">Chargement des comptes…</p>')
-      + '</div></div></div>';
+      + '</div>'
+      + (S.showAdminMenu ? '<p class="note" style="margin-top:14px">Accès administrateur</p><div class="namegrid">' + adminRows.map(a => '<button type="button" class="namebtn admin" data-act="pickAccount" data-id="' + esc(a.id) + '">Admin</button>').join('') + '</div>' : '')
+      + '</div></div>';
   }
   const acc = S.profiles[S.loginPick];
-  return '<div class="authwrap"><div class="authcard"><h1>' + esc(acc ? acc.name : '') + '</h1>'
+  const pickTitle = acc && acc.role === 'admin' ? 'Admin' : (acc ? acc.name : '');
+  return '<div class="authwrap"><div class="authcard"><h1>' + esc(pickTitle) + '</h1>'
     + '<label class="field" for="loPass"><span>Mot de passe</span><input type="text" id="loPass" data-chg="loginPass" autocomplete="off" value="' + esc(S.loginPass || '') + '"></label>'
     + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
     + '<div class="bar">' + (S.loginBusy ? '<span class="muted">Connexion…</span>' : '<button type="button" class="btn" data-act="loginBack">‹ Retour</button><button type="button" class="btn btn-red grow" data-act="doLogin">Se connecter</button>') + '</div></div></div>';
@@ -850,7 +862,7 @@ function shPost(s){
 /* ---------- actions ---------- */
 const A = {
   qk(d){ S.qk = Number(d.k); render(); },
-  setMark(d){ const per = clone(S.people[d.per]); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); },
+  setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient pas le poste'; if (!confirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?')) return; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); },
   tab(d){ S.tab = d.tab; LS.set('tab', d.tab); close(); render(); window.scrollTo(0, 0); },
   day(d){ S.date = addDays(S.date, Number(d.d)); render(); },
   close(){ close(); },
@@ -904,7 +916,7 @@ const A = {
   otOff(){ const n = editable(); n.ot = 0; n.q[4] = {}; n.lock[4] = {}; saveNight(n); },
   balance(){ open({type:'balance', span:30}); },
   span(d){ S.sheet.span = Number(d.v); renderSheet(); },
-  cycle(d){ const per = clone(S.people[d.per]); per.marks = per.marks || {}; const m = per.marks[d.post] || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); },
+  cycle(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; if (!confirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?')) return; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); },
   diff(d){ const p = clone(S.posts[d.id]); p.diff = DIFF[(DIFF.indexOf(p.diff || '') + 1) % DIFF.length]; savePost(p); },
   editPerson(d){ open({type:'person', id:d.id}); },
   editPost(d){ open({type:'post', id:d.id}); },
@@ -921,7 +933,7 @@ const A = {
   accounts(){ if (!isAdmin()) return; S.accountsErr = ''; open({type:'accounts'}); },
   openPersonMenu(d){ open({type:'personMenu', id:d.id}); },
   renfortPosts(d){ open({type:'renfortPosts', id:d.id}); },
-  renfortMark(d){ const per = clone(S.people[d.id]); per.marks = per.marks || {}; const m = per.marks[d.post] || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
+  renfortMark(d){ const src = S.people[d.id]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; if (!confirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?')) return; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
   toggleQAbs(){ S.sheet.showQ = !S.sheet.showQ; renderSheet(); },
   qAbsToggle(d){ const n = editable(); const k = Number(d.k); const c = Object.assign({}, n.qAbsent[k]); if (c[d.id]) delete c[d.id]; else c[d.id] = true; n.qAbsent[k] = c; if (n.generated) regenQuart(n, k); saveNight(n); renderSheet(); },
   openAbsRange(d){ open({type:'absPeriod', id:d.id}); },
@@ -943,6 +955,8 @@ const A = {
   logout(){ sb.auth.signOut(); S.loginPick = null; S.loginPass = ''; S.loginErr = ''; close(); },
   pickAccount(d){ S.loginPick = d.id; S.loginPass = ''; S.loginErr = ''; render(); },
   loginBack(){ S.loginPick = null; render(); },
+  toggleAdminMenu(){ S.showAdminMenu = !S.showAdminMenu; render(); },
+  clearProvisional(){ if (!isAdmin()) return; S.cfg.provisionalRoster = false; saveCfg(); },
   async doLogin(){
     const acc = S.profiles[S.loginPick]; if (!acc) return;
     if (acc.active === false) { S.loginErr = 'Ce compte est désactivé, contacte ton responsable.'; render(); return; }
