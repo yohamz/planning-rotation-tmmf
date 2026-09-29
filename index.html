@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html data-theme="dark"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#131517;color:#ECEEF0}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>PLANNING CH2-2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -463,7 +463,7 @@ function render(){
   if (!S.authUser) { if (header) header.hidden = true; main.innerHTML = viewLogin(); return; }
   const p = profile();
   if (!p) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement du profil…</p>'; return; }
-  if (p.active === false) { if (!S._forcedOut) { S._forcedOut = true; sb.auth.signOut(); } if (header) header.hidden = true; main.innerHTML = '<p class="muted">Ce compte a été désactivé. Contacte l’Admin.</p>'; return; }
+  if (p.active === false) { if (!S._forcedOut) { S._forcedOut = true; sb.auth.signOut(); } if (header) header.hidden = true; main.innerHTML = '<p class="muted">Ce compte est désactivé. Contacte ton responsable.</p>'; return; }
   if (p.must_change_password) { if (header) header.hidden = true; main.innerHTML = viewChangePass(); return; }
   if (p.role === 'tl' && !tlWindowOk()) { if (header) header.hidden = true; main.innerHTML = viewClosed(); return; }
   if (!S.ready) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement…</p>'; return; }
@@ -773,12 +773,12 @@ function shHelp(){
   return {title:'Aide', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
 function viewLogin(){
-  const rows = Object.values(S.profiles).filter(a => a.active !== false).sort((x, y) => (x.role === y.role ? x.name.localeCompare(y.name, 'fr') : x.role === 'admin' ? 1 : -1));
+  const rows = Object.values(S.profiles).filter(a => a.active !== false).sort((x, y) => x.name.localeCompare(y.name, 'fr'));
   if (!S.loginPick) {
     return '<div class="authwrap"><div class="authcard"><h1>PLANNING CH2-2</h1>'
       + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
       + '<p class="note">Touche ton nom pour te connecter.</p><div class="namegrid">'
-      + (rows.length ? rows.map(a => '<button type="button" class="namebtn" data-act="pickAccount" data-id="' + esc(a.id) + '">' + esc(a.name) + (a.role === 'admin' ? '<small>Admin</small>' : '') + '</button>').join('') : '<p class="note">Chargement des comptes…</p>')
+      + (rows.length ? rows.map(a => '<button type="button" class="namebtn" data-act="pickAccount" data-id="' + esc(a.id) + '">' + esc(a.name) + '</button>').join('') : '<p class="note">Chargement des comptes…</p>')
       + '</div></div></div>';
   }
   const acc = S.profiles[S.loginPick];
@@ -796,7 +796,7 @@ function viewChangePass(){
     + '<button type="button" class="btn btn-red" data-act="doChangePass"' + (S.newPassBusy ? ' disabled' : '') + '>' + (S.newPassBusy ? 'Enregistrement…' : 'Valider') + '</button></div></div>';
 }
 function viewClosed(){
-  return '<div class="authwrap"><div class="authcard"><h1>Application fermée</h1><p class="note">PLANNING CH2-2 est accessible aux TL uniquement de 20h30 à 6h45. Reviens pendant ces horaires — l’Admin peut y accéder à tout moment.</p><button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
+  return '<div class="authwrap"><div class="authcard"><h1>Application fermée</h1><p class="note">PLANNING CH2-2 est accessible de 20h30 à 6h45. Reviens pendant ces horaires.</p><button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
 }
 function shRegen(){ return {title:'Régénérer la nuit ?', body:'<p style="margin:0">Le planning de cette nuit sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>', foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="genGo">Régénérer</button>'}; }
 function shBalancePhone(s, list){
@@ -945,7 +945,7 @@ const A = {
   loginBack(){ S.loginPick = null; render(); },
   async doLogin(){
     const acc = S.profiles[S.loginPick]; if (!acc) return;
-    if (acc.active === false) { S.loginErr = 'Ce compte est désactivé, contacte l’Admin.'; render(); return; }
+    if (acc.active === false) { S.loginErr = 'Ce compte est désactivé, contacte ton responsable.'; render(); return; }
     S.loginBusy = true; S.loginErr = ''; render();
     const {error} = await sb.auth.signInWithPassword({email:acc.login_email, password:S.loginPass || ''});
     S.loginBusy = false;
