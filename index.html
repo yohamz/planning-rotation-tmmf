@@ -855,9 +855,26 @@ function shFormation(s){
 /* ---------- sheets ---------- */
 function open(s){ S.sheet = s; renderSheet(); }
 function close(){ S.sheet = null; $('#sheet').innerHTML = ''; }
+/* confirmation générique pour les actions importantes : ouvre une petite sheet avec
+   le message et un bouton « Confirmer », sans perdre la sheet déjà ouverte (ex. Comptes,
+   Restrictions) — elle est restaurée juste avant d'exécuter l'action (voir A.confirmYes). */
+function askConfirm(message, fn, data, opts){
+  const back = S.sheet;
+  /* copie défensive : data vient souvent directement du dataset d'un bouton qui va
+     être remplacé par le rendu de cette sheet de confirmation */
+  const safeData = data ? Object.assign({}, data) : data;
+  open({type:'confirm', message, fn, data:safeData, back, danger:!!(opts && opts.danger), okLabel:(opts && opts.okLabel) || 'Confirmer'});
+}
+function shConfirm(s){
+  const body = s.danger
+    ? '<div class="provisional"><span>⚠️ ' + esc(s.message) + '</span></div>'
+    : '<p class="note" style="font-size:15px;color:var(--ink)">' + esc(s.message) + '</p>';
+  return {title:'Confirmation', body,
+    foot:'<button type="button" class="btn" data-act="confirmNo">Annuler</button><button type="button" class="btn btn-red" data-act="confirmYes">' + esc(s.okLabel) + '</button>'};
+}
 function renderSheet(){
   const s = S.sheet; if (!s) return;
-  const c = ({pick:shPick, person:shPerson, post:shPost, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation})[s.type](s);
+  const c = ({pick:shPick, person:shPerson, post:shPost, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev ? prev.scrollTop : 0;
   $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
@@ -1088,7 +1105,8 @@ function shPost(s){
 /* ---------- actions ---------- */
 const A = {
   qk(d){ S.qk = Number(d.k); render(); },
-  setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient pas le poste'; if (!confirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?')) return; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); },
+  setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient pas le poste'; askConfirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?', 'setMarkReal', d); },
+  setMarkReal(d){ const src = S.people[d.per]; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); },
   tab(d){ S.tab = d.tab; LS.set('tab', d.tab); close(); render(); window.scrollTo(0, 0); },
   day(d){ S.date = addDays(S.date, Number(d.d)); render(); },
   close(){ close(); },
@@ -1109,6 +1127,10 @@ const A = {
     renderSheet();
   },
   delRenfort(d){
+    const per = S.people[d.id];
+    askConfirm('Retirer ' + (per ? per.name : 'ce renfort') + ' de la liste de renfort ?', 'delRenfortReal', d);
+  },
+  delRenfortReal(d){
     deletePersonRow(d.id);
     renderSheet();
   },
@@ -1117,6 +1139,12 @@ const A = {
   chooseTrain(d){ const n = editable(); const k = Number(d.k); const post = S.posts[d.post]; const trainerId = n.q[k] ? n.q[k][d.post] : null; n.train[k][d.post] = d.id; pushLog(n, 'train', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:(S.people[d.id] || {}).name || '', trainer:(trainerId && S.people[trainerId]) ? S.people[trainerId].name : ''}); saveNight(n); renderSheet(); },
   unTrain(d){ const n = editable(); const k = Number(d.k); const post = S.posts[d.post]; const prevId = n.train[k][d.post]; delete n.train[k][d.post]; if (prevId && S.people[prevId]) pushLog(n, 'untrain', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:S.people[prevId].name}); saveNight(n); renderSheet(); },
   abs(d){
+    const n = editable(); const off = (n.absent || []).includes(d.id);
+    if (off) { A.absReal(d); return; } /* remettre présent : correction immédiate, sans confirmation */
+    const per = S.people[d.id];
+    askConfirm((per ? per.name : '') + ' — marquer absent(e) cette nuit ?', 'absReal', d);
+  },
+  absReal(d){
     const n = editable(); const set = new Set(n.absent);
     if (set.has(d.id)) set.delete(d.id); else set.add(d.id);
     n.absent = [...set];
@@ -1130,7 +1158,8 @@ const A = {
     if (n.generated) regenQuart(n, k);
     saveNight(n); renderSheet();
   },
-  otOn(){ const n = editable(); n.ot = 1; if (n.generated) regenQuart(n, 4); saveNight(n); },
+  otOn(){ askConfirm('Ajouter un overtime (Quart 5) pour toute l’équipe cette nuit ?', 'otOnReal', null); },
+  otOnReal(){ const n = editable(); n.ot = 1; if (n.generated) regenQuart(n, 4); saveNight(n); },
   otOff(){ const n = editable(); n.ot = 0; n.q[4] = {}; n.lock[4] = {}; saveNight(n); },
   eqSpan(d){ S.eqSpan = Number(d.v); render(); },
   formation(){ open({type:'formation', mode:'auto', done:[]}); },
@@ -1161,7 +1190,9 @@ const A = {
   },
   clearLog(){
     if (!isAdmin()) return;
-    if (!confirm('Effacer tout l’historique (connexions et modifications) ? Cette action est définitive.')) return;
+    askConfirm('Effacer tout l’historique (connexions et modifications) ? Cette action est définitive.', 'clearLogReal', null, {danger:true, okLabel:'Effacer définitivement'});
+  },
+  clearLogReal(){
     Object.keys(S.nights).forEach(date => {
       const raw = S.nights[date];
       if (raw && raw.tl && raw.tl._log && raw.tl._log.length) { const c = editable(date); delete c.tl._log; saveNight(c); }
@@ -1185,11 +1216,15 @@ const A = {
     toast('Restriction enregistrée.');
   },
   restDel(d){
+    askConfirm('Retirer cette restriction ?', 'restDelReal', d);
+  },
+  restDelReal(d){
     const per = clone(S.people[d.id]); if (!per.marks || !per.marks._restrict) { renderSheet(); return; }
     per.marks._restrict = per.marks._restrict.filter(r => r.id !== d.rid);
     savePerson(per); renderSheet();
   },
-  cycle(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; if (!confirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?')) return; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); },
+  cycle(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; askConfirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?', 'cycleReal', Object.assign({}, d, {nx})); },
+  cycleReal(d){ const src = S.people[d.per]; const per = clone(src); per.marks = per.marks || {}; if (d.nx) per.marks[d.post] = d.nx; else delete per.marks[d.post]; savePerson(per); },
   toggleTrainer(d){ const src = S.people[d.id]; if (!src) return; const per = clone(src); per.marks = per.marks || {}; if (per.marks._trainer) delete per.marks._trainer; else per.marks._trainer = true; savePerson(per); },
   diff(d){ const p = clone(S.posts[d.id]); p.diff = DIFF[(DIFF.indexOf(p.diff || '') + 1) % DIFF.length]; savePost(p); },
   editPerson(d){ open({type:'person', id:d.id}); },
@@ -1207,7 +1242,8 @@ const A = {
   accounts(){ if (!isAdmin()) return; S.accountsErr = ''; open({type:'accounts'}); },
   openPersonMenu(d){ open({type:'personMenu', id:d.id}); },
   renfortPosts(d){ open({type:'renfortPosts', id:d.id}); },
-  renfortMark(d){ const src = S.people[d.id]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; if (!confirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?')) return; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
+  renfortMark(d){ const src = S.people[d.id]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; askConfirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?', 'renfortMarkReal', Object.assign({}, d, {nx})); },
+  renfortMarkReal(d){ const src = S.people[d.id]; const per = clone(src); per.marks = per.marks || {}; if (d.nx) per.marks[d.post] = d.nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
   toggleQAbs(){ S.sheet.showQ = !S.sheet.showQ; renderSheet(); },
   qAbsToggle(d){ const n = editable(); const k = Number(d.k); const c = Object.assign({}, n.qAbsent[k]); if (c[d.id]) delete c[d.id]; else c[d.id] = true; n.qAbsent[k] = c; if (n.generated) regenQuart(n, k); saveNight(n); renderSheet(); },
   openAbsRange(d){ open({type:'absPeriod', id:d.id}); },
@@ -1230,7 +1266,8 @@ const A = {
   pickAccount(d){ S.loginPick = d.id; S.loginPass = ''; S.loginErr = ''; render(); setTimeout(() => A.playRoad(), 350); },
   loginBack(){ S.loginPick = null; render(); },
   toggleAdminMenu(){ S.showAdminMenu = !S.showAdminMenu; render(); },
-  clearProvisional(){ if (!isAdmin()) return; S.cfg.provisionalRoster = false; saveCfg(); },
+  clearProvisional(){ if (!isAdmin()) return; askConfirm('Marquer les données (postes, personnes, polyvalence) comme validées ? Le bandeau d’avertissement disparaîtra.', 'clearProvisionalReal', null); },
+  clearProvisionalReal(){ S.cfg.provisionalRoster = false; saveCfg(); },
   async doLogin(){
     const acc = S.profiles[S.loginPick]; if (!acc) return;
     if (acc.active === false) { S.loginErr = 'Ce compte est désactivé, contacte ton responsable.'; render(); return; }
@@ -1267,7 +1304,11 @@ const A = {
     } catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
     renderSheet();
   },
-  async resetPass(d){
+  resetPass(d){
+    const acc = S.profiles[d.id]; if (!acc) return;
+    askConfirm('Réinitialiser le mot de passe de ' + acc.name + ' ? Son mot de passe actuel cessera de fonctionner immédiatement.', 'resetPassReal', d, {danger:true, okLabel:'Réinitialiser'});
+  },
+  async resetPassReal(d){
     const acc = S.profiles[d.id]; if (!acc) return;
     S.accountsErr = 'Réinitialisation en cours…'; renderSheet();
     try {
@@ -1276,9 +1317,25 @@ const A = {
     } catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
     renderSheet();
   },
-  async toggleActive(d){
+  toggleActive(d){
+    const acc = S.profiles[d.id]; if (!acc) return;
+    const activating = acc.active === false;
+    askConfirm((activating ? 'Réactiver ' : 'Désactiver ') + acc.name + ' ?' + (activating ? '' : ' Il/elle ne pourra plus se connecter.'), 'toggleActiveReal', d, {danger:!activating});
+  },
+  async toggleActiveReal(d){
     try { await callAdminAction({action:'toggleActive', id:d.id}); S.accountsErr = ''; }
     catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
+    renderSheet();
+  },
+  confirmYes(){
+    const s = S.sheet; if (!s || s.type !== 'confirm') return;
+    const fn = s.fn, data = s.data;
+    S.sheet = s.back || null;
+    if (fn && A[fn]) A[fn](data); else renderSheet();
+  },
+  confirmNo(){
+    const s = S.sheet;
+    S.sheet = (s && s.back) || null;
     renderSheet();
   }
 };
