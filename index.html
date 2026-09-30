@@ -872,7 +872,7 @@ function shConfirm(s){
     foot:'<button type="button" class="btn" data-act="confirmNo">Annuler</button><button type="button" class="btn btn-red" data-act="confirmYes">' + esc(s.okLabel) + '</button>'};
 }
 function renderSheet(){
-  const s = S.sheet; if (!s) return;
+  const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
   const c = ({pick:shPick, person:shPerson, post:shPost, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev ? prev.scrollTop : 0;
@@ -1330,7 +1330,8 @@ const A = {
     const s = S.sheet; if (!s || s.type !== 'confirm') return;
     const fn = s.fn, data = s.data;
     S.sheet = s.back || null;
-    if (fn && A[fn]) A[fn](data); else renderSheet();
+    if (fn && A[fn]) A[fn](data);
+    renderSheet();
   },
   confirmNo(){
     const s = S.sheet;
