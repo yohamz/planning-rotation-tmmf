@@ -376,6 +376,13 @@ const posts = () => byOrder(Object.values(S.posts));
 const zones = ps => { const z = []; ps.forEach(p => { const k = p.zone || 'Autres'; if (!z.includes(k)) z.push(k); }); return z; };
 const mark = (per, pid) => { const m = (per && per.marks && per.marks[pid]) || ''; return m === 'X' ? 'G' : m; };
 const canHold = (per, pid) => { const m = mark(per, pid); return m === 'G' || m === 'H'; };
+/* qualifié pour tenir SEUL un poste (sans accompagnement) : uniquement les personnes
+   marquées G. Une personne marquée H (en formation) ne doit jamais être affectée seule
+   sur un poste — elle doit toujours être accompagnée d'un titulaire qualifié (via la
+   fiche « Mettre en formation », qui l'ajoute EN PLUS du titulaire, jamais à sa place).
+   Utilisé par la génération automatique et par le mode auto de « Mettre en formation »,
+   pour ne jamais proposer un poste tenu seul par une personne encore en formation. */
+const canHoldAlone = (per, pid) => mark(per, pid) === 'G';
 /* restriction temporaire (ex. médicale) : la personne reste qualifiée (mark inchangé)
    mais ne doit pas être proposée sur ce poste pendant la période — voir « Restriction »
    dans le menu d'une personne (Effectifs). Stockée dans marks._restrict, clé réservée. */
@@ -465,7 +472,7 @@ function autoFindQuart(n, postId, traineeId, requireFormateur){
     if (n.qAbsent[k] && n.qAbsent[k][traineeId]) continue;
     const holder = n.q[k] && n.q[k][postId];
     if (!holder || holder === traineeId) continue;
-    const holderPer = S.people[holder]; if (!holderPer || !canHold(holderPer, postId) || isRestricted(holderPer, postId, n.date)) continue;
+    const holderPer = S.people[holder]; if (!holderPer || !canHoldAlone(holderPer, postId) || isRestricted(holderPer, postId, n.date)) continue;
     if (requireFormateur && !isFormateur(holderPer)) continue;
     if (n.train[k] && n.train[k][postId]) continue;
     let busy = false;
@@ -503,7 +510,7 @@ function buildQuart(k, night, hist){
       let c;
       if (i < P && j < N) {
         const p = ps[i], per = cands[j];
-        if (!canHold(per, p.id) || isRestricted(per, p.id, night.date)) c = BAN;
+        if (!canHoldAlone(per, p.id) || isRestricted(per, p.id, night.date)) c = BAN;
         else {
           c = 15 * (hist.count[per.id + '|' + p.id] || 0) + Math.random() * 12;
           others.forEach(o => { if (o.m[per.id] === p.id) c += 600; });
@@ -830,7 +837,7 @@ function shFormation(s){
           body += '<div class="lbl">Quart</div><div class="opt-row">' + Array.from({length:Q}).map((z, k) => '<button type="button" class="qb opt" style="flex:1" data-act="formK" data-k="' + k + '" aria-pressed="' + (s.k === k) + '">Q' + (k + 1) + '</button>').join('') + '</div>';
           if (s.k != null) {
             const absentSet = new Set(n.absent || []); const qAbs = n.qAbsent[s.k] || {};
-            const cand = activePeople().filter(pr => canHold(pr, post.id) && !isRestricted(pr, post.id, n.date) && pr.id !== s.trainee && !absentSet.has(pr.id) && !qAbs[pr.id])
+            const cand = activePeople().filter(pr => canHoldAlone(pr, post.id) && !isRestricted(pr, post.id, n.date) && pr.id !== s.trainee && !absentSet.has(pr.id) && !qAbs[pr.id])
               .sort((a, b) => (isFormateur(b) ? 1 : 0) - (isFormateur(a) ? 1 : 0));
             const curHolder = n.q[s.k][post.id] || '';
             if (!s.trainer && curHolder) s.trainer = curHolder;
