@@ -54,6 +54,8 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:14px
 .btn:hover{background:var(--surface-2)}
 .btn-red{background:var(--red);border-color:var(--red);color:var(--red-ink)}
 .btn-red:hover{background:var(--red);filter:brightness(1.07)}
+.btn-formation{background:var(--orange);border-color:var(--orange);color:#1E2125;font-weight:700}
+.btn-formation:hover{filter:brightness(1.06)}
 .btn-sm{min-height:38px;padding:6px 12px;font-size:15px}
 .icon{width:46px;height:46px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-size:24px;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none}
 input[type=date],input[type=text],select{min-height:46px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);padding:6px 10px}
@@ -259,11 +261,7 @@ table{border-collapse:separate;border-spacing:0}
     </div>
     <div class="brand"><i aria-hidden="true"></i>PLANNING <span id="teamName">CH2-2</span><span class="verbadge">V0.1 test</span></div>
   </button>
-  <nav class="tabs" aria-label="Pages">
-    <button type="button" data-act="tab" data-tab="plan">Planning du jour</button>
-    <button type="button" data-act="tab" data-tab="effectifs">Effectifs</button>
-    <button type="button" data-act="tab" data-tab="poly">Polyvalence</button>
-  </nav>
+  <nav class="tabs" id="tabsNav" aria-label="Pages"></nav>
   <button type="button" class="icon helpbtn" data-act="help" aria-label="Aide">?</button>
   <div id="acctBar"></div>
 </div></header>
@@ -288,6 +286,13 @@ const DIFF = ['', 'vert', 'orange', 'rouge'];
 const HIST_NIGHTS = 30;
 const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
 const ROLE_LABEL = {admin:'Admin', tl:'TL'};
+const TAB_DEFS = [
+  {k:'plan', label:'Planning du jour'},
+  {k:'effectifs', label:'Effectifs'},
+  {k:'poly', label:'Polyvalence'},
+  {k:'equilibre', label:'Équilibre', admin:true},
+  {k:'historique', label:'Historique', admin:true}
+];
 const ONBOARD_MS = 3 * 60 * 60 * 1000; /* 3h d’astuces au premier lancement sur cet appareil */
 
 /* ---------- Supabase ---------- */
@@ -302,11 +307,11 @@ const S = { ready:false, people:{}, posts:{}, nights:{}, cfg:Object.assign({}, D
   authUser:null, authReady:false,
   loginPick:null, loginPass:'', loginErr:'', loginBusy:false,
   newPass:'', newPass2:'', newPassErr:'', newPassBusy:false,
-  accountsErr:'', newTLName:'' };
+  accountsErr:'', newTLName:'', eqSpan:7 };
 const mq = window.matchMedia ? window.matchMedia('(max-width: 700px)') : null;
 const phone = () => !!(mq && mq.matches);
 if (mq) { const f = () => { render(); if (S.sheet) renderSheet(); }; if (mq.addEventListener) mq.addEventListener('change', f); else if (mq.addListener) mq.addListener(f); }
-if (!['plan', 'effectifs', 'poly'].includes(S.tab)) S.tab = 'plan';
+if (!['plan', 'effectifs', 'poly', 'equilibre', 'historique'].includes(S.tab)) S.tab = 'plan';
 
 /* ---------- astuces temporaires (3h) ---------- */
 let onboardEnd = LS.get('onboardEnd', 0);
@@ -318,15 +323,35 @@ const hint = txt => hintsOn() ? '<small class="hint">' + esc(txt) + '</small>' :
    sont imposées côté serveur par les policies RLS, ceci ne sert qu'à l'affichage) ---------- */
 const profile = () => (S.authUser && S.profiles[S.authUser.id]) || null;
 const isAdmin = () => { const p = profile(); return !!(p && p.role === 'admin' && p.active); };
-/* Fenêtre d'accès TL, heure de Paris — purement indicatif côté écran : la
-   vraie limite est appliquée par la fonction SQL tl_window_ok() via RLS. */
+/* Fenêtre d'accès TL, heure de Paris — équipe de nuit (prise de poste 21h45,
+   fin 5h26/5h33 ou plus tard en overtime), pas d'équipe le samedi soir.
+   Purement indicatif côté écran : la vraie limite horaire est appliquée par
+   la fonction SQL tl_window_ok() via RLS (celle-ci ne connaît pas encore
+   l'exception du samedi — à reporter côté serveur si l'accès Supabase est
+   donné un jour, pour que les deux restent cohérentes). */
 function parisParts(){
   const f = new Intl.DateTimeFormat('fr-FR', {timeZone:'Europe/Paris', hour:'2-digit', minute:'2-digit', hour12:false});
   const parts = f.formatToParts(new Date());
   const get = t => Number(parts.find(p => p.type === t).value);
   return {h:get('hour'), m:get('minute')};
 }
-function tlWindowOk(){ const {h, m} = parisParts(); const mins = h * 60 + m; return mins >= 20 * 60 + 30 || mins < 6 * 60 + 45; }
+function parisDateParts(){
+  const f = new Intl.DateTimeFormat('fr-FR', {timeZone:'Europe/Paris', year:'numeric', month:'2-digit', day:'2-digit'});
+  const parts = f.formatToParts(new Date());
+  const get = t => Number(parts.find(p => p.type === t).value);
+  return {y:get('year'), mo:get('month'), d:get('day')};
+}
+/* renvoie pourquoi l'appli est fermée pour un TL en ce moment, ou null si elle est ouverte */
+function tlWindowReason(){
+  const {h, m} = parisParts(); const mins = h * 60 + m;
+  if (!(mins >= 20 * 60 + 30 || mins < 6 * 60 + 45)) return 'hours';
+  const dp = parisDateParts();
+  /* après 6h45, la nuit en cours a commencé la veille */
+  const nightStart = mins < 6 * 60 + 45 ? new Date(dp.y, dp.mo - 1, dp.d - 1) : new Date(dp.y, dp.mo - 1, dp.d);
+  if (nightStart.getDay() === 6) return 'saturday'; /* pas d'équipe le samedi soir */
+  return null;
+}
+function tlWindowOk(){ return tlWindowReason() == null; }
 function appOpenForMe(){ const p = profile(); if (!p) return true; return p.role === 'admin' || tlWindowOk(); }
 async function callAdminAction(payload){
   const {data, error} = await sb.functions.invoke('admin-actions', {body: payload});
@@ -343,6 +368,10 @@ const posts = () => byOrder(Object.values(S.posts));
 const zones = ps => { const z = []; ps.forEach(p => { const k = p.zone || 'Autres'; if (!z.includes(k)) z.push(k); }); return z; };
 const mark = (per, pid) => { const m = (per && per.marks && per.marks[pid]) || ''; return m === 'X' ? 'G' : m; };
 const canHold = (per, pid) => { const m = mark(per, pid); return m === 'G' || m === 'H'; };
+/* restriction temporaire (ex. médicale) : la personne reste qualifiée (mark inchangé)
+   mais ne doit pas être proposée sur ce poste pendant la période — voir « Restriction »
+   dans le menu d'une personne (Effectifs). Stockée dans marks._restrict, clé réservée. */
+const isRestricted = (per, pid, date) => !!(per && per.marks && per.marks._restrict && per.marks._restrict.some(r => r.postId === pid && date >= r.from && date <= r.to));
 const isTL = per => per && per.role === 'TL';
 const isTemp = per => !!(per && per.temp);
 const nightOf = d => S.nights[d || S.date] || null;
@@ -385,6 +414,56 @@ function history(date){
   return {count, red};
 }
 function holderMap(q){ const m = {}; Object.keys(q || {}).forEach(pid => { if (q[pid]) m[q[pid]] = pid; }); return m; }
+/* ---------- historique (connexions + modifications manuelles) : le journal vit dans
+   les nuits elles-mêmes (clé réservée _log dans la colonne tl, ignorée ailleurs), pour
+   rester dans les policies RLS déjà en place tant que l'accès Supabase n'est pas donné. */
+function pushLog(n, type, detail, actor){
+  const p = actor || profile();
+  n.tl = n.tl || {};
+  const log = (n.tl._log || []).slice();
+  log.push({id:newId('lg'), ts:new Date().toISOString(), type, by:(p && p.name) || '', role:(p && p.role) || '', detail:detail || {}});
+  if (log.length > 200) log.splice(0, log.length - 200);
+  n.tl._log = log;
+}
+/* affecte (ou libère) un poste à un quart ; centralise le swap avec l'ancien titulaire
+   et journalise le changement — utilisé par la fiche « poste » et par « Formation ». */
+function assignHolder(n, k, postId, who, force){
+  const q = n.q[k], lk = n.lock[k], mn = n.manual[k];
+  const old = q[postId] || null;
+  if (who) {
+    const where = holderMap(q)[who];
+    if (where && where !== postId) { if (old) { q[where] = old; mn[where] = true; } else { delete q[where]; delete mn[where]; } if (lk[where] === who) delete lk[where]; }
+    Object.keys(lk).forEach(pid => { if (pid !== postId && lk[pid] === who) delete lk[pid]; });
+    q[postId] = who; mn[postId] = true;
+    if (force) lk[postId] = who; else delete lk[postId];
+  } else { delete q[postId]; delete lk[postId]; delete mn[postId]; }
+  if (old !== (who || null)) {
+    const p = S.posts[postId];
+    pushLog(n, 'assign', {date:n.date, k, postCode:p ? p.code : postId, postName:p ? p.name : '', from:(old && S.people[old]) ? S.people[old].name : 'vide', to:(who && S.people[who]) ? S.people[who].name : 'vide'});
+  }
+  return old;
+}
+/* mode automatique du bouton Formation : cherche un quart où le poste a déjà un
+   titulaire qualifié, sans case de formation occupée, et où le stagiaire est libre —
+   donc sans toucher au reste du planning. */
+function autoFindQuart(n, postId, traineeId){
+  if ((n.absent || []).includes(traineeId)) return null;
+  const Q = nq(n);
+  for (let k = 0; k < Q; k++) {
+    if (n.qAbsent[k] && n.qAbsent[k][traineeId]) continue;
+    const holder = n.q[k] && n.q[k][postId];
+    if (!holder || holder === traineeId) continue;
+    const holderPer = S.people[holder]; if (!holderPer || !canHold(holderPer, postId) || isRestricted(holderPer, postId, n.date)) continue;
+    if (n.train[k] && n.train[k][postId]) continue;
+    let busy = false;
+    const qk = n.q[k] || {}; Object.keys(qk).forEach(pid => { if (qk[pid] === traineeId) busy = true; });
+    if (busy) continue;
+    const tk = n.train[k] || {}; Object.keys(tk).forEach(pid => { if (tk[pid] === traineeId) busy = true; });
+    if (busy) continue;
+    return k;
+  }
+  return null;
+}
 /* one quart = best assignment of people to posts, given the other quarts of the night */
 function buildQuart(k, night, hist){
   const absent = new Set(night.absent || []);
@@ -404,7 +483,7 @@ function buildQuart(k, night, hist){
       let c;
       if (i < P && j < N) {
         const p = ps[i], per = cands[j];
-        if (!canHold(per, p.id)) c = BAN;
+        if (!canHold(per, p.id) || isRestricted(per, p.id, night.date)) c = BAN;
         else {
           c = 15 * (hist.count[per.id + '|' + p.id] || 0) + Math.random() * 12;
           others.forEach(o => { if (o.m[per.id] === p.id) c += 600; });
@@ -479,11 +558,13 @@ function render(){
   if (p.role === 'tl' && !tlWindowOk()) { if (header) header.hidden = true; main.innerHTML = viewClosed(); return; }
   if (!S.ready) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement…</p>'; return; }
   if (header) header.hidden = false;
+  if ((S.tab === 'equilibre' || S.tab === 'historique') && !isAdmin()) S.tab = 'plan';
   $('#teamName').textContent = S.cfg.team || '';
   renderAcct();
+  renderTabs();
   document.querySelectorAll('.tabs button').forEach(b => { if (b.dataset.tab === S.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   const keep = {}; main.querySelectorAll('[data-scroll]').forEach(el => { keep[el.dataset.scroll] = [el.scrollLeft, el.scrollTop]; });
-  main.innerHTML = S.tab === 'poly' ? (phone() ? viewPolyPhone() : viewPoly()) : S.tab === 'effectifs' ? viewEffectifs() : (phone() ? viewPlanPhone() : viewPlan());
+  main.innerHTML = S.tab === 'poly' ? (phone() ? viewPolyPhone() : viewPoly()) : S.tab === 'effectifs' ? viewEffectifs() : S.tab === 'equilibre' ? (phone() ? viewEquilibrePhone() : viewEquilibre()) : S.tab === 'historique' ? viewHistorique() : (phone() ? viewPlanPhone() : viewPlan());
   main.querySelectorAll('[data-scroll]').forEach(el => { const k = keep[el.dataset.scroll]; if (k) { el.scrollLeft = k[0]; el.scrollTop = k[1]; } });
 }
 function renderAcct(){
@@ -493,11 +574,16 @@ function renderAcct(){
     + (p.role === 'admin' ? '<button type="button" class="btn btn-sm" data-act="accounts">Comptes</button>' : '')
     + '<button type="button" class="btn btn-sm" data-act="logout">Se déconnecter</button></div>';
 }
+function renderTabs(){
+  const nav = $('#tabsNav'); if (!nav) return;
+  const adm = isAdmin();
+  nav.innerHTML = TAB_DEFS.filter(t => !t.admin || adm).map(t => '<button type="button" data-act="tab" data-tab="' + t.k + '">' + esc(t.label) + '</button>').join('');
+}
 function postHead(p){ return '<button type="button" class="post linkbtn" data-act="trainees" data-id="' + esc(p.id) + '"><span class="dot ' + esc(p.diff || '') + '" aria-hidden="true"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button>'; }
 function viewPlan(){
   const n = nightOf(), gen = generated(n), Q = nq(n), ps = posts();
   const absent = n ? (n.absent || []).length : 0;
-  const tlOn = n ? Object.values(n.tl || {}).filter(a => a && a.some(Boolean)).length : 0;
+  const tlOn = n ? Object.keys(n.tl || {}).filter(k => k !== '_log').map(k => n.tl[k]).filter(a => a && a.some(Boolean)).length : 0;
   const crewInfo = [absent ? absent + ' absent' + (absent > 1 ? 's' : '') : '', tlOn ? tlOn + ' TL' : ''].filter(Boolean).join(' · ');
   let html = '<div class="bar"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button>'
     + '<span class="night">' + esc(fmt(S.date)) + '</span>'
@@ -507,6 +593,7 @@ function viewPlan(){
     + '<button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? ' · ' + crewInfo : '') + '</button>'
     + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>')
     + '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>'
+    + (gen ? '<button type="button" class="btn btn-formation" data-act="formation">🎓 Formation</button>' : '')
     + (gen ? '<button type="button" class="btn" data-act="print">🖨️ Imprimer</button>' : '') + '</div>';
   if (!gen) html += '<div class="start"><p>Pas encore de planning pour cette nuit. Indique les absents et les TL dans « Effectifs », puis génère.' + hint(' Astuce : reste appuyé sur un nom dans Effectifs pour plus d’options (absence longue, par quart…).') + '</p><button type="button" class="btn btn-red" data-act="gen">Générer la rotation</button></div>';
   let head = '<tr><th scope="col">Poste</th>';
@@ -556,7 +643,7 @@ function viewPlanPhone(){
   if (S.qk >= Q) S.qk = 0;
   const k = S.qk;
   const absent = n ? (n.absent || []).length : 0;
-  const tlOn = n ? Object.values(n.tl || {}).filter(a => a && a.some(Boolean)).length : 0;
+  const tlOn = n ? Object.keys(n.tl || {}).filter(k => k !== '_log').map(k => n.tl[k]).filter(a => a && a.some(Boolean)).length : 0;
   const crewInfo = [absent ? absent + ' abs.' : '', tlOn ? tlOn + ' TL' : ''].filter(Boolean).join(' · ');
   const a = S.date.split('-').map(Number);
   const short = new Date(a[0], a[1] - 1, a[2]).toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
@@ -564,6 +651,7 @@ function viewPlanPhone(){
     + '<div class="m-acts"><button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? '<br><small class="muted">' + crewInfo + '</small>' : '') + '</button>'
     + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>') + '</div>'
     + '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>'
+    + (gen ? '<button type="button" class="btn btn-formation m-gen" data-act="formation">🎓 Mettre en formation</button>' : '')
     + (gen ? '<button type="button" class="btn m-gen" data-act="print">🖨️ Imprimer</button>' : '');
   html += '<div class="qtabs" role="group" aria-label="Quart">';
   for (let j = 0; j < Q; j++) html += '<button type="button" data-act="qk" data-k="' + j + '" aria-pressed="' + (j === k) + '">Q' + (j + 1) + (j === 4 ? '<small>OT</small>' : '') + '</button>';
@@ -637,12 +725,115 @@ function viewPoly(){
     + '<p class="note">Touche une case : vide → tient le poste → en formation → vide. Pastille noire : nombre de postes tenus (personne) ou de personnes qui tiennent le poste, sans les TL ni les formations. Touche la pastille d’un poste pour sa difficulté, un nom ou un poste pour le modifier.</p>';
 }
 
+/* ---------- équilibre (admin) ---------- */
+function viewEquilibre(){
+  if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
+  const span = S.eqSpan || 7;
+  const from = addDays(S.date, -(span - 1));
+  const list = Object.values(S.nights).filter(n => generated(n) && n.date >= from && n.date <= S.date);
+  const ps = posts(), count = {}, tot = {};
+  list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { const w = q[pid]; if (!w) return; count[w + '|' + pid] = (count[w + '|' + pid] || 0) + 1; tot[w] = (tot[w] || 0) + 1; })));
+  const pp = people().filter(per => !isTL(per) || tot[per.id]);
+  let t = '<table class="eq"><thead><tr><th class="n" scope="col"></th>' + ps.map(p => '<th scope="col"><span class="dot ' + esc(p.diff || '') + '" style="margin-right:3px"></span>' + esc(p.code) + '</th>').join('') + '<th scope="col">Total</th></tr></thead><tbody>';
+  pp.forEach(per => {
+    t += '<tr><th class="n" scope="row">' + esc(per.name) + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c">' + (tot[per.id] || 0) + '</td></tr>';
+  });
+  t += '</tbody></table>';
+  return '<div class="bar"><h1>Équilibre · ' + esc(S.cfg.team) + '</h1><span class="grow"></span>'
+    + '<button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="7">7 derniers jours</button>'
+    + '<button type="button" class="btn btn-sm' + (span === 30 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="30">30 derniers jours</button>'
+    + '<span class="muted">' + list.length + ' nuit' + (list.length > 1 ? 's' : '') + '</span></div>'
+    + '<div class="scroll" data-scroll="eq" style="max-height:74vh">' + t + '</div>'
+    + '<p class="note">Nombre de quarts faits sur chaque poste, sur la période choisie à partir de la nuit affichée dans Planning du jour. « · » : poste qu’il ne tient pas.</p>';
+}
+function viewEquilibrePhone(){
+  if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
+  const span = S.eqSpan || 7;
+  const from = addDays(S.date, -(span - 1));
+  const list = Object.values(S.nights).filter(n => generated(n) && n.date >= from && n.date <= S.date);
+  const ps = posts(), pp = activePeople().filter(per => !isTL(per));
+  if (!S.balPerson || !S.people[S.balPerson]) S.balPerson = pp.length ? pp[0].id : null;
+  const count = {};
+  list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { if (q[pid] === S.balPerson) count[pid] = (count[pid] || 0) + 1; })));
+  const per = S.people[S.balPerson];
+  let html = '<h1>Équilibre</h1>'
+    + '<select class="pp-sel" id="balSel" data-chg="balPerson" aria-label="Personne">' + pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.balPerson ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select>'
+    + '<div class="bar"><button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="7">7 jours</button><button type="button" class="btn btn-sm' + (span === 30 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="30">30 jours</button><span class="muted">' + list.length + ' nuit' + (list.length > 1 ? 's' : '') + '</span></div><div class="mlist bal">';
+  ps.filter(p => (per && canHold(per, p.id)) || count[p.id]).forEach(p => { html += '<div class="mrow static"><span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span><span class="cntv">' + (count[p.id] || 0) + '</span></div>'; });
+  return html + '</div><p class="note">Nombre de quarts faits sur chaque poste qu’il tient.</p>';
+}
+/* ---------- historique (admin) ---------- */
+function fmtTs(ts){ try { const d = new Date(ts); const s = d.toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}); return s; } catch (e) { return ts || ''; } }
+function logRow(e){
+  const who = esc(e.by || '?') + (e.role ? ' <span class="tag' + (e.role === 'admin' ? '' : ' h') + '">' + esc(ROLE_LABEL[e.role] || e.role) + '</span>' : '');
+  const d = e.detail || {};
+  let txt;
+  if (e.type === 'login') txt = '🔑 Connexion — ' + who;
+  else if (e.type === 'assign') txt = '✏️ ' + who + ' — ' + esc(d.postCode || '') + (d.postName ? ' · ' + esc(d.postName) : '') + ', nuit du ' + esc(fmt(d.date)) + ', quart ' + (Number(d.k) + 1) + ' : ' + esc(d.from) + ' → ' + esc(d.to);
+  else if (e.type === 'train') txt = '🎓 ' + who + ' a mis ' + esc(d.trainee || '') + ' en formation — ' + esc(d.postCode || '') + ', nuit du ' + esc(fmt(d.date)) + ', quart ' + (Number(d.k) + 1) + (d.trainer ? ' avec ' + esc(d.trainer) : '');
+  else if (e.type === 'untrain') txt = '🎓 ' + who + ' a retiré ' + esc(d.trainee || '') + ' de la formation — ' + esc(d.postCode || '') + ', nuit du ' + esc(fmt(d.date)) + ', quart ' + (Number(d.k) + 1);
+  else txt = esc(e.type);
+  return '<div class="mrow static" style="align-items:flex-start;min-height:auto;padding:10px 14px;flex-direction:column;gap:2px"><div>' + txt + '</div><div class="muted" style="font-size:12.5px">' + esc(fmtTs(e.ts)) + '</div></div>';
+}
+function viewHistorique(){
+  if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
+  const entries = [];
+  Object.keys(S.nights).forEach(date => { const n = S.nights[date]; ((n.tl && n.tl._log) || []).forEach(e => entries.push(e)); });
+  entries.sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
+  const list = entries.slice(0, 300);
+  return '<div class="bar"><h1>Historique</h1><span class="grow"></span>' + (list.length ? '<button type="button" class="btn btn-sm" data-act="clearLog">Effacer l’historique</button>' : '') + '</div>'
+    + '<p class="note">Connexions des comptes, et modifications manuelles du planning (changement ou retrait d’un poste, mise en formation). Limité aux nuits encore en mémoire.</p>'
+    + (list.length ? '<div class="mlist">' + list.map(logRow).join('') + '</div>' : '<p class="note">Aucun évènement enregistré pour l’instant.</p>');
+}
+/* ---------- fiche « mettre en formation » ---------- */
+function shFormation(s){
+  const n = editable(); const Q = nq(n);
+  const pp = activePeople().filter(per => !isTL(per) && !isTemp(per) && !(n.absent || []).includes(per.id));
+  if (s.trainee && !S.people[s.trainee]) s.trainee = '';
+  const traineeOpts = '<option value="">— choisir —</option>' + pp.map(per => '<option value="' + esc(per.id) + '"' + (s.trainee === per.id ? ' selected' : '') + '>' + esc(per.name) + '</option>').join('');
+  let body = '<div class="lbl">Mode</div><span class="st3" style="width:100%"><button type="button" style="flex:1" data-act="formMode" data-v="auto" aria-pressed="' + (s.mode !== 'manual') + '">Automatique</button><button type="button" style="flex:1" data-act="formMode" data-v="manual" aria-pressed="' + (s.mode === 'manual') + '">Manuel</button></span>';
+  body += '<label class="field" for="fTrainee"><span>Personne à mettre en formation</span><select id="fTrainee" data-chg="formTrainee">' + traineeOpts + '</select></label>';
+  const per = s.trainee ? S.people[s.trainee] : null;
+  if (per) {
+    const postsH = posts().filter(p => mark(per, p.id) === 'H');
+    if (!postsH.length) {
+      body += '<p class="note">Aucun poste marqué « en formation » (hachuré) pour ' + esc(per.name) + ' dans Polyvalence. Marque d’abord le poste concerné là-bas.</p>';
+    } else {
+      if (s.post && !postsH.some(p => p.id === s.post)) s.post = '';
+      const postOpts = '<option value="">— choisir —</option>' + postsH.map(p => '<option value="' + esc(p.id) + '"' + (s.post === p.id ? ' selected' : '') + '>' + esc(p.code) + ' · ' + esc(p.name) + '</option>').join('');
+      body += '<label class="field" for="fPost"><span>Poste / process</span><select id="fPost" data-chg="formPost">' + postOpts + '</select></label>';
+      if (s.post) {
+        const post = S.posts[s.post];
+        if (s.mode === 'manual') {
+          body += '<div class="lbl">Quart</div><div class="opt-row">' + Array.from({length:Q}).map((z, k) => '<button type="button" class="qb opt" style="flex:1" data-act="formK" data-k="' + k + '" aria-pressed="' + (s.k === k) + '">Q' + (k + 1) + '</button>').join('') + '</div>';
+          if (s.k != null) {
+            const absentSet = new Set(n.absent || []); const qAbs = n.qAbsent[s.k] || {};
+            const cand = activePeople().filter(pr => canHold(pr, post.id) && !isRestricted(pr, post.id, n.date) && pr.id !== s.trainee && !absentSet.has(pr.id) && !qAbs[pr.id]);
+            const curHolder = n.q[s.k][post.id] || '';
+            if (!s.trainer && curHolder) s.trainer = curHolder;
+            const trainerOpts = '<option value="">— choisir —</option>' + cand.map(pr => '<option value="' + esc(pr.id) + '"' + (s.trainer === pr.id ? ' selected' : '') + '>' + esc(pr.name) + (pr.id === curHolder ? ' (titulaire actuel)' : '') + '</option>').join('');
+            body += '<label class="field" for="fTrainer"><span>Former avec</span><select id="fTrainer" data-chg="formTrainer">' + trainerOpts + '</select></label>';
+            if (!cand.length) body += '<p class="note">Personne d’habilité et présent sur ce poste à ce quart.</p>';
+          }
+        } else {
+          const auto = autoFindQuart(n, post.id, s.trainee);
+          if (auto == null) body += '<p class="note">Aucun quart libre pour cette formation sans impacter les autres. Essaie le mode manuel.</p>';
+          else { const holder = S.people[n.q[auto][post.id]]; body += '<p class="note">Quart ' + (auto + 1) + ', avec <b>' + esc(holder ? holder.name : '') + '</b> comme formateur — sans impact sur le reste du planning.</p>'; }
+        }
+      }
+    }
+  }
+  if (s.err) body += '<p class="note" style="color:var(--red)">' + esc(s.err) + '</p>';
+  if (s.done && s.done.length) body += '<div class="lbl">Ajoutés dans cette session</div>' + s.done.map(x => '<p class="note">✓ ' + esc(x) + '</p>').join('');
+  return {title:'🎓 Mettre en formation', body, foot:'<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn btn-red" data-act="formConfirm">Confirmer</button>'};
+}
+
 /* ---------- sheets ---------- */
 function open(s){ S.sheet = s; renderSheet(); }
 function close(){ S.sheet = null; $('#sheet').innerHTML = ''; }
 function renderSheet(){
   const s = S.sheet; if (!s) return;
-  const c = ({pick:shPick, balance:shBalance, person:shPerson, post:shPost, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts})[s.type](s);
+  const c = ({pick:shPick, person:shPerson, post:shPost, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev ? prev.scrollTop : 0;
   $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
@@ -658,8 +849,8 @@ function shPick(s){
   /* un échange n'est proposé que si le titulaire actuel connaît aussi l'autre poste : les 2 doivent savoir faire les 2 process */
   const swappable = per => { const w = where[per.id]; if (!w || w === p.id || !cur) return true; return !!(curPer && canHold(curPer, w)); };
   const othersAll = pres.filter(per => !isTL(per) && onQuart(per));
-  const tls = pres.filter(per => isTL(per) && canHold(per, p.id) && swappable(per));
-  const others = othersAll.filter(per => canHold(per, p.id) && swappable(per));
+  const tls = pres.filter(per => isTL(per) && canHold(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per));
+  const others = othersAll.filter(per => canHold(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per));
   const locked = !!(n && n.lock && n.lock[s.k] && n.lock[s.k][p.id]);
   if (s.force == null) s.force = locked;
   const Q = n ? nq(n) : 4;
@@ -729,7 +920,8 @@ function viewEffectifs(){
   html += '<div class="lbl">Équipe</div><div class="mlist">' + pp.filter(p => !isTL(p) && !isTemp(p)).sort(byAbsentFirst).map(per => {
     const off = absent.has(per.id);
     const qa = [0, 1, 2, 3, 4].filter(k => k < Q && ((n.qAbsent[k] || {})[per.id]));
-    const badge = off ? 'Absent cette nuit' : (qa.length ? 'Absent Q' + qa.map(k => k + 1).join(', Q') : '');
+    const restricted = ((per.marks && per.marks._restrict) || []).some(r => r.from <= S.date && S.date <= r.to);
+    const badge = off ? 'Absent cette nuit' : [qa.length ? 'Absent Q' + qa.map(k => k + 1).join(', Q') : '', restricted ? 'Restriction' : ''].filter(Boolean).join(' · ');
     return '<button type="button" class="eff-row' + (off ? ' off' : '') + '" data-act="abs" data-id="' + esc(per.id) + '" data-long="openPersonMenu"><span class="pname">' + esc(per.name) + (isTL(per) ? '' : '') + '</span>' + (badge ? '<span class="absbadge">' + esc(badge) + '</span>' : '') + '</button>';
   }).join('') + '</div>';
   return html;
@@ -742,8 +934,35 @@ function shPersonMenu(s){
   body += '<button type="button" class="force" data-act="toggleQAbs" aria-pressed="' + !!s.showQ + '">Absent seulement sur certains quarts cette nuit</button>';
   if (s.showQ) body += '<div class="opt-row">' + [0, 1, 2, 3, 4].filter(k => k < Q).map(k => '<button type="button" class="qb" data-act="qAbsToggle" data-id="' + esc(s.id) + '" data-k="' + k + '" aria-pressed="' + !!((n.qAbsent[k] || {})[s.id]) + '">Q' + (k + 1) + '</button>').join('') + '</div>';
   body += '<button type="button" class="opt" data-act="openAbsRange" data-id="' + esc(s.id) + '">Absent sur plusieurs jours (période)</button>';
+  body += '<button type="button" class="opt" data-act="openRestriction" data-id="' + esc(s.id) + '">Restriction sur un ou plusieurs postes</button>';
   body += '<button type="button" class="opt" data-act="editPerson" data-id="' + esc(s.id) + '">Modifier / supprimer cette personne</button>';
   return {title:esc(per.name) + (isTL(per) ? ' · TL' : ''), body, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+}
+function shRestriction(s){
+  const per = S.people[s.id]; if (!per) return null;
+  if (!s.from) s.from = S.date;
+  if (!s.to) s.to = S.date;
+  if (!s.sel) s.sel = new Set();
+  const ps = posts();
+  const current = ((per.marks && per.marks._restrict) || []).slice().sort((a, b) => b.to.localeCompare(a.to));
+  let body = '<p class="note">' + esc(per.name) + ' ne sera plus proposé(e) sur les postes cochés, du jour choisi (inclus) jusqu’au jour choisi (inclus) — utile pour une restriction médicale ou temporaire. Un planning déjà généré sur cette période sera recalculé.</p>'
+    + '<label class="field" for="fRFrom"><span>Du</span><input type="date" id="fRFrom" data-chg="restFrom" value="' + s.from + '"></label>'
+    + '<label class="field" for="fRTo"><span>Au</span><input type="date" id="fRTo" data-chg="restTo" value="' + s.to + '"></label>'
+    + '<div class="lbl">Postes concernés</div>';
+  zones(ps).forEach(z => {
+    body += '<div class="lbl" style="margin-top:2px">' + esc(z) + '</div>';
+    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
+      const checked = s.sel.has(p.id);
+      body += '<button type="button" class="opt" data-act="restToggle" data-post="' + esc(p.id) + '" aria-current="' + checked + '"><span class="code">' + esc(p.code) + '</span>&nbsp;' + esc(p.name) + '</button>';
+    });
+  });
+  if (current.length) {
+    body += '<div class="lbl">Restrictions déjà actives</div>' + current.map(r => {
+      const p = S.posts[r.postId];
+      return '<div class="mrow static"><span class="pname">' + esc(p ? p.code + ' · ' + p.name : r.postId) + ' — du ' + esc(fmt(r.from)) + ' au ' + esc(fmt(r.to)) + '</span><button type="button" class="btn btn-sm" data-act="restDel" data-id="' + esc(s.id) + '" data-rid="' + esc(r.id) + '" style="margin-left:auto">Retirer</button></div>';
+    }).join('');
+  }
+  return {title:'Restriction · ' + esc(per.name), body, foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="restGo" data-id="' + esc(s.id) + '">Enregistrer</button>'};
 }
 function shAbsPeriod(s){
   const per = S.people[s.id]; if (!per) return null;
@@ -781,9 +1000,11 @@ function shRenfortPosts(s){
 }
 function shHelp(){
   const body = '<div class="lbl">Planning du jour</div><p class="note">Choisis la nuit, va dans « Effectifs » pour les absences, puis touche « Générer ». Touche une case du tableau pour changer qui tient le poste.</p>'
-    + '<div class="lbl">Effectifs</div><p class="note">Toute l’équipe en un coup d’œil. Touche un nom pour le mettre présent/absent cette nuit. Reste appuyé sur un nom pour : absence sur certains quarts seulement, absence sur plusieurs jours, ou modifier/supprimer la personne.</p>'
+    + '<div class="lbl">🎓 Formation</div><p class="note">Une fois la rotation générée, ce bouton propose de mettre quelqu’un en formation sur un poste (marqué hachuré dans Polyvalence) : automatiquement (l’appli choisit un quart et un formateur sans rien changer d’autre) ou manuellement (tu choisis le quart, le poste et avec qui).</p>'
+    + '<div class="lbl">Effectifs</div><p class="note">Toute l’équipe en un coup d’œil. Touche un nom pour le mettre présent/absent cette nuit. Reste appuyé sur un nom pour : absence sur certains quarts seulement, absence sur plusieurs jours, restriction sur un ou plusieurs postes (ex. médicale), ou modifier/supprimer la personne.</p>'
     + '<div class="lbl">Polyvalence</div><p class="note">Qui sait tenir quel poste. Touche une case pour faire tourner : vide → tient le poste → en formation → vide.</p>'
-    + '<div class="lbl">Imprimer</div><p class="note">Le bouton « 🖨️ Imprimer » sort toujours le planning en noir et blanc, même si l’écran est en couleur.</p>';
+    + '<div class="lbl">Imprimer</div><p class="note">Le bouton « 🖨️ Imprimer » sort toujours le planning en noir et blanc, même si l’écran est en couleur.</p>'
+    + '<div class="lbl">Équilibre et Historique</div><p class="note">Réservés à l’administrateur : « Équilibre » compte les quarts faits par poste sur 7 ou 30 jours, « Historique » liste les connexions et les modifications manuelles du planning.</p>';
   return {title:'Aide', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
 function viewLogin(){
@@ -814,36 +1035,11 @@ function viewChangePass(){
     + '<button type="button" class="btn btn-red" data-act="doChangePass"' + (S.newPassBusy ? ' disabled' : '') + '>' + (S.newPassBusy ? 'Enregistrement…' : 'Valider') + '</button></div></div>';
 }
 function viewClosed(){
-  return '<div class="authwrap"><div class="authcard"><h1>Application fermée</h1><p class="note">PLANNING CH2-2 est accessible de 20h30 à 6h45. Reviens pendant ces horaires.</p><button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
+  const why = tlWindowReason();
+  const msg = why === 'saturday' ? 'Pas d’équipe de nuit le samedi. Rendez-vous dimanche soir dès 20h30.' : 'PLANNING CH2-2 est accessible de 20h30 à 6h45 (prise de poste 21h45, fin de nuit 5h26/5h33 ou plus tard en overtime).';
+  return '<div class="authwrap"><div class="authcard"><h1>Application fermée</h1><p class="note">' + esc(msg) + '</p><button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
 }
 function shRegen(){ return {title:'Régénérer la nuit ?', body:'<p style="margin:0">Le planning de cette nuit sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>', foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="genGo">Régénérer</button>'}; }
-function shBalancePhone(s, list){
-  const ps = posts(), pp = activePeople().filter(per => !isTL(per));
-  if (!S.balPerson || !S.people[S.balPerson]) S.balPerson = pp.length ? pp[0].id : null;
-  const count = {};
-  list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { if (q[pid] === S.balPerson) count[pid] = (count[pid] || 0) + 1; })));
-  const per = S.people[S.balPerson];
-  let body = '<select class="pp-sel" id="balSel" data-chg="balPerson" aria-label="Personne">' + pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.balPerson ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select>';
-  body += '<div class="bar"><button type="button" class="btn btn-sm' + (s.span === 7 ? ' btn-red' : '') + '" data-act="span" data-v="7">7 jours</button><button type="button" class="btn btn-sm' + (s.span !== 7 ? ' btn-red' : '') + '" data-act="span" data-v="30">30 jours</button><span class="muted">' + list.length + ' nuit' + (list.length > 1 ? 's' : '') + '</span></div><div class="mlist bal">';
-  ps.filter(p => (per && canHold(per, p.id)) || count[p.id]).forEach(p => { body += '<div class="mrow static"><span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span><span class="cntv">' + (count[p.id] || 0) + '</span></div>'; });
-  return {title:'Équilibre', body:body + '</div><p class="note">Nombre de quarts faits sur chaque poste qu\u2019il tient.</p>'};
-}
-function shBalance(s){
-  if (phone()) { const span0 = s.span || 30; const from0 = addDays(S.date, -(span0 - 1)); return shBalancePhone(s, Object.values(S.nights).filter(n => generated(n) && n.date >= from0 && n.date <= S.date)); }
-  const span = s.span || 30;
-  const from = addDays(S.date, -(span - 1));
-  const list = Object.values(S.nights).filter(n => generated(n) && n.date >= from && n.date <= S.date);
-  const ps = posts(), count = {}, tot = {};
-  list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { const w = q[pid]; if (!w) return; count[w + '|' + pid] = (count[w + '|' + pid] || 0) + 1; tot[w] = (tot[w] || 0) + 1; })));
-  const pp = people().filter(per => !isTL(per) || tot[per.id]);
-  let t = '<table class="eq"><thead><tr><th class="n" scope="col"></th>' + ps.map(p => '<th scope="col"><span class="dot ' + esc(p.diff || '') + '" style="margin-right:3px"></span>' + esc(p.code) + '</th>').join('') + '<th scope="col">Total</th></tr></thead><tbody>';
-  pp.forEach(per => {
-    t += '<tr><th class="n" scope="row">' + esc(per.name) + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c">' + (tot[per.id] || 0) + '</td></tr>';
-  });
-  t += '</tbody></table>';
-  const body = '<div class="bar"><button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="span" data-v="7">7 derniers jours</button><button type="button" class="btn btn-sm' + (span === 30 ? ' btn-red' : '') + '" data-act="span" data-v="30">30 derniers jours</button><span class="muted">' + list.length + ' nuit' + (list.length > 1 ? 's' : '') + '</span></div><div class="scroll" data-scroll="eq" style="max-height:60vh">' + t + '</div><p class="note">Nombre de quarts faits sur chaque poste. « · » : poste qu’il ne tient pas.</p>';
-  return {title:'Équilibre', body, wide:true};
-}
 function shPerson(s){
   const per = S.people[s.id]; if (!per) return null; s.form = true;
   const left = per.active === false;
@@ -878,16 +1074,8 @@ const A = {
   trainees(d){ open({type:'trainees', id:d.id}); },
   toggleFrm(){ S.sheet.showFrm = !S.sheet.showFrm; renderSheet(); },
   choose(d){
-    const s = S.sheet, n = editable(), q = n.q[s.k];
-    const lk = n.lock[s.k], mn = n.manual[s.k];
-    const who = d.id || null, old = q[s.post] || null;
-    if (who) {
-      const where = holderMap(q)[who];
-      if (where && where !== s.post) { if (old) { q[where] = old; mn[where] = true; } else { delete q[where]; delete mn[where]; } if (lk[where] === who) delete lk[where]; }
-      Object.keys(lk).forEach(pid => { if (pid !== s.post && lk[pid] === who) delete lk[pid]; });
-      q[s.post] = who; mn[s.post] = true;
-      if (s.force) lk[s.post] = who; else delete lk[s.post];
-    } else { delete q[s.post]; delete lk[s.post]; delete mn[s.post]; }
+    const s = S.sheet, n = editable();
+    assignHolder(n, s.k, s.post, d.id || null, s.force);
     close(); saveNight(n);
   },
   addRenfort(){
@@ -902,8 +1090,8 @@ const A = {
   },
   force(){ S.sheet.force = !S.sheet.force; renderSheet(); },
   unlock(){ const s = S.sheet, n = editable(); delete n.lock[s.k][s.post]; close(); saveNight(n); },
-  chooseTrain(d){ const n = editable(); const k = Number(d.k); n.train[k][d.post] = d.id; saveNight(n); renderSheet(); },
-  unTrain(d){ const n = editable(); const k = Number(d.k); delete n.train[k][d.post]; saveNight(n); renderSheet(); },
+  chooseTrain(d){ const n = editable(); const k = Number(d.k); const post = S.posts[d.post]; const trainerId = n.q[k] ? n.q[k][d.post] : null; n.train[k][d.post] = d.id; pushLog(n, 'train', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:(S.people[d.id] || {}).name || '', trainer:(trainerId && S.people[trainerId]) ? S.people[trainerId].name : ''}); saveNight(n); renderSheet(); },
+  unTrain(d){ const n = editable(); const k = Number(d.k); const post = S.posts[d.post]; const prevId = n.train[k][d.post]; delete n.train[k][d.post]; if (prevId && S.people[prevId]) pushLog(n, 'untrain', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:S.people[prevId].name}); saveNight(n); renderSheet(); },
   abs(d){
     const n = editable(); const set = new Set(n.absent);
     if (set.has(d.id)) set.delete(d.id); else set.add(d.id);
@@ -920,8 +1108,63 @@ const A = {
   },
   otOn(){ const n = editable(); n.ot = 1; if (n.generated) regenQuart(n, 4); saveNight(n); },
   otOff(){ const n = editable(); n.ot = 0; n.q[4] = {}; n.lock[4] = {}; saveNight(n); },
-  balance(){ open({type:'balance', span:30}); },
-  span(d){ S.sheet.span = Number(d.v); renderSheet(); },
+  eqSpan(d){ S.eqSpan = Number(d.v); render(); },
+  formation(){ open({type:'formation', mode:'auto', done:[]}); },
+  formMode(d){ S.sheet.mode = d.v; S.sheet.k = null; S.sheet.trainer = ''; S.sheet.err = ''; renderSheet(); },
+  formK(d){ S.sheet.k = Number(d.k); S.sheet.trainer = ''; renderSheet(); },
+  formConfirm(){
+    const s = S.sheet;
+    if (!s.trainee || !s.post) { s.err = 'Choisis une personne et un poste.'; renderSheet(); return; }
+    const n = editable();
+    let k = s.mode === 'manual' ? s.k : autoFindQuart(n, s.post, s.trainee);
+    if (k == null) { s.err = s.mode === 'manual' ? 'Choisis un quart.' : 'Aucun quart disponible sans impacter les autres. Essaie le mode manuel.'; renderSheet(); return; }
+    if (s.mode === 'manual') {
+      if (!s.trainer) { s.err = 'Choisis avec qui la former.'; renderSheet(); return; }
+      assignHolder(n, k, s.post, s.trainer, false);
+    }
+    const holder = n.q[k][s.post];
+    if (!holder) { s.err = 'Il faut un titulaire qualifié sur ce poste à ce quart.'; renderSheet(); return; }
+    n.train[k][s.post] = s.trainee;
+    const traineeName = (S.people[s.trainee] || {}).name || '';
+    const postObj = S.posts[s.post];
+    const holderName = (S.people[holder] || {}).name || '';
+    pushLog(n, 'train', {date:n.date, k, postCode:postObj ? postObj.code : s.post, postName:postObj ? postObj.name : '', trainee:traineeName, trainer:holderName});
+    saveNight(n);
+    s.done = s.done || []; s.done.unshift(traineeName + ' — ' + (postObj ? postObj.code : '') + ' · Quart ' + (k + 1) + ' avec ' + holderName);
+    s.post = ''; s.k = null; s.trainer = ''; s.err = '';
+    renderSheet();
+    toast(traineeName + ' mis(e) en formation.');
+  },
+  clearLog(){
+    if (!isAdmin()) return;
+    if (!confirm('Effacer tout l’historique (connexions et modifications) ? Cette action est définitive.')) return;
+    Object.keys(S.nights).forEach(date => {
+      const raw = S.nights[date];
+      if (raw && raw.tl && raw.tl._log && raw.tl._log.length) { const c = editable(date); delete c.tl._log; saveNight(c); }
+    });
+    toast('Historique effacé.');
+  },
+  openRestriction(d){ open({type:'restriction', id:d.id, sel:new Set()}); },
+  restToggle(d){ const s = S.sheet; if (s.sel.has(d.post)) s.sel.delete(d.post); else s.sel.add(d.post); renderSheet(); },
+  restGo(d){
+    const s = S.sheet;
+    let from = s.from || S.date, to = s.to || S.date;
+    if (from > to) { const t = from; from = to; to = t; }
+    if (!s.sel || !s.sel.size) { toast('Choisis au moins un poste.'); return; }
+    const per = clone(S.people[d.id]); per.marks = per.marks || {}; per.marks._restrict = (per.marks._restrict || []).slice();
+    s.sel.forEach(postId => { per.marks._restrict.push({id:newId('rs'), postId, from, to}); });
+    savePerson(per);
+    Object.keys(S.nights).forEach(date => {
+      if (date >= from && date <= to) { const raw = S.nights[date]; if (raw && generated(raw)) { const c = editable(date); generateAll(c); saveNight(c); } }
+    });
+    close();
+    toast('Restriction enregistrée.');
+  },
+  restDel(d){
+    const per = clone(S.people[d.id]); if (!per.marks || !per.marks._restrict) { renderSheet(); return; }
+    per.marks._restrict = per.marks._restrict.filter(r => r.id !== d.rid);
+    savePerson(per); renderSheet();
+  },
   cycle(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; if (!confirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?')) return; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); },
   diff(d){ const p = clone(S.posts[d.id]); p.diff = DIFF[(DIFF.indexOf(p.diff || '') + 1) % DIFF.length]; savePost(p); },
   editPerson(d){ open({type:'person', id:d.id}); },
@@ -970,6 +1213,7 @@ const A = {
     const {error} = await sb.auth.signInWithPassword({email:acc.login_email, password:S.loginPass || ''});
     S.loginBusy = false;
     if (error) { S.loginErr = 'Mot de passe incorrect.'; S.loginPass = ''; render(); return; }
+    S._pendingLoginLog = {name:acc.name, role:acc.role};
     S.loginPick = null; S.loginPass = ''; S.loginErr = '';
     render();
   },
@@ -1015,7 +1259,7 @@ const A = {
 };
 const C = {
   person(el){ S.person = el.value; render(); },
-  balPerson(el){ S.balPerson = el.value; renderSheet(); },
+  balPerson(el){ S.balPerson = el.value; render(); },
   pickPerson(el){ A.choose({id:el.value}); },
   date(el){ S.date = el.value || today(); render(); },
   countH(el){ S.cfg.countH = el.checked; saveCfg(); },
@@ -1031,7 +1275,12 @@ const C = {
   newTLName(el){ S.newTLName = el.value; },
   teamName(el){ S.cfg.team = el.value; saveCfg(); },
   absFrom(el){ S.sheet.from = el.value; },
-  absTo(el){ S.sheet.to = el.value; }
+  absTo(el){ S.sheet.to = el.value; },
+  restFrom(el){ S.sheet.from = el.value; },
+  restTo(el){ S.sheet.to = el.value; },
+  formTrainee(el){ S.sheet.trainee = el.value; S.sheet.post = ''; S.sheet.k = null; S.sheet.trainer = ''; S.sheet.err = ''; renderSheet(); },
+  formPost(el){ S.sheet.post = el.value; S.sheet.k = null; S.sheet.trainer = ''; S.sheet.err = ''; renderSheet(); },
+  formTrainer(el){ S.sheet.trainer = el.value; renderSheet(); }
 };
 let pressTimer = null, suppressClick = false;
 function cancelPress(){ clearTimeout(pressTimer); pressTimer = null; }
@@ -1089,6 +1338,7 @@ async function loadBusinessData(){
   subscribeTable(bizChannels, 'posts', 'id', r => { S.posts[r.id] = rowToPost(r); later(); }, id => { delete S.posts[id]; later(); });
   subscribeTable(bizChannels, 'nights', 'date', r => { S.nights[r.date] = rowToNight(r); later(); }, date => { delete S.nights[date]; later(); });
   subscribeTable(bizChannels, 'config', 'key', r => { if (r.key === 'main') S.cfg = Object.assign({}, DEFAULT_CFG, r.value || {}); later(); }, () => {});
+  if (S._pendingLoginLog) { const info = S._pendingLoginLog; S._pendingLoginLog = null; const n = editable(today()); pushLog(n, 'login', {}, info); saveNight(n); }
   render();
 }
 async function boot(){
