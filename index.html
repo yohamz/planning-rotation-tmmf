@@ -343,12 +343,11 @@ function parisDateParts(){
   const get = t => Number(parts.find(p => p.type === t).value);
   return {y:get('year'), mo:get('month'), d:get('day')};
 }
-/* Horaires TL (20h30-6h45, fermé le samedi) SUSPENDUS temporairement à la demande du
-   30/09/2026 — l'appli reste ouverte 24h/24, 7j/7 pour les TL jusqu'à nouvel ordre.
-   Remettre à true pour réactiver les horaires (penser aussi à remettre la fonction SQL
-   tl_window_ok() d'origine côté Supabase, qui bloque encore l'accès aux données hors
-   20h30-6h45 même horaires désactivés ici). */
-const TL_HOURS_ENFORCED = false;
+/* Horaires TL (20h30-6h45, fermé le samedi) : actifs. Un essai d'ouverture 24h/24 a été
+   envisagé le 30/09/2026 mais annulé — la règle côté base de données (Supabase, fonction
+   tl_window_ok()) bloque de toute façon les données hors 20h30-6h45, donc désactiver
+   uniquement ce côté-ci n'aurait fait qu'ouvrir l'écran sans donner accès aux données. */
+const TL_HOURS_ENFORCED = true;
 /* renvoie pourquoi l'appli est fermée pour un TL en ce moment, ou null si elle est ouverte */
 function tlWindowReason(){
   if (!TL_HOURS_ENFORCED) return null;
