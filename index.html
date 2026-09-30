@@ -114,6 +114,8 @@ table{border-collapse:separate;border-spacing:0}
 .mx .who{width:38px;min-width:38px;padding:6px 0 4px}
 .mx .who button{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
 .mx .vname{writing-mode:vertical-rl;transform:rotate(180deg);font-size:14px;font-weight:600;white-space:nowrap;max-height:140px;overflow:hidden;text-overflow:ellipsis}
+.mx .who .trainerchk{margin-top:4px;font-size:13px;line-height:1;padding:2px 0;opacity:.3;filter:grayscale(1)}
+.mx .who .trainerchk.on{opacity:1;filter:none}
 .mx .role{font-size:10px;font-weight:700;color:var(--muted)}
 .mx .tlc{background:var(--tl)}
 .mx .grp th{position:sticky;left:0}
@@ -372,6 +374,10 @@ const canHold = (per, pid) => { const m = mark(per, pid); return m === 'G' || m 
    mais ne doit pas être proposée sur ce poste pendant la période — voir « Restriction »
    dans le menu d'une personne (Effectifs). Stockée dans marks._restrict, clé réservée. */
 const isRestricted = (per, pid, date) => !!(per && per.marks && per.marks._restrict && per.marks._restrict.some(r => r.postId === pid && date >= r.from && date <= r.to));
+/* apte à former : aptitude globale (pas liée à un poste précis) — dès qu'elle est cochée,
+   la personne est proposée comme formateur pour tous les postes qu'elle tient déjà (mark G).
+   Stockée dans marks._trainer, clé réservée (comme _restrict ci-dessus). */
+const isFormateur = per => !!(per && per.marks && per.marks._trainer);
 const isTL = per => per && per.role === 'TL';
 const isTemp = per => !!(per && per.temp);
 const nightOf = d => S.nights[d || S.date] || null;
@@ -446,7 +452,7 @@ function assignHolder(n, k, postId, who, force){
 /* mode automatique du bouton Formation : cherche un quart où le poste a déjà un
    titulaire qualifié, sans case de formation occupée, et où le stagiaire est libre —
    donc sans toucher au reste du planning. */
-function autoFindQuart(n, postId, traineeId){
+function autoFindQuart(n, postId, traineeId, requireFormateur){
   if ((n.absent || []).includes(traineeId)) return null;
   const Q = nq(n);
   for (let k = 0; k < Q; k++) {
@@ -454,6 +460,7 @@ function autoFindQuart(n, postId, traineeId){
     const holder = n.q[k] && n.q[k][postId];
     if (!holder || holder === traineeId) continue;
     const holderPer = S.people[holder]; if (!holderPer || !canHold(holderPer, postId) || isRestricted(holderPer, postId, n.date)) continue;
+    if (requireFormateur && !isFormateur(holderPer)) continue;
     if (n.train[k] && n.train[k][postId]) continue;
     let busy = false;
     const qk = n.q[k] || {}; Object.keys(qk).forEach(pid => { if (qk[pid] === traineeId) busy = true; });
@@ -463,6 +470,13 @@ function autoFindQuart(n, postId, traineeId){
     return k;
   }
   return null;
+}
+/* essaie d'abord de trouver un quart avec un formateur désigné (marks._trainer), sinon
+   retombe sur n'importe quel titulaire qualifié — pour que le mode auto reste utilisable
+   même si personne n'a encore été désigné « formateur » dans Polyvalence. */
+function autoFindQuartPreferTrainer(n, postId, traineeId){
+  const withTrainer = autoFindQuart(n, postId, traineeId, true);
+  return withTrainer != null ? withTrainer : autoFindQuart(n, postId, traineeId, false);
 }
 /* one quart = best assignment of people to posts, given the other quarts of the night */
 function buildQuart(k, night, hist){
@@ -679,7 +693,8 @@ function viewPolyPhone(){
     + (S.cfg.provisionalRoster ? '<div class="provisional"><span>⚠️ Données provisoires à vérifier.</span>' + (isAdmin() ? '<div class="bar"><button type="button" class="btn btn-sm" data-act="clearProvisional">Marquer comme validé</button></div>' : '') + '</div>' : '')
     + '<select class="pp-sel" id="ppSel" data-chg="person" aria-label="Personne">' + opts + '</select>'
     + '<div class="bar"><button type="button" class="btn btn-sm" data-act="editPerson" data-id="' + esc(S.person || '') + '">Modifier la personne</button><button type="button" class="btn btn-sm" data-act="addPost">+ Ajouter un poste</button></div>'
-    + '<div class="legend"><span><span class="sw"><span class="sym G"></span></span>Tient le poste</span><span><span class="sw"><span class="sym H"></span></span>En formation</span></div>';
+    + (per ? '<div class="bar"><button type="button" class="btn btn-sm' + (isFormateur(per) ? ' btn-red' : '') + '" data-act="toggleTrainer" data-id="' + esc(per.id) + '" aria-pressed="' + isFormateur(per) + '">🎓 Formateur' + (isFormateur(per) ? ' ✓' : '') + '</button></div>' : '')
+    + '<div class="legend"><span><span class="sw"><span class="sym G"></span></span>Tient le poste</span><span><span class="sw"><span class="sym H"></span></span>En formation</span><span>🎓 Formateur : apte à former</span></div>';
   if (!per) return html;
   html += '<div class="mlist">';
   zones(ps).forEach(z => {
@@ -706,8 +721,9 @@ function viewPoly(){
     + '<span><span class="sw"><span class="sym G"></span></span>Tient le poste</span>'
     + '<span><span class="sw"><span class="sym H"></span></span>En formation</span>'
     + '<span><span class="dot vert"></span><span class="dot orange"></span><span class="dot rouge"></span>Difficulté</span>'
+    + '<span>🎓 Formateur : apte à former sur les postes qu’il/elle tient</span>'
     + '</div>';
-  const head = '<tr><th class="corner" scope="col"></th>' + pp.map(per => '<th class="who' + (isTL(per) ? ' tlc' : '') + '" scope="col"><button type="button" data-act="editPerson" data-id="' + esc(per.id) + '" title="' + esc(per.name) + '"><span class="role">' + esc(per.role || 'TM') + '</span><span class="vname">' + esc(per.name) + '</span>' + (isTL(per) ? '<span class="cnt" style="visibility:hidden">0</span>' : '<span class="cnt" title="Postes tenus">' + ps.filter(p => mark(per, p.id) === 'G').length + '</span>') + '</button></th>').join('') + '</tr>';
+  const head = '<tr><th class="corner" scope="col"></th>' + pp.map(per => '<th class="who' + (isTL(per) ? ' tlc' : '') + '" scope="col"><button type="button" data-act="editPerson" data-id="' + esc(per.id) + '" title="' + esc(per.name) + '"><span class="role">' + esc(per.role || 'TM') + '</span><span class="vname">' + esc(per.name) + '</span>' + (isTL(per) ? '<span class="cnt" style="visibility:hidden">0</span>' : '<span class="cnt" title="Postes tenus">' + ps.filter(p => mark(per, p.id) === 'G').length + '</span>') + '</button><button type="button" class="trainerchk' + (isFormateur(per) ? ' on' : '') + '" data-act="toggleTrainer" data-id="' + esc(per.id) + '" aria-pressed="' + isFormateur(per) + '" aria-label="' + esc(per.name) + ', formateur" title="Cocher : ' + esc(per.name) + ' est apte à former">🎓</button></th>').join('') + '</tr>';
   let body = '';
   zones(ps).forEach(z => {
     body += '<tr class="grp"><th scope="rowgroup">' + esc(z) + '</th><td colspan="' + pp.length + '"></td></tr>';
@@ -808,17 +824,18 @@ function shFormation(s){
           body += '<div class="lbl">Quart</div><div class="opt-row">' + Array.from({length:Q}).map((z, k) => '<button type="button" class="qb opt" style="flex:1" data-act="formK" data-k="' + k + '" aria-pressed="' + (s.k === k) + '">Q' + (k + 1) + '</button>').join('') + '</div>';
           if (s.k != null) {
             const absentSet = new Set(n.absent || []); const qAbs = n.qAbsent[s.k] || {};
-            const cand = activePeople().filter(pr => canHold(pr, post.id) && !isRestricted(pr, post.id, n.date) && pr.id !== s.trainee && !absentSet.has(pr.id) && !qAbs[pr.id]);
+            const cand = activePeople().filter(pr => canHold(pr, post.id) && !isRestricted(pr, post.id, n.date) && pr.id !== s.trainee && !absentSet.has(pr.id) && !qAbs[pr.id])
+              .sort((a, b) => (isFormateur(b) ? 1 : 0) - (isFormateur(a) ? 1 : 0));
             const curHolder = n.q[s.k][post.id] || '';
             if (!s.trainer && curHolder) s.trainer = curHolder;
-            const trainerOpts = '<option value="">— choisir —</option>' + cand.map(pr => '<option value="' + esc(pr.id) + '"' + (s.trainer === pr.id ? ' selected' : '') + '>' + esc(pr.name) + (pr.id === curHolder ? ' (titulaire actuel)' : '') + '</option>').join('');
+            const trainerOpts = '<option value="">— choisir —</option>' + cand.map(pr => '<option value="' + esc(pr.id) + '"' + (s.trainer === pr.id ? ' selected' : '') + '>' + (isFormateur(pr) ? '🎓 ' : '') + esc(pr.name) + (pr.id === curHolder ? ' (titulaire actuel)' : '') + '</option>').join('');
             body += '<label class="field" for="fTrainer"><span>Former avec</span><select id="fTrainer" data-chg="formTrainer">' + trainerOpts + '</select></label>';
             if (!cand.length) body += '<p class="note">Personne d’habilité et présent sur ce poste à ce quart.</p>';
           }
         } else {
-          const auto = autoFindQuart(n, post.id, s.trainee);
+          const auto = autoFindQuartPreferTrainer(n, post.id, s.trainee);
           if (auto == null) body += '<p class="note">Aucun quart libre pour cette formation sans impacter les autres. Essaie le mode manuel.</p>';
-          else { const holder = S.people[n.q[auto][post.id]]; body += '<p class="note">Quart ' + (auto + 1) + ', avec <b>' + esc(holder ? holder.name : '') + '</b> comme formateur — sans impact sur le reste du planning.</p>'; }
+          else { const holder = S.people[n.q[auto][post.id]]; body += '<p class="note">Quart ' + (auto + 1) + ', avec <b>' + esc(holder ? holder.name : '') + (isFormateur(holder) ? ' 🎓' : '') + '</b> comme formateur — sans impact sur le reste du planning.</p>'; }
         }
       }
     }
@@ -1002,7 +1019,7 @@ function shHelp(){
   const body = '<div class="lbl">Planning du jour</div><p class="note">Choisis la nuit, va dans « Effectifs » pour les absences, puis touche « Générer ». Touche une case du tableau pour changer qui tient le poste.</p>'
     + '<div class="lbl">🎓 Formation</div><p class="note">Une fois la rotation générée, ce bouton propose de mettre quelqu’un en formation sur un poste (marqué hachuré dans Polyvalence) : automatiquement (l’appli choisit un quart et un formateur sans rien changer d’autre) ou manuellement (tu choisis le quart, le poste et avec qui).</p>'
     + '<div class="lbl">Effectifs</div><p class="note">Toute l’équipe en un coup d’œil. Touche un nom pour le mettre présent/absent cette nuit. Reste appuyé sur un nom pour : absence sur certains quarts seulement, absence sur plusieurs jours, restriction sur un ou plusieurs postes (ex. médicale), ou modifier/supprimer la personne.</p>'
-    + '<div class="lbl">Polyvalence</div><p class="note">Qui sait tenir quel poste. Touche une case pour faire tourner : vide → tient le poste → en formation → vide.</p>'
+    + '<div class="lbl">Polyvalence</div><p class="note">Qui sait tenir quel poste. Touche une case pour faire tourner : vide → tient le poste → en formation → vide. Le bouton 🎓 à côté du nom marque une personne comme « Formateur » (apte à former, pour tous les postes qu’elle tient) : le mode automatique du bouton Formation la propose alors en priorité.</p>'
     + '<div class="lbl">Imprimer</div><p class="note">Le bouton « 🖨️ Imprimer » sort toujours le planning en noir et blanc, même si l’écran est en couleur.</p>'
     + '<div class="lbl">Équilibre et Historique</div><p class="note">Réservés à l’administrateur : « Équilibre » compte les quarts faits par poste sur 7 ou 30 jours, « Historique » liste les connexions et les modifications manuelles du planning.</p>';
   return {title:'Aide', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
@@ -1116,7 +1133,7 @@ const A = {
     const s = S.sheet;
     if (!s.trainee || !s.post) { s.err = 'Choisis une personne et un poste.'; renderSheet(); return; }
     const n = editable();
-    let k = s.mode === 'manual' ? s.k : autoFindQuart(n, s.post, s.trainee);
+    let k = s.mode === 'manual' ? s.k : autoFindQuartPreferTrainer(n, s.post, s.trainee);
     if (k == null) { s.err = s.mode === 'manual' ? 'Choisis un quart.' : 'Aucun quart disponible sans impacter les autres. Essaie le mode manuel.'; renderSheet(); return; }
     if (s.mode === 'manual') {
       if (!s.trainer) { s.err = 'Choisis avec qui la former.'; renderSheet(); return; }
@@ -1166,6 +1183,7 @@ const A = {
     savePerson(per); renderSheet();
   },
   cycle(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; if (!confirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?')) return; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); },
+  toggleTrainer(d){ const src = S.people[d.id]; if (!src) return; const per = clone(src); per.marks = per.marks || {}; if (per.marks._trainer) delete per.marks._trainer; else per.marks._trainer = true; savePerson(per); },
   diff(d){ const p = clone(S.posts[d.id]); p.diff = DIFF[(DIFF.indexOf(p.diff || '') + 1) % DIFF.length]; savePost(p); },
   editPerson(d){ open({type:'person', id:d.id}); },
   editPost(d){ open({type:'post', id:d.id}); },
