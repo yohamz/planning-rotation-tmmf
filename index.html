@@ -193,19 +193,19 @@ table{border-collapse:separate;border-spacing:0}
 .muted{color:var(--muted)}
 .note{margin:0;font-size:14px;color:var(--muted)}
 @media (max-width:700px){.top{position:static}.top-in{gap:6px 12px}.tabs{width:100%}.tabs button{flex:1}}
-@media (max-width:560px){.night{font-size:22px}.tabs{margin-left:0}.plan .ph{min-width:120px;width:130px}.pname{display:none}.plan td{min-width:110px}}
+@media (max-width:560px){.night{font-size:22px}.tabs{margin-left:0}.plan .ph{min-width:120px;width:130px}.plan .pname{display:none}.plan td{min-width:110px}}
 /* ---- logo animé ---- */
-.brandbtn{position:relative;border:0;background:none;padding:2px 4px;border-radius:8px;overflow:hidden}
-.brand{position:relative;z-index:1;display:flex;align-items:center;gap:10px;font-family:var(--f-cond);font-weight:700;font-size:22px;white-space:nowrap;letter-spacing:.01em}
-.brand i{width:14px;height:14px;background:var(--red);border-radius:3px;display:block}
+.brandbtn{position:relative;border:0;background:none;padding:4px 6px;border-radius:8px;overflow:hidden}
+.brand{position:relative;z-index:1;display:flex;align-items:center;gap:12px;font-family:var(--f-cond);font-weight:700;font-size:28px;white-space:nowrap;letter-spacing:.01em}
+.brand i{width:18px;height:18px;background:var(--red);border-radius:4px;display:block}
 .brand span{color:var(--muted);font-weight:600}
-.road{position:absolute;left:0;right:0;bottom:2px;height:6px;pointer-events:none;overflow:hidden;opacity:.55}
-.road::before{content:"";position:absolute;inset:2px 0;background:repeating-linear-gradient(90deg,var(--line-2) 0 10px,transparent 10px 20px)}
-.car{position:absolute;bottom:-2px;left:-40px;width:26px;height:12px;opacity:0}
+.road{position:absolute;left:0;right:0;bottom:2px;height:10px;pointer-events:none;overflow:hidden;opacity:.55}
+.road::before{content:"";position:absolute;inset:3px 0;background:repeating-linear-gradient(90deg,var(--line-2) 0 14px,transparent 14px 28px)}
+.car{position:absolute;bottom:-4px;left:-60px;width:40px;height:19px;opacity:0}
 .car svg{width:100%;height:100%;display:block}
 .brandbtn.play .car.c1{animation:drive 1.6s ease-in-out 1}
 .brandbtn.play .car.c2{animation:drive 1.6s ease-in-out .35s 1}
-@keyframes drive{0%{opacity:0;transform:translateX(0)}6%{opacity:1}92%{opacity:1}100%{opacity:0;transform:translateX(160px)}}
+@keyframes drive{0%{opacity:0;transform:translateX(0)}6%{opacity:1}92%{opacity:1}100%{opacity:0;transform:translateX(240px)}}
 /* ---- astuces & aide ---- */
 .hint{display:block;font-size:12.5px;color:var(--muted);font-weight:500;margin-top:2px;white-space:normal}
 .helpbtn{border-radius:99px}
@@ -214,7 +214,8 @@ table{border-collapse:separate;border-spacing:0}
 .acct .role{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--tl);color:var(--ink-2)}
 .acct .role.admin{background:var(--red);color:var(--red-ink)}
 .authwrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
-.authcard{width:min(460px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px;display:grid;gap:14px}
+.authcard{width:min(460px,100%);background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--red);border-radius:16px;padding:22px 20px;display:grid;gap:14px}
+.authhead .brandbtn{padding:2px 4px 10px 2px}
 .authcard h1{font-size:24px}
 .namegrid{display:grid;gap:8px}
 .authhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -465,7 +466,12 @@ function later(){ if (rq) return; rq = true; requestAnimationFrame(() => { rq = 
 function render(){
   const header = $('header.top'), main = $('#main');
   if (!S.authReady) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement…</p>'; return; }
-  if (!S.authUser) { if (header) header.hidden = true; main.innerHTML = viewLogin(); return; }
+  if (!S.authUser) {
+    if (header) header.hidden = true;
+    main.innerHTML = viewLogin();
+    if (!S._loginAnimPlayed) { S._loginAnimPlayed = true; setTimeout(() => A.playRoad(), 350); }
+    return;
+  }
   const p = profile();
   if (!p) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement du profil…</p>'; return; }
   if (p.active === false) { if (!S._forcedOut) { S._forcedOut = true; sb.auth.signOut(); } if (header) header.hidden = true; main.innerHTML = '<p class="muted">Ce compte est désactivé. Contacte ton responsable.</p>'; return; }
@@ -784,7 +790,7 @@ function viewLogin(){
   const rows = Object.values(S.profiles).filter(a => a.active !== false && a.role !== 'admin').sort((x, y) => x.name.localeCompare(y.name, 'fr'));
   const adminRows = Object.values(S.profiles).filter(a => a.active !== false && a.role === 'admin');
   if (!S.loginPick) {
-    return '<div class="authwrap"><div class="authcard"><div class="authhead"><h1>PLANNING CH2-2 <span class="verbadge">V0.1 test</span></h1><button type="button" class="gearbtn" data-act="toggleAdminMenu" aria-label="Réglages">⚙</button></div>'
+    return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation"><div class="road" aria-hidden="true"><div class="car c1" title="Toyota Yaris"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M4 20 Q4 10 14 9 L20 9 Q26 3 34 3 L42 9 L52 9 Q58 10 58 16 L58 20 Z" fill="var(--red)"/><circle cx="16" cy="21" r="5" fill="var(--ink)"/><circle cx="46" cy="21" r="5" fill="var(--ink)"/></svg></div><div class="car c2" title="Toyota Yaris Cross"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M3 21 Q3 9 13 8 L19 8 Q25 1 35 1 L44 8 L53 8 Q59 9 59 15 L59 21 Z" fill="var(--ink-2)"/><rect x="16" y="4" width="26" height="2.4" rx="1.2" fill="var(--ink-2)"/><circle cx="15" cy="22" r="5.5" fill="var(--ink)"/><circle cx="47" cy="22" r="5.5" fill="var(--ink)"/></svg></div></div><div class="brand"><i aria-hidden="true"></i>PLANNING <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button><button type="button" class="gearbtn" data-act="toggleAdminMenu" aria-label="Réglages">⚙</button></div>'
       + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
       + '<p class="note">Touche ton nom pour te connecter.</p><div class="namegrid">'
       + (rows.length ? rows.map(a => '<button type="button" class="namebtn" data-act="pickAccount" data-id="' + esc(a.id) + '">' + esc(a.name) + '</button>').join('') : '<p class="note">Chargement des comptes…</p>')
@@ -794,7 +800,7 @@ function viewLogin(){
   }
   const acc = S.profiles[S.loginPick];
   const pickTitle = acc && acc.role === 'admin' ? 'Admin' : (acc ? acc.name : '');
-  return '<div class="authwrap"><div class="authcard"><h1>' + esc(pickTitle) + '</h1>'
+  return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation"><div class="road" aria-hidden="true"><div class="car c1" title="Toyota Yaris"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M4 20 Q4 10 14 9 L20 9 Q26 3 34 3 L42 9 L52 9 Q58 10 58 16 L58 20 Z" fill="var(--red)"/><circle cx="16" cy="21" r="5" fill="var(--ink)"/><circle cx="46" cy="21" r="5" fill="var(--ink)"/></svg></div><div class="car c2" title="Toyota Yaris Cross"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M3 21 Q3 9 13 8 L19 8 Q25 1 35 1 L44 8 L53 8 Q59 9 59 15 L59 21 Z" fill="var(--ink-2)"/><rect x="16" y="4" width="26" height="2.4" rx="1.2" fill="var(--ink-2)"/><circle cx="15" cy="22" r="5.5" fill="var(--ink)"/><circle cx="47" cy="22" r="5.5" fill="var(--ink)"/></svg></div></div><div class="brand"><i aria-hidden="true"></i>PLANNING <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button></div><h1>' + esc(pickTitle) + '</h1>'
     + '<label class="field" for="loPass"><span>Mot de passe</span><input type="text" id="loPass" data-chg="loginPass" autocomplete="off" value="' + esc(S.loginPass || '') + '"></label>'
     + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
     + '<div class="bar">' + (S.loginBusy ? '<span class="muted">Connexion…</span>' : '<button type="button" class="btn" data-act="loginBack">‹ Retour</button><button type="button" class="btn btn-red grow" data-act="doLogin">Se connecter</button>') + '</div></div></div>';
@@ -928,7 +934,7 @@ const A = {
   reactivatePerson(){ const per = clone(S.people[S.sheet.id]); per.active = true; savePerson(per); renderSheet(); },
   delPost(){ deletePostRow(S.sheet.id); close(); },
   print(){ window.print(); },
-  playRoad(){ const btn = document.querySelector('.brandbtn'); if (!btn) return; btn.classList.remove('play'); void btn.offsetWidth; btn.classList.add('play'); setTimeout(() => btn.classList.remove('play'), 1700); },
+  playRoad(){ const all = document.querySelectorAll('.brandbtn'); const btn = Array.prototype.find.call(all, b => b.offsetParent !== null) || all[0]; if (!btn) return; btn.classList.remove('play'); void btn.offsetWidth; btn.classList.add('play'); setTimeout(() => btn.classList.remove('play'), 1700); },
   help(){ open({type:'help'}); },
   accounts(){ if (!isAdmin()) return; S.accountsErr = ''; open({type:'accounts'}); },
   openPersonMenu(d){ open({type:'personMenu', id:d.id}); },
@@ -953,7 +959,7 @@ const A = {
     toast('Absence enregistrée du ' + fmt(from) + ' au ' + fmt(to) + '.');
   },
   logout(){ sb.auth.signOut(); S.loginPick = null; S.loginPass = ''; S.loginErr = ''; close(); },
-  pickAccount(d){ S.loginPick = d.id; S.loginPass = ''; S.loginErr = ''; render(); },
+  pickAccount(d){ S.loginPick = d.id; S.loginPass = ''; S.loginErr = ''; render(); setTimeout(() => A.playRoad(), 350); },
   loginBack(){ S.loginPick = null; render(); },
   toggleAdminMenu(){ S.showAdminMenu = !S.showAdminMenu; render(); },
   clearProvisional(){ if (!isAdmin()) return; S.cfg.provisionalRoster = false; saveCfg(); },
