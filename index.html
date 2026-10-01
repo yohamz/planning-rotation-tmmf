@@ -153,6 +153,8 @@ table{border-collapse:separate;border-spacing:0}
 .tog.off{background:var(--surface-2);color:var(--muted);text-decoration:line-through}
 .tlrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line)}
 .tlrow b{min-width:90px}
+.tlrow select.rolesel{min-height:32px;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700;background:var(--orange);color:#fff;border-color:var(--orange)}
+.tlrow select.rolesel.tm{background:var(--surface-2);color:var(--ink-2);border-color:var(--line-2)}
 .qb{min-width:52px;min-height:44px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);font-weight:700}
 .qb[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:var(--red-ink)}
 .field{display:grid;gap:6px}
@@ -293,6 +295,9 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .sug.med{border-left:4px solid var(--orange)}
 .sug.info{border-left:4px solid var(--line-2)}
 .sug p{margin:0}
+.fbtext{width:100%;min-height:96px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);padding:8px 10px;font:inherit;color:inherit;resize:vertical}
+.msgbtn{position:relative}
+.msgbtn .badge{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;border-radius:99px;background:var(--red);color:var(--red-ink);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
 .sug .acts{display:flex;gap:6px;flex-wrap:wrap}
 .opt .rec{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--vert);margin-left:6px}
 .opt .steps{display:grid;gap:2px;font-weight:600}
@@ -310,6 +315,25 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .gf-car{position:absolute;left:-60px;bottom:0;width:58px;height:27px;animation:gfDrive 1.5s ease-in-out infinite}
 .gf-car svg{width:100%;height:100%;display:block}
 @keyframes gfIn{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+.loadfx{display:flex;flex-direction:column;align-items:center;gap:10px;padding:80px 16px;color:var(--muted);font-weight:600}
+.warnq{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:99px;background:var(--orange);color:#fff;font-size:13px;font-weight:800;flex:none}
+/* ---- cinématique « le tirage » ---- */
+.gf-dot{width:10px;height:10px;border-radius:99px;background:var(--red);animation:gfPulse .8s ease-in-out infinite}
+@keyframes gfPulse{50%{opacity:.35;transform:scale(.7)}}
+#main.shuffling .plan,#main.shuffling .mlist,#main.shuffling .qtabs{pointer-events:none}
+.spin{display:inline-block;color:var(--muted);font-weight:600;filter:blur(.4px);animation:spinJit .15s linear infinite}
+@keyframes spinJit{0%{transform:translateY(-2px)}50%{transform:translateY(2px)}100%{transform:translateY(-2px)}}
+.lockpop{display:inline-flex;align-items:center;gap:6px;animation:lockPop .35s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes lockPop{0%{transform:scale(.7);opacity:.3}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.gf-dot,.spin,.lockpop{animation:none}}
+.maint{text-align:center}
+.maint-road{position:relative;height:56px;overflow:hidden;margin:4px 0 8px}
+.maint-road::before{content:"";position:absolute;left:0;right:0;bottom:3px;height:2px;background:repeating-linear-gradient(90deg,var(--line-2) 0 12px,transparent 12px 24px);animation:maintLine .6s linear infinite}
+.maint-car{position:absolute;left:0;bottom:2px;width:104px;height:48px;animation:maintDrive 4.5s ease-in-out infinite}
+.maint-car svg{width:100%;height:100%;display:block}
+@keyframes maintDrive{0%{left:-120px}45%,58%{left:calc(50% - 52px)}100%{left:calc(100% + 16px)}}
+@keyframes maintLine{to{background-position:-24px 0}}
+@media (prefers-reduced-motion:reduce){.maint-car,.maint-road::before{animation:none}.maint-car{left:calc(50% - 52px)}}
 @keyframes gfDrive{from{transform:translateX(0)}to{transform:translateX(212px)}}
 .fresh{animation:fresh .55s ease-out both}
 @keyframes fresh{0%{opacity:0;transform:translateY(3px);background:var(--red-soft)}60%{opacity:1;transform:none}100%{opacity:1;transform:none}}
@@ -328,7 +352,7 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 <main id="main"><p class="muted">Chargement…</p></main>
 <div id="sheet"></div>
 <div id="toast" role="status" aria-live="polite" hidden></div>
-<div id="genfx" role="status" aria-live="polite" hidden><div class="gf-road" aria-hidden="true"><div class="gf-car" data-car></div></div><span>Calcul…</span></div>
+<div id="genfx" role="status" aria-live="polite" hidden><i class="gf-dot" aria-hidden="true"></i><span>Calcul…</span></div>
 
 <script>
 (function(){
@@ -346,7 +370,9 @@ const MARKS = ['', 'G', 'H'];
 const DIFF = ['', 'vert', 'orange', 'rouge'];
 const HIST_NIGHTS = 30;
 const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
-const ROLE_LABEL = {admin:'Admin', tl:'TL'};
+const ROLE_LABEL = {admin:'Admin', tl:'TL', gl:'GL', tm:'TM'};
+/* rôles qu'un Admin attribue : TL et GL gèrent le planning (mêmes droits), TM est spectateur */
+const ACCOUNT_ROLES = [{k:'tl', label:'TL'}, {k:'gl', label:'GL'}, {k:'tm', label:'TM (spectateur)'}];
 const TAB_DEFS = [
   {k:'plan', label:'Planning du jour', short:'Planning'},
   {k:'effectifs', label:'Effectifs', short:'Effectifs'},
@@ -397,7 +423,7 @@ const S = { ready:false, people:{}, posts:{}, nights:{}, cfg:Object.assign({}, D
   authUser:null, authReady:false,
   loginPick:null, loginPass:'', loginErr:'', loginBusy:false,
   newPass:'', newPass2:'', newPassErr:'', newPassBusy:false,
-  accountsErr:'', newTLName:'', eqSpan:7 };
+  accountsErr:'', newTLName:'', eqSpan:7, feedback:{} };
 const mq = window.matchMedia ? window.matchMedia('(max-width: 700px)') : null;
 const phone = () => !!(mq && mq.matches);
 if (mq) { const f = () => { render(); if (S.sheet) renderSheet(); }; if (mq.addEventListener) mq.addEventListener('change', f); else if (mq.addListener) mq.addListener(f); }
@@ -416,42 +442,24 @@ const hint = txt => hintsOn() ? '<small class="hint">' + esc(txt) + '</small>' :
    sont imposées côté serveur par les policies RLS, ceci ne sert qu'à l'affichage) ---------- */
 const profile = () => (S.authUser && S.profiles[S.authUser.id]) || null;
 const isAdmin = () => { const p = profile(); return !!(p && p.role === 'admin' && p.active); };
-/* Fenêtre d'accès TL, heure de Paris — équipe de nuit (prise de poste 21h45,
-   fin 5h26/5h33 ou plus tard en overtime), pas d'équipe le samedi soir.
-   Purement indicatif côté écran : la vraie limite horaire est appliquée par
-   la fonction SQL tl_window_ok() via RLS (celle-ci ne connaît pas encore
-   l'exception du samedi — à reporter côté serveur si l'accès Supabase est
-   donné un jour, pour que les deux restent cohérentes). */
+/* TM = spectateur : ne voit que les plannings validés, sans rien pouvoir modifier
+   (côté serveur, les policies RLS ne lui renvoient que les nuits validées, en lecture) */
+const isViewer = () => { const p = profile(); return !!(p && p.role === 'tm'); };
+/* Horaires d'accès, heure de Paris :
+   - Admin : 24h/24 ;
+   - TL, GL et TM : de 21h à 7h30 ; en dehors (7h30-21h), écran « Maintenance en cours ».
+   Pour les TM la limite est aussi appliquée par la base de données (fonction SQL
+   tm_window_ok() via is_viewer() et les policies RLS) ; pour TL/GL c'est l'écran seul. */
 function parisParts(){
   const f = new Intl.DateTimeFormat('fr-FR', {timeZone:'Europe/Paris', hour:'2-digit', minute:'2-digit', hour12:false});
   const parts = f.formatToParts(new Date());
   const get = t => Number(parts.find(p => p.type === t).value);
-  return {h:get('hour'), m:get('minute')};
+  return {h:get('hour') % 24, m:get('minute')};
 }
-function parisDateParts(){
-  const f = new Intl.DateTimeFormat('fr-FR', {timeZone:'Europe/Paris', year:'numeric', month:'2-digit', day:'2-digit'});
-  const parts = f.formatToParts(new Date());
-  const get = t => Number(parts.find(p => p.type === t).value);
-  return {y:get('year'), mo:get('month'), d:get('day')};
-}
-/* Horaires TL (20h30-6h45, fermé le samedi) : actifs. Un essai d'ouverture 24h/24 a été
-   envisagé le 30/09/2026 mais annulé — la règle côté base de données (Supabase, fonction
-   tl_window_ok()) bloque de toute façon les données hors 20h30-6h45, donc désactiver
-   uniquement ce côté-ci n'aurait fait qu'ouvrir l'écran sans donner accès aux données. */
-const TL_HOURS_ENFORCED = true;
-/* renvoie pourquoi l'appli est fermée pour un TL en ce moment, ou null si elle est ouverte */
-function tlWindowReason(){
-  if (!TL_HOURS_ENFORCED) return null;
-  const {h, m} = parisParts(); const mins = h * 60 + m;
-  if (!(mins >= 20 * 60 + 30 || mins < 6 * 60 + 45)) return 'hours';
-  const dp = parisDateParts();
-  /* après 6h45, la nuit en cours a commencé la veille */
-  const nightStart = mins < 6 * 60 + 45 ? new Date(dp.y, dp.mo - 1, dp.d - 1) : new Date(dp.y, dp.mo - 1, dp.d);
-  if (nightStart.getDay() === 6) return 'saturday'; /* pas d'équipe le samedi soir */
-  return null;
-}
-function tlWindowOk(){ return tlWindowReason() == null; }
-function appOpenForMe(){ const p = profile(); if (!p) return true; return p.role === 'admin' || tlWindowOk(); }
+function appWindowOk(){ const {h, m} = parisParts(); const mins = h * 60 + m; return mins >= 21 * 60 || mins < 7 * 60 + 30; }
+function appOpenForMe(){ const p = profile(); if (!p) return true; return p.role === 'admin' || appWindowOk(); }
+/* « Bonjour » de 5h à 18h, « Bonsoir » le reste du temps (heure de Paris) */
+const greeting = () => { const {h} = parisParts(); return h >= 5 && h < 18 ? 'Bonjour' : 'Bonsoir'; };
 async function callAdminAction(payload){
   const {data, error} = await sb.functions.invoke('admin-actions', {body: payload});
   if (error) { let msg = error.message || 'Erreur.'; try { const ctx = await error.context.json(); if (ctx && ctx.error) msg = ctx.error; } catch (e) {} throw new Error(msg); }
@@ -486,7 +494,8 @@ const isFormateur = per => !!(per && per.marks && per.marks._trainer);
 const roleOf = per => String((per && per.role) || 'TM').trim() || 'TM';
 const isTL = per => !!per && roleOf(per).toUpperCase() === 'TL';
 const isTemp = per => !!(per && per.temp);
-const nightOf = d => S.nights[d || S.date] || null;
+/* un spectateur ne voit jamais une nuit non validée (même si une copie traîne en mémoire) */
+const nightOf = d => { const n = S.nights[d || S.date] || null; return n && isViewer() && !(n.tl && n.tl._status && n.tl._status.state === 'validated') ? null : n; };
 const generated = n => !!(n && n.generated);
 const nq = n => (n && n.ot) ? 5 : 4;
 /* clés réservées dans la colonne tl d'une nuit (_log, _status, _snap) : jamais des personnes */
@@ -822,14 +831,20 @@ function deletePostRow(id){ delete S.posts[id]; render(); queued('post:' + id, (
 const newId = pre => pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
 let tt = null;
-function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, Math.min(7000, Math.max(2800, String(m).length * 45))); }
+function toast(m){ if (S.deferToasts) { S.deferToasts.push(m); return; } const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, Math.min(7000, Math.max(2800, String(m).length * 45))); }
 
 /* ---------- render ---------- */
 let rq = false;
 function later(){ if (rq) return; rq = true; requestAnimationFrame(() => { rq = false; render(); if (S.sheet && !S.sheet.form) renderSheet(); }); }
+/* écran de chargement : la même voiture que pendant la génération, jusqu'à ce que les données soient là
+   (pas redessiné s'il est déjà affiché, pour que l'animation ne redémarre pas) */
+function showLoading(main){
+  if (main.querySelector('.loadfx')) return;
+  main.innerHTML = '<div class="loadfx" role="status"><div class="gf-road" aria-hidden="true"><div class="gf-car">' + car206() + '</div></div><span>Chargement…</span></div>';
+}
 function render(){
   const header = $('header.top'), main = $('#main');
-  if (!S.authReady) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement…</p>'; return; }
+  if (!S.authReady) { if (header) header.hidden = true; showLoading(main); return; }
   if (!S.authUser) {
     if (header) header.hidden = true;
     main.innerHTML = viewLogin();
@@ -840,10 +855,13 @@ function render(){
   if (!p) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement du profil…</p>'; return; }
   if (p.active === false) { if (!S._forcedOut) { S._forcedOut = true; sb.auth.signOut(); } if (header) header.hidden = true; main.innerHTML = '<p class="muted">Ce compte est désactivé. Contacte ton responsable.</p>'; return; }
   if (p.must_change_password) { if (header) header.hidden = true; main.innerHTML = viewChangePass(); return; }
-  if (p.role === 'tl' && !tlWindowOk()) { if (header) header.hidden = true; main.innerHTML = viewClosed(); return; }
-  if (!S.ready) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement…</p>'; return; }
+  if (!appOpenForMe()) { if (header) header.hidden = true; S._wasClosed = true; if (!main.querySelector('.maint')) main.innerHTML = viewClosed(); return; }
+  /* réouverture à 21h : les données étaient refusées par la base pendant la fermeture, on les recharge */
+  if (S._wasClosed) { S._wasClosed = false; S.ready = false; loadBusinessData(); }
+  if (!S.ready) { if (header) header.hidden = true; showLoading(main); return; }
   if (header) header.hidden = false;
   if (S.tab === 'equilibre' && !isAdmin()) S.tab = 'plan';
+  if (isViewer() && S.tab !== 'plan' && S.tab !== 'archives') S.tab = 'plan';
   $('#teamName').textContent = S.cfg.team || '';
   renderAcct();
   renderTabs();
@@ -856,14 +874,14 @@ function render(){
 function renderAcct(){
   const bar = $('#acctBar'); if (!bar) return;
   const p = profile(); if (!p) { bar.innerHTML = ''; return; }
-  bar.innerHTML = '<div class="acct"><span class="who">' + esc(p.name) + '</span><span class="role' + (p.role === 'admin' ? ' admin' : '') + '">' + esc(ROLE_LABEL[p.role] || p.role) + '</span>'
-    + (p.role === 'admin' ? '<button type="button" class="btn btn-sm" data-act="accounts">Comptes</button>' : '')
+  bar.innerHTML = '<div class="acct"><span class="who">' + greeting() + ' ' + esc(p.name) + '</span><span class="role' + (p.role === 'admin' ? ' admin' : '') + '">' + esc(ROLE_LABEL[p.role] || p.role) + '</span>'
+    + (p.role === 'admin' ? '<button type="button" class="btn btn-sm msgbtn" data-act="messages" aria-label="Suggestions reçues' + (unreadFeedback() ? ', ' + unreadFeedback() + ' non lue(s)' : '') + '">💬 Suggestions' + (unreadFeedback() ? '<span class="badge">' + unreadFeedback() + '</span>' : '') + '</button><button type="button" class="btn btn-sm" data-act="accounts">Comptes</button>' : '')
     + '<button type="button" class="btn btn-sm" data-act="logout">Se déconnecter</button></div>';
 }
 function renderTabs(){
   const nav = $('#tabsNav'); if (!nav) return;
-  const adm = isAdmin();
-  nav.innerHTML = TAB_DEFS.filter(t => !t.admin || adm).map(t => '<button type="button" data-act="tab" data-tab="' + t.k + '"><span class="l">' + esc(t.label) + '</span><span class="s">' + esc(t.short) + '</span></button>').join('');
+  const adm = isAdmin(), viewer = isViewer();
+  nav.innerHTML = TAB_DEFS.filter(t => (!t.admin || adm) && (!viewer || t.k === 'plan' || t.k === 'archives')).map(t => '<button type="button" data-act="tab" data-tab="' + t.k + '"><span class="l">' + esc(t.label) + '</span><span class="s">' + esc(t.short) + '</span></button>').join('');
 }
 function postHead(p){ return '<button type="button" class="post linkbtn" data-act="trainees" data-id="' + esc(p.id) + '"><span class="dot ' + esc(p.diff || '') + '" aria-hidden="true"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button>'; }
 function crewInfoOf(n, shortForm){
@@ -888,7 +906,8 @@ function statusBar(n){
   const todo = allQuarts(n).filter(k => !quartDone(n, k)).map(k => 'Q' + (k + 1));
   const covTxt = todo.length ? '<small style="color:var(--orange);font-weight:700">' + todo.join(', ') + ' pas encore généré' + (todo.length > 1 ? 's' : '') + '</small>' : cov.missing ? '<small style="color:var(--rouge);font-weight:700">' + cov.missing + ' case' + (cov.missing > 1 ? 's' : '') + ' non couverte' + (cov.missing > 1 ? 's' : '') + '</small>' : '<small>Tous les postes sont couverts</small>';
   /* nuit générée quart par quart : un bouton pour compléter les quarts restants */
-  const rest = todo.length ? '<button type="button" class="btn btn-sm btn-red" data-act="genRest">⚡ Générer le reste de la nuit (' + todo.join(', ') + ')</button>' : '';
+  if (isViewer()) return '<div class="status ' + st + '"><span class="pill">' + (st === 'archived' ? 'Archivé' : 'Validé') + '</span><small>Planning officiel' + (s.by ? ' · validé par ' + esc(s.by) : '') + '</small></div>';
+  const rest = todo.length ?'<button type="button" class="btn btn-sm btn-red" data-act="genRest">⚡ Générer le reste de la nuit (' + todo.join(', ') + ')</button>' : '';
   if (st === 'draft') return '<div class="status draft"><span class="pill">En préparation</span>' + covTxt + '<span class="grow"></span>' + rest + '<button type="button" class="btn btn-sm' + (todo.length ? '' : ' btn-red') + '" data-act="validate">✓ Valider le planning</button></div>';
   if (st === 'validated') return '<div class="status validated"><span class="pill">Validé</span><small>Planning officiel' + (s.by ? ' · validé par ' + esc(s.by) : '') + (t ? ' à ' + t : '') + ' · passera dans les Archives à la fin de la nuit.</small>' + covTxt + '<span class="grow"></span>' + rest + '<button type="button" class="btn btn-sm" data-act="unvalidate">Repasser en préparation</button></div>';
   return '<div class="status archived"><span class="pill">Archivé</span><small>Lecture seule' + (s.by ? ' · validé par ' + esc(s.by) : '') + '</small></div>';
@@ -901,6 +920,12 @@ function freshFx(k, pid){
   return {cls:' fresh', st:' style="animation-delay:' + Math.round(k * 70 - el) + 'ms"'};
 }
 function cellInner(n, k, p, compact){
+  /* cinématique « le tirage » : la case défile tant que son quart n'est pas figé */
+  if (spinning(k)) return '<span class="spin" data-spin>' + esc(spinName()) + '</span>';
+  const h0 = cellContent(n, k, p, compact);
+  return S.shuffle && S.shuffle.pop === k && S.shuffle.date === S.date ? '<span class="lockpop">' + h0 + '</span>' : h0;
+}
+function cellContent(n, k, p, compact){
   const gen = generated(n);
   const who = n && n.q && n.q[k] ? n.q[k][p.id] : null;
   const per = personFor(n, who);
@@ -908,15 +933,18 @@ function cellInner(n, k, p, compact){
   let h = per ? esc(per.name) + (isTL(per) ? ' <span class="tag">TL</span>' : '') + (mark(per, p.id) === 'H' ? ' <span class="tag h">' + (compact ? '🎓' : '🎓 Formation') + '</span>' : '')
     : (gen && quartDone(n, k) ? '<span class="uncov">Non couvert</span>' : '<span class="empty">—</span>');
   if (trainPer) h += ' <span class="tag h">+' + (compact ? '' : ' ') + esc(trainPer.name) + ' 🎓</span>';
+  /* attention : même personne sur ce poste au quart précédent (deux quarts d'affilée) */
+  if (per && k > 0 && n.q[k - 1] && n.q[k - 1][p.id] === who && !spinning(k - 1)) h += ' <span class="warnq" title="Attention : même poste que le quart précédent (Q' + k + ')" aria-label="Attention : même poste deux quarts d’affilée">!</span>';
   return h;
 }
+/* TL et GL proposent des améliorations (pas les TM) ; l'Admin les reçoit dans 💬 Suggestions */
 function nutBtn(n, cls){
-  const cnt = nightSuggestions(n, true).filter(x => x.level !== 'info').length;
-  return '<button type="button" class="btn nut' + (cls || '') + '" data-act="suggest" title="Suggestions pour le TL">🥜 Suggestions' + (cnt ? '<span class="badge">' + cnt + '</span>' : '') + '</button>';
+  if (isAdmin() || isViewer()) return '';
+  return '<button type="button" class="btn nut' + (cls || '') + '" data-act="suggest" title="Proposer une amélioration à l’Admin">💡 ' + (phone() ? 'Proposer' : 'Proposer une amélioration') + '</button>';
 }
 const shareBtns = () => '<button type="button" class="btn" data-act="pdfDownload">⬇️ Télécharger</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button>';
 function viewPlan(){
-  const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived', ps = planPosts(n);
+  const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived' || isViewer(), ps = planPosts(n);
   const crewInfo = crewInfoOf(n, false);
   let html = '<div class="bar"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button>'
     + '<span class="night">' + esc(fmt(S.date)) + '</span>'
@@ -927,11 +955,12 @@ function viewPlan(){
     html += '<button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? ' · ' + crewInfo : '') + '</button>'
       + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>')
       + (st !== 'validated' ? '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>' : '')
-      + (gen ? '<button type="button" class="btn btn-formation" data-act="formation">🎓 Formation</button>' : '')
-      + nutBtn(n);
+      + (gen ? '<button type="button" class="btn btn-formation" data-act="formation">🎓 Formation</button>' : '');
   }
+  html += nutBtn(n);
   if (gen) html += shareBtns();
   html += '</div>' + statusBar(n);
+  if (!gen && isViewer()) return html + '<div class="start"><p>Le planning de cette nuit n’est pas encore validé. Il apparaîtra ici dès que le TL l’aura validé.</p></div>';
   if (!gen) html += '<div class="start"><p>Pas encore de planning pour cette nuit. Indique les absents et les TL dans « Effectifs », puis génère toute la nuit, ou fais un appui long sur un quart (Quart 1, Quart 2…) pour ne générer que celui-là.' + hint(' Astuce : dans Effectifs, le bouton ⚙️ (ou un appui long sur un nom) donne plus d’options : absence longue, par quart…') + '</p><button type="button" class="btn btn-red" data-act="gen">Générer la rotation</button></div>';
   let head = '<tr><th scope="col">Poste</th>';
   for (let k = 0; k < Q; k++) {
@@ -960,7 +989,7 @@ function viewPlan(){
     + (ro ? '' : '<p class="note">Touche une case pour changer qui tient le poste ; appui long (ou clic droit) sur une case pour retirer ou remplacer la personne sur ce quart ; appui long sur l’en-tête d’un quart pour ne générer que celui-là. Case avec une barre rouge : personne forcée, gardée quand tu régénères.</p>');
 }
 function viewPlanPhone(){
-  const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived', ps = planPosts(n);
+  const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived' || isViewer(), ps = planPosts(n);
   if (S.qk >= Q) S.qk = 0;
   const k = S.qk;
   const crewInfo = crewInfoOf(n, true);
@@ -973,7 +1002,9 @@ function viewPlanPhone(){
       + (st !== 'validated' ? '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>' : '')
       + (gen ? '<button type="button" class="btn btn-formation m-gen" data-act="formation">🎓 Mettre en formation</button>' : '');
   }
-  if (gen || !ro) html += '<div class="m-acts m-acts3">' + (ro ? '' : nutBtn(n)) + (gen ? shareBtns() : '') + '</div>';
+  if (!gen && isViewer()) return html + '<p class="note">Le planning de cette nuit n’est pas encore validé. Il apparaîtra ici dès que le TL l’aura validé.</p>';
+  const macts = nutBtn(n) + (gen ? shareBtns() : '');
+  if (macts) html += '<div class="m-acts m-acts3">' + macts + '</div>';
   html += statusBar(n);
   html += '<div class="qtabs" role="group" aria-label="Quart">';
   for (let j = 0; j < Q; j++) html += '<button type="button" data-act="qk" data-k="' + j + '"' + (!ro ? ' data-long="quartLong"' : '') + ' aria-pressed="' + (j === k) + '">Q' + (j + 1) + (j === 4 ? '<small>OT</small>' : '') + '</button>';
@@ -1191,17 +1222,58 @@ function shFormation(s){
   return {title:'🎓 Mettre en formation', body, foot:'<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn btn-red" data-act="formConfirm">Confirmer</button>'};
 }
 
-/* ---------- calcul avec animation (rapide, non bloquante) ---------- */
-let genBusy = false;
-function runWithAnim(label, fn){
+/* ---------- cinématique « le tirage » ----------
+   Pendant la génération, les noms défilent dans les cases des quarts concernés comme
+   une machine à sous ; une fois le calcul ET l'enregistrement dans Supabase terminés,
+   les quarts se figent un par un (Q1, Q2…) sur le vrai résultat. Durée : tout le
+   chargement, avec un minimum d'environ 3 s. ks = quarts concernés. */
+let genBusy = false, spinTimer = null;
+const SPIN_MIN_MS = 1300, LOCK_STEP_MS = 450;
+function spinName(){
+  const pp = S._spinNames || [];
+  return pp.length ? pp[Math.floor(Math.random() * pp.length)] : '…';
+}
+function spinning(k){ const sh = S.shuffle; return !!(sh && sh.date === S.date && sh.ks.includes(k) && !sh.locked.has(k)); }
+function runWithAnim(label, fn, ks){
   if (genBusy) return; genBusy = true;
-  const fx = $('#genfx');
+  const fx = $('#genfx'), main = $('#main');
   const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  if (fx) { fx.querySelector('span').textContent = label; fx.hidden = false; }
-  setTimeout(() => {
-    try { fn(); } catch (e) { console.error(e); toast('Erreur pendant le calcul.'); }
-    finally { genBusy = false; setTimeout(() => { if (fx) fx.hidden = true; }, reduce ? 0 : 1050); } /* la voiture finit sa traversée, sans bloquer l'écran */
-  }, reduce ? 0 : 450);
+  const setLabel = t => { if (fx) { fx.querySelector('span').textContent = t; fx.hidden = false; } };
+  setLabel(label);
+  const list = (ks && ks.length ? ks : [0, 1, 2, 3]).slice().sort((a, b) => a - b);
+  const t0 = Date.now();
+  const finish = () => {
+    clearInterval(spinTimer); spinTimer = null;
+    S.shuffle = null; genBusy = false; if (main) main.classList.remove('shuffling');
+    const msgs = S.deferToasts || []; S.deferToasts = null;
+    render();
+    setTimeout(() => { if (fx) fx.hidden = true; }, 600);
+    if (msgs.length) toast(msgs[msgs.length - 1]);
+  };
+  if (!reduce) {
+    S._spinNames = activePeople().filter(p => !isTemp(p)).map(p => p.name);
+    S.shuffle = {date:S.date, ks:list, locked:new Set(), pop:-1};
+    if (main) main.classList.add('shuffling');
+    if (phone()) S.qk = list[0];
+    render();
+    spinTimer = setInterval(() => { document.querySelectorAll('[data-spin]').forEach(el => { el.textContent = spinName(); }); }, 75);
+  }
+  S.deferToasts = []; /* les messages « Rotation générée »… s'affichent à la fin du tirage */
+  setTimeout(async () => {
+    try { fn(); } catch (e) { console.error(e); S.deferToasts && S.deferToasts.push('Erreur pendant le calcul.'); }
+    try { await Promise.allSettled(Object.values(queues)); } catch (e) {}
+    if (reduce || !S.shuffle) { finish(); return; }
+    /* les quarts se figent un par un sur le vrai résultat */
+    const startIn = Math.max(0, SPIN_MIN_MS - (Date.now() - t0));
+    list.forEach((k, i) => setTimeout(() => {
+      if (!S.shuffle) return;
+      S.shuffle.locked.add(k); S.shuffle.pop = k;
+      if (phone()) S.qk = k;
+      setLabel('Quart ' + (k + 1) + ' placé');
+      render();
+      if (i === list.length - 1) setTimeout(() => { if (phone()) S.qk = list[0]; finish(); }, LOCK_STEP_MS + 150);
+    }, startIn + i * LOCK_STEP_MS));
+  }, reduce ? 0 : 400);
 }
 /* repère les cases qui changent, pour les faire apparaître en douceur */
 function markFresh(n, before){
@@ -1213,79 +1285,25 @@ function markFresh(n, before){
   S.fresh = {date:n.date, keys, t:Date.now()};
 }
 
-/* ---------- suggestions pour les TL (🥜) ----------
-   light = true : version rapide pour le compteur du bouton (sans chercher de solutions) */
-function nightSuggestions(n, light){
-  const out = [];
-  if (!n) n = editable(S.date);
-  if (nightState(n) === 'archived') return out;
-  const ps = posts(), Q = nq(n), gen = generated(n);
-  const nm = id => (S.people[id] || {}).name || '?';
-  if (!gen) {
-    ps.forEach(p => {
-      const anyone = allQuarts(n).some(k => activePeople().some(per => onQuart(n, k, per) && fitFor(per, p.id, n)));
-      if (!anyone) out.push({level:'high', text:p.code + ' · ' + p.name + ' : aucune personne qualifiée présente cette nuit (' + whyEmpty(n, 0, p.id) + '). Ce poste restera vide.', acts:[]});
-    });
-    out.push({level:'info', text:'Pas encore de planning : vérifie les absents et les TL dans Effectifs, puis génère la rotation.', acts:[{label:'Générer', act:'gen'}]});
-    return out;
-  }
-  for (let k = 0; k < Q; k++) {
-    const q = n.q[k] || {}, t = n.train[k] || {};
-    if (!quartDone(n, k)) { out.push({level:'med', text:'Q' + (k + 1) + ' n’est pas encore généré.', acts:[{label:'Générer le Q' + (k + 1), act:'regenOne', data:{k}}]}); continue; }
-    ps.forEach(p => {
-      if (q[p.id]) return;
-      const item = {level:'high', text:'Q' + (k + 1) + ' · ' + p.code + ' ' + p.name + ' non couvert — ' + whyEmpty(n, k, p.id) + '.', acts:[]};
-      if (!light) {
-        const o = replacementOptions(n, k, p.id);
-        if (o.length) item.acts.push({label:o[0].steps.length === 1 ? 'Proposer quelqu’un' : 'Proposer une solution (2 changements)', act:'openReplace', data:{k, post:p.id, mode:'fill'}});
-        else item.text += ' Aucune solution sans renfort ni TL supplémentaire.';
-      }
-      out.push(item);
-    });
-    Object.keys(t).forEach(pid => { if (!q[pid] && S.posts[pid]) out.push({level:'high', text:'Q' + (k + 1) + ' · ' + nm(t[pid]) + ' est en formation sur ' + S.posts[pid].code + ' sans titulaire : une personne en formation ne doit jamais être seule.', acts:[{label:'Choisir un titulaire', act:'openReplace', data:{k, post:pid, mode:'fill'}}]}); });
-  }
-  for (let k = 0; k + 1 < Q; k++) {
-    const a = holderMap(n.q[k] || {}), b = holderMap(n.q[k + 1] || {});
-    Object.keys(b).forEach(id => {
-      const p1 = S.posts[a[id]], p2 = S.posts[b[id]];
-      if (!p1 || !p2) return;
-      /* inutile de signaler si personne d'autre ne sait tenir ce poste */
-      const locked = (n.lock[k + 1] || {})[p2.id] === id || !activePeople().some(per => per.id !== id && fitFor(per, p2.id, n));
-      if (p1.id === p2.id && !locked) out.push({level:'med', text:nm(id) + ' tient ' + p2.code + ' en Q' + (k + 1) + ' et Q' + (k + 2) + ' (même poste deux quarts de suite).', acts:[{label:'Remplacer au Q' + (k + 2), act:'openReplace', data:{k:k + 1, post:p2.id, mode:'replace', who:id}}]});
-      else if (p1.diff === 'rouge' && p2.diff === 'rouge' && !locked) out.push({level:'med', text:nm(id) + ' enchaîne deux postes rouges : ' + p1.code + ' (Q' + (k + 1) + ') puis ' + p2.code + ' (Q' + (k + 2) + ').', acts:[{label:'Remplacer au Q' + (k + 2), act:'openReplace', data:{k:k + 1, post:p2.id, mode:'replace', who:id}}]});
-    });
-  }
-  for (let k = 0; k < Q; k++) {
-    const placed = holderMap(n.q[k] || {});
-    tlIds(n).forEach(id => { const per = S.people[id]; if (per && isTL(per) && onQuart(n, k, per) && !placed[id]) out.push({level:'info', text:per.name + ' (TL) est coché(e) sur Q' + (k + 1) + ' mais ne tient aucun poste (aucun poste libre qu’il/elle sait tenir).', acts:[]}); });
-  }
-  activePeople().filter(per => !isTL(per) && !isTemp(per) && !(n.absent || []).includes(per.id)).forEach(per => {
-    const busy = allQuarts(n).some(k => holderMap(n.q[k] || {})[per.id] || Object.values(n.train[k] || {}).includes(per.id));
-    const nbPosts = posts().filter(p => canHoldAlone(per, p.id)).length;
-    if (!busy) out.push({level:'info', text:per.name + ' est présent(e) mais placé(e) sur aucun quart' + (nbPosts ? '.' : ' : aucun poste coché « tient le poste » dans Polyvalence.'), acts:[]});
-  });
-  if (!light) {
-    let shown = 0;
-    activePeople().filter(per => !isTL(per) && !isTemp(per) && !(n.absent || []).includes(per.id)).forEach(per => {
-      if (shown >= 5 || allQuarts(n).some(k => Object.values(n.train[k] || {}).includes(per.id))) return;
-      const hp = posts().find(p => mark(per, p.id) === 'H' && autoFindQuartPreferTrainer(n, p.id, per.id) != null);
-      if (!hp) return;
-      const k = autoFindQuartPreferTrainer(n, hp.id, per.id), holder = S.people[n.q[k][hp.id]];
-      out.push({level:'info', text:'🎓 ' + per.name + ' pourrait être formé(e) sur ' + hp.code + ' au Q' + (k + 1) + ' avec ' + (holder ? holder.name : '') + (isFormateur(holder) ? ' (formateur)' : '') + ', sans rien changer d’autre.', acts:[{label:'Mettre en formation', act:'sugTrain', data:{id:per.id, post:hp.id, k}}]});
-      shown++;
-    });
-  }
-  if (nightState(n) === 'draft') out.push({level:'info', text:'Planning en préparation : valide-le quand il est prêt pour en faire le planning officiel (il sera archivé à la fin de la nuit).', acts:[{label:'✓ Valider', act:'validate'}]});
-  const rank = {high:0, med:1, info:2};
-  return out.sort((a, b) => rank[a.level] - rank[b.level]);
-}
+/* ---------- suggestions (💡) : boîte à idées ----------
+   le TL/GL écrit une amélioration ou une suggestion, l'Admin la reçoit avec une notification */
 function shSuggest(){
-  const n = nightOf();
-  const list = nightSuggestions(n, false);
-  const dataAttrs = d => Object.keys(d || {}).map(k => ' data-' + k + '="' + esc(d[k]) + '"').join('');
-  const body = list.length ? list.map(x => '<div class="sug ' + x.level + '"><p>' + esc(x.text) + '</p>' + (x.acts.length ? '<div class="acts">' + x.acts.map(a => '<button type="button" class="btn btn-sm" data-act="' + a.act + '"' + dataAttrs(a.data) + '>' + esc(a.label) + '</button>').join('') + '</div>' : '') + '</div>').join('')
-    : '<p class="okmsg">Rien à signaler pour cette nuit 👌</p>';
-  return {title:'🥜 Suggestions · ' + esc(fmt(S.date)), body, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+  const s = S.sheet || {};
+  const body = '<p class="note" style="margin-top:0">Une idée, un problème, quelque chose à changer dans l’appli ? Écris-le ici, l’Admin le recevra.</p>'
+    + '<textarea class="fbtext" id="fbText" data-inp="fbText" maxlength="2000" rows="4" placeholder="Ta suggestion…">' + esc(s.fbText || '') + '</textarea>'
+    + (s.fbMsg ? '<p class="note" style="color:' + (s.fbOk ? 'var(--vert)' : 'var(--red)') + '">' + esc(s.fbMsg) + '</p>' : '')
+    + '<div class="bar"><span class="grow"></span><button type="button" class="btn btn-red" data-act="sendFeedback"' + (s.fbBusy ? ' disabled' : '') + '>' + (s.fbBusy ? 'Envoi…' : 'Envoyer à l’Admin') + '</button></div>';
+  return {title:'💡 Proposer une amélioration', body, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+}
+/* messages reçus (Admin) */
+const unreadFeedback = () => Object.values(S.feedback).filter(f => !f.read).length;
+function shMessages(){
+  const rows = Object.values(S.feedback).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const body = rows.length ? rows.map(f => '<div class="sug ' + (f.read ? 'info' : 'med') + '"><p><b>' + esc(f.author_name || '?') + '</b> <small class="muted">· ' + esc(fmtTs(f.created_at)) + (f.read ? '' : ' · <b style="color:var(--orange)">nouveau</b>') + '</small></p><p class="selectable" style="white-space:pre-wrap">' + esc(f.message) + '</p>'
+    + '<div class="acts">' + (f.read ? '' : '<button type="button" class="btn btn-sm" data-act="fbRead" data-id="' + esc(f.id) + '">✓ Marquer comme lu</button>') + '<button type="button" class="btn btn-sm" data-act="fbDelete" data-id="' + esc(f.id) + '">Supprimer</button></div></div>').join('')
+    : '<p class="note">Aucun message pour l’instant. Les idées envoyées par les TL et GL (bouton 💡 Proposer une amélioration) apparaîtront ici.</p>';
+  const foot = (unreadFeedback() ? '<button type="button" class="btn" data-act="fbReadAll">Tout marquer comme lu</button>' : '') + '<button type="button" class="btn btn-red" data-act="close">Fermer</button>';
+  return {title:'💬 Suggestions reçues', body, wide:true, foot};
 }
 
 /* ---------- menus d'une case et d'un quart (appui long ou clic droit) ---------- */
@@ -1307,7 +1325,6 @@ function shQuartMenu(s){
   let body = '<p class="note">' + c.held + '/' + c.total + ' postes couverts sur ce quart.</p>'
     + '<button type="button" class="opt" data-act="regenOne" data-k="' + s.k + '">⚡ Générer uniquement ce quart<small>les autres quarts ne bougent pas</small></button>'
     + '<p class="note">Les personnes forcées (barre rouge) restent à leur place. Le calcul tient compte des autres quarts (pas le même poste deux fois, postes rouges) et laisse les absents de ce quart de côté.</p>';
-  if (c.held < c.total) body += '<button type="button" class="opt" data-act="suggest">🥜 Voir pourquoi des postes sont vides</button>';
   return {title:'Quart ' + (s.k + 1) + (s.k === 4 ? ' · Overtime' : ''), body, foot:'<button type="button" class="btn" data-act="close">Fermer</button>'};
 }
 /* ---------- remplacement : retirer / remplacer / combler une case ---------- */
@@ -1493,7 +1510,7 @@ function shConfirm(s){
 }
 function renderSheet(){
   const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
-  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm})[s.type](s);
+  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev && prev.dataset.t === s.type ? prev.scrollTop : 0;
   $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb" data-t="' + esc(s.type) + '">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
@@ -1645,11 +1662,21 @@ function shAccounts(){
   const meId = S.authUser && S.authUser.id;
   const rows = Object.values(S.profiles).sort((x, y) => (x.role === y.role ? x.name.localeCompare(y.name, 'fr') : x.role === 'admin' ? -1 : 1));
   let body = S.accountsErr ? '<p class="note selectable" style="color:var(--red)">' + esc(S.accountsErr) + '</p>' : '';
-  body += rows.map(a => '<div class="tlrow"><b>' + esc(a.name) + '</b><span class="tag' + (a.role === 'admin' ? '' : ' h') + '">' + esc(ROLE_LABEL[a.role] || a.role) + '</span>'
+  const roleOpts = cur => ACCOUNT_ROLES.map(r => '<option value="' + r.k + '"' + (r.k === cur ? ' selected' : '') + '>' + esc(r.label) + '</option>').join('');
+  /* pastille de rôle : modifiable (TL / GL / TM) sauf pour les comptes Admin */
+  const pill = a => a.role === 'admin' || a.id === meId
+    ? '<span class="tag' + (a.role === 'admin' ? '' : ' h') + '">' + esc(ROLE_LABEL[a.role] || a.role) + '</span>'
+    : '<select class="rolesel' + (a.role === 'tm' ? ' tm' : '') + '" data-chg="accRole" data-id="' + esc(a.id) + '" aria-label="' + esc('Rôle de ' + a.name) + '">' + roleOpts(a.role) + '</select>';
+  const manageable = a => a.id !== meId && a.role !== 'admin';
+  body += rows.map(a => '<div class="tlrow"><b>' + esc(a.name) + '</b>' + pill(a)
     + (a.must_change_password ? '<small class="muted">mot de passe provisoire</small>' : '') + (a.active === false ? '<small class="muted">désactivé</small>' : '')
     + '<span class="grow"></span><button type="button" class="btn btn-sm" data-act="resetPass" data-id="' + esc(a.id) + '">Réinitialiser le mot de passe</button>'
-    + (a.id !== meId ? '<button type="button" class="btn btn-sm" data-act="toggleActive" data-id="' + esc(a.id) + '">' + (a.active === false ? 'Réactiver' : 'Désactiver') + '</button>' : '') + '</div>').join('');
-  body += '<div class="lbl">Ajouter un compte TL</div><label class="field" for="fNewTL"><span>Nom</span><input type="text" id="fNewTL" data-chg="newTLName" value="' + esc(S.newTLName || '') + '" placeholder="Nom du TL" autocomplete="off"></label><button type="button" class="btn btn-sm" data-act="addTL">+ Créer ce compte</button>';
+    + (manageable(a) ? '<button type="button" class="btn btn-sm" data-act="toggleActive" data-id="' + esc(a.id) + '">' + (a.active === false ? 'Réactiver' : 'Désactiver') + '</button>'
+      + '<button type="button" class="btn btn-sm" style="color:var(--red)" data-act="deleteAcc" data-id="' + esc(a.id) + '">Supprimer</button>' : '') + '</div>').join('');
+  body += '<p class="note">TL et GL gèrent le planning (mêmes droits). TM = spectateur : il voit uniquement les plannings validés, sans rien pouvoir modifier. Sauf l’Admin, tout le monde accède à l’appli de 21h à 7h30 (écran « Maintenance » de 7h30 à 21h).</p>';
+  body += '<div class="lbl">Ajouter un compte</div><label class="field" for="fNewTL"><span>Nom</span><input type="text" id="fNewTL" data-chg="newTLName" value="' + esc(S.newTLName || '') + '" placeholder="Nom de la personne" autocomplete="off"></label>'
+    + '<label class="field" for="fNewRole"><span>Rôle</span><select id="fNewRole" data-chg="newAccRole">' + roleOpts(S.newAccRole || 'tl') + '</select></label>'
+    + '<button type="button" class="btn btn-sm" data-act="addTL">+ Créer ce compte</button>';
   body += '<div class="lbl">Équipe</div><label class="field" for="fTeam"><span>Nom affiché à côté du logo</span><input type="text" id="fTeam" data-chg="teamName" value="' + esc(S.cfg.team || '') + '" autocomplete="off"></label>';
   return {title:'Comptes', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
@@ -1667,11 +1694,11 @@ function shRenfortPosts(s){
   return {title:'Postes · ' + esc(per.name), body, foot:'<button type="button" class="btn btn-red" data-act="close">Terminé</button>'};
 }
 function shHelp(){
-  const body = '<div class="lbl">Planning du jour</div><p class="note">Choisis la nuit, va dans « Effectifs » pour les absences, puis touche « Générer ». Touche une case du tableau pour changer qui tient le poste. Une case « Non couvert » signifie qu’aucune personne qualifiée n’était disponible : 🥜 Suggestions explique pourquoi et propose une solution.</p>'
+  const body = '<div class="lbl">Planning du jour</div><p class="note">Choisis la nuit, va dans « Effectifs » pour les absences, puis touche « Générer ». Touche une case du tableau pour changer qui tient le poste. Une case « Non couvert » signifie qu’aucune personne qualifiée n’était disponible.</p>'
     + '<div class="lbl">En cours de nuit</div><p class="note">Appui long (ou clic droit sur ordinateur) sur un nom du planning : « Retirer de ce quart » (la personne reste disponible pour les autres quarts) ou « Remplacer ». L’appli propose aussitôt les remplaçants qui changent le moins de cases. Sans appui long : touche la case, les mêmes boutons sont en haut de la fiche.</p>'
     + '<div class="lbl">Générer un seul quart</div><p class="note">Appui long (ou clic droit) sur l’en-tête d’un quart (Q1, Q2…) : il est généré seul, même si la nuit n’a pas encore été générée. Les autres quarts ne bougent pas.</p>'
     + '<div class="lbl">Valider · Archives</div><p class="note">« ✓ Valider » fait du planning le planning officiel : il ne peut plus être régénéré en entier (seulement corrigé case par case ou quart par quart). À la fin de la nuit (le lendemain 7h), il passe dans « Archives », en lecture seule. Un brouillon non validé n’est jamais archivé.</p>'
-    + '<div class="lbl">🥜 Suggestions</div><p class="note">Pour les TL : postes non couverts et pourquoi, même poste deux quarts de suite, postes rouges enchaînés, formations possibles sans rien changer, personnes non placées.</p>'
+    + '<div class="lbl">💡 Proposer une amélioration</div><p class="note">Une idée, un problème, quelque chose à changer dans l’appli ? Écris-le ici : l’Admin le reçoit aussitôt dans « 💬 Suggestions ».</p>'
     + '<div class="lbl">🎓 Formation</div><p class="note">Une fois la rotation générée, ce bouton propose de mettre quelqu’un en formation sur un poste (marqué hachuré dans Polyvalence) : automatiquement (l’appli choisit un quart et un formateur sans rien changer d’autre) ou manuellement (tu choisis le quart, le poste et avec qui).</p>'
     + '<div class="lbl">Effectifs</div><p class="note">Toute l’équipe en un coup d’œil. Touche un nom pour le mettre présent/absent cette nuit. Le bouton ⚙️ (ou un appui long sur le nom) donne : absence sur certains quarts seulement, absence sur plusieurs jours, restriction sur un ou plusieurs postes (ex. médicale), modifier ou retirer la personne. Sur un planning validé, une absence est corrigée localement (remplaçant automatique) au lieu de tout recalculer.</p>'
     + '<div class="lbl">Polyvalence</div><p class="note">Qui sait tenir quel poste. Touche une case pour faire tourner : vide → tient le poste → en formation → vide. Le bouton 🎓 à côté du nom marque une personne comme « Formateur » (apte à former, pour tous les postes qu’elle tient) : le mode automatique du bouton Formation la propose alors en priorité.</p>'
@@ -1706,10 +1733,11 @@ function viewChangePass(){
     + (S.newPassErr ? '<p class="note" style="color:var(--red)">' + esc(S.newPassErr) + '</p>' : '')
     + '<button type="button" class="btn btn-red" data-act="doChangePass"' + (S.newPassBusy ? ' disabled' : '') + '>' + (S.newPassBusy ? 'Enregistrement…' : 'Valider') + '</button></div></div>';
 }
+/* écran hors horaires (7h30-21h, tous sauf Admin) : « Maintenance en cours » avec la 206 CC qui roule */
 function viewClosed(){
-  const why = tlWindowReason();
-  const msg = why === 'saturday' ? 'Pas d’équipe de nuit le samedi. Rendez-vous dimanche soir dès 20h30.' : 'PLANNING CH2-2 est accessible de 20h30 à 6h45 (prise de poste 21h45, fin de nuit 5h26/5h33 ou plus tard en overtime).';
-  return '<div class="authwrap"><div class="authcard"><h1>Application fermée</h1><p class="note">' + esc(msg) + '</p><button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
+  return '<div class="authwrap"><div class="authcard maint"><div class="maint-road" aria-hidden="true"><div class="maint-car">' + car206() + '</div></div>'
+    + '<h1>Maintenance en cours</h1><p class="note">' + greeting() + (profile() ? ' ' + esc(profile().name) : '') + ', l’appli est accessible de 21h à 7h30. Reviens ce soir !</p>'
+    + '<button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
 }
 function shRegen(){ return {title:'Régénérer la nuit ?', body:'<p style="margin:0">Le planning de cette nuit sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>', foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="genGo">Régénérer</button>'}; }
 function shPost(s){
@@ -1734,11 +1762,11 @@ const A = {
     const cur = nightOf();
     if (nightState(cur) === 'validated') { toast('Planning validé : repasse-le en préparation pour tout régénérer, ou génère un seul quart (appui long sur Q1, Q2…).'); return; }
     if (generated(cur)) { open({type:'regen'}); return; }
-    runWithAnim('Calcul de la rotation…', () => { const n = editable(); const before = clone(n.q); generateAll(n); markFresh(n, before); saveNight(n); toast('Rotation générée'); });
+    runWithAnim('Calcul de la rotation…', () => { const n = editable(); const before = clone(n.q); generateAll(n); markFresh(n, before); saveNight(n); toast('Rotation générée'); }, allQuarts(editable()));
   },
   genGo(){
     close(); if (!canEdit()) return;
-    runWithAnim('Calcul de la rotation…', () => { const n = editable(); const before = clone(n.q); generateAll(n); markFresh(n, before); saveNight(n); toast('Rotation recalculée'); });
+    runWithAnim('Calcul de la rotation…', () => { const n = editable(); const before = clone(n.q); generateAll(n); markFresh(n, before); saveNight(n); toast('Rotation recalculée'); }, allQuarts(editable()));
   },
   pick(d){ if (!canEdit()) return; if (S.sheet && S.sheet.type === 'replace') S.sheet.done = true; open({type:'pick', k:Number(d.k), post:d.post}); },
   trainees(d){ open({type:'trainees', id:d.id}); },
@@ -1852,7 +1880,23 @@ const A = {
   unvalidate(){ if (!canEdit()) return; askConfirm('Repasser ce planning en préparation ? Il ne sera plus le planning officiel tant qu’il n’est pas revalidé, et ne sera pas archivé.', 'unvalidateReal', null); },
   unvalidateReal(){ if (!canEdit()) return; const n = editable(); delete n.tl._status; delete n.tl._snap; pushLog(n, 'unvalidate', {date:n.date}); saveNight(n); toast('Planning repassé en préparation.'); },
   /* ---- suggestions, menus, remplacements ---- */
-  suggest(){ open({type:'suggest'}); },
+  suggest(){ if (isAdmin() || isViewer()) return; open({type:'suggest', form:true}); },
+  async sendFeedback(){
+    const s = S.sheet; if (!s || s.type !== 'suggest' || s.fbBusy) return;
+    const msg = String(s.fbText || '').trim();
+    if (!msg) { s.fbOk = false; s.fbMsg = 'Écris ta suggestion avant d’envoyer.'; renderSheet(); return; }
+    s.fbBusy = true; s.fbMsg = ''; renderSheet();
+    const {error} = await sb.from('feedback').insert({message:msg});
+    s.fbBusy = false;
+    if (error) { s.fbOk = false; s.fbMsg = 'Envoi impossible, réessaie.'; }
+    else { s.fbOk = true; s.fbText = ''; s.fbMsg = 'Merci ! Ta suggestion a été envoyée à l’Admin.'; }
+    if (S.sheet === s) renderSheet();
+  },
+  messages(){ if (!isAdmin()) return; open({type:'messages'}); },
+  fbRead(d){ const f = S.feedback[d.id]; if (!f || !isAdmin()) return; f.read = true; render(); renderSheet(); queued('fb:' + f.id, () => sb.from('feedback').update({read:true}).eq('id', f.id)); },
+  fbReadAll(){ if (!isAdmin()) return; Object.values(S.feedback).filter(f => !f.read).forEach(f => A.fbRead({id:f.id})); },
+  fbDelete(d){ const f = S.feedback[d.id]; if (!f) return; askConfirm('Supprimer le message de ' + (f.author_name || '?') + ' ?', 'fbDeleteReal', d, {danger:true, okLabel:'Supprimer'}); },
+  fbDeleteReal(d){ if (!isAdmin() || !S.feedback[d.id]) return; delete S.feedback[d.id]; render(); queued('fb:' + d.id, () => sb.from('feedback').delete().eq('id', d.id)); },
   cellMenu(d){ if (!canEdit()) return; open({type:'cellMenu', k:Number(d.k), post:d.post}); },
   quartMenu(d){ if (!canEdit()) return; open({type:'quartMenu', k:Number(d.k)}); },
   openReplace(d){ if (!canEdit()) return; open({type:'replace', k:Number(d.k), post:d.post, mode:d.mode || 'fill', who:d.who || null}); },
@@ -1903,7 +1947,7 @@ const A = {
       done.forEach(q => pushLog(n, 'regenQuart', {date:n.date, k:Number(q.slice(1)) - 1}));
       markFresh(n, before); saveNight(n);
       toast(done.join(', ') + ' générés · les quarts déjà faits n’ont pas bougé.');
-    });
+    }, (() => { const n = editable(); return allQuarts(n).filter(k => !quartDone(n, k)); })());
   },
   /* appui long sur Q1, Q2… : génère directement ce quart seul */
   quartLong(d){ S.qk = Number(d.k); A.regenOne(d); },
@@ -1916,7 +1960,7 @@ const A = {
   regenOneReal(d){
     if (!canEdit()) return;
     const k = Number(d.k); close();
-    runWithAnim('Calcul du quart ' + (k + 1) + '…', () => { const n = editable(); const before = clone(n.q); const first = !quartDone(n, k); regenQuart(n, k); n.generated = true; pushLog(n, 'regenQuart', {date:n.date, k}); markFresh(n, before); saveNight(n); toast('Quart ' + (k + 1) + (first ? ' généré' : ' recalculé') + ' · les autres quarts n’ont pas bougé.'); });
+    runWithAnim('Calcul du quart ' + (k + 1) + '…', () => { const n = editable(); const before = clone(n.q); const first = !quartDone(n, k); regenQuart(n, k); n.generated = true; pushLog(n, 'regenQuart', {date:n.date, k}); markFresh(n, before); saveNight(n); toast('Quart ' + (k + 1) + (first ? ' généré' : ' recalculé') + ' · les autres quarts n’ont pas bougé.'); }, [k]);
   },
   sugTrain(d){
     if (!canEdit()) return;
@@ -2071,10 +2115,22 @@ const A = {
     const nm = (S.newTLName || '').trim(); if (!nm) return;
     S.accountsErr = 'Création en cours…'; renderSheet();
     try {
-      const r = await callAdminAction({action:'createTL', name:nm});
+      const role = S.newAccRole || 'tl';
+      const r = await callAdminAction({action:'createAccount', name:nm, role});
       S.newTLName = '';
-      S.accountsErr = r.name + ' créé — mot de passe provisoire : ' + r.tempPassword + ' (note-le et transmets-le au TL, il ne sera plus réaffiché ; il devra le changer à sa première connexion).';
+      S.accountsErr = r.name + ' (' + (ROLE_LABEL[role] || role) + ') créé — mot de passe provisoire : ' + r.tempPassword + ' (note-le et transmets-le, il ne sera plus réaffiché ; il devra être changé à la première connexion).';
     } catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
+    renderSheet();
+  },
+  deleteAcc(d){
+    const acc = S.profiles[d.id]; if (!acc) return;
+    askConfirm('Supprimer définitivement le compte de ' + acc.name + ' ? Il/elle ne pourra plus se connecter et le compte ne pourra pas être récupéré (pour une coupure temporaire, utilise plutôt « Désactiver »).', 'deleteAccReal', d, {danger:true, okLabel:'Supprimer'});
+  },
+  async deleteAccReal(d){
+    const acc = S.profiles[d.id]; if (!acc) return;
+    S.accountsErr = 'Suppression en cours…'; renderSheet();
+    try { await callAdminAction({action:'deleteAccount', id:d.id}); delete S.profiles[d.id]; S.accountsErr = acc.name + ' supprimé(e).'; }
+    catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
     renderSheet();
   },
   resetPass(d){
@@ -2127,6 +2183,14 @@ const C = {
   newPass(el){ S.newPass = el.value; },
   newPass2(el){ S.newPass2 = el.value; },
   newTLName(el){ S.newTLName = el.value; },
+  newAccRole(el){ S.newAccRole = el.value; },
+  async accRole(el){
+    const acc = S.profiles[el.dataset.id]; if (!acc || !isAdmin()) return;
+    const role = el.value, prev = acc.role;
+    try { await callAdminAction({action:'setRole', id:acc.id, role}); acc.role = role; S.accountsErr = acc.name + ' est maintenant ' + (ROLE_LABEL[role] || role) + '.'; }
+    catch (e) { acc.role = prev; S.accountsErr = 'Erreur : ' + e.message; }
+    renderSheet();
+  },
   teamName(el){ S.cfg.team = el.value; saveCfg(); },
   absFrom(el){ S.sheet.from = el.value; },
   absTo(el){ S.sheet.to = el.value; },
@@ -2145,6 +2209,9 @@ const C = {
    Maintenant : tolérance de 10 px au doigt qui tremble, l'évènement contextmenu (appui
    long Android, clic droit sur PC) déclenche aussi l'action, et le clic à ignorer expire.
    Chaque action a de toute façon une alternative visible (⚙️, boutons des fiches). */
+/* seules actions permises à un spectateur (TM) : naviguer, consulter, télécharger */
+const VIEWER_ACTS = new Set(['tab', 'day', 'qk', 'openNight', 'pdfDownload', 'pdfShare', 'logout', 'close', 'confirmNo', 'playRoad']);
+const VIEWER_CHG = new Set(['date']);
 const LONG_MS = 450, LONG_TOL = 10;
 let press = null, suppressClick = false, suppressTimer = null, longUntil = 0;
 /* bloque le début d'une sélection de texte pendant un appui (sauf dans les champs) */
@@ -2159,7 +2226,7 @@ function fireLong(el){
   longUntil = Date.now() + 1500;
   try { const sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges(); } catch (e2) {}
   suppressClick = true; clearTimeout(suppressTimer); suppressTimer = setTimeout(() => { suppressClick = false; }, 900);
-  const f = A[el.dataset.long]; if (f) f(Object.assign({}, el.dataset));
+  const f = isViewer() ? null : A[el.dataset.long]; if (f) f(Object.assign({}, el.dataset));
   if (navigator.vibrate) try { navigator.vibrate(12); } catch (e2) {}
 }
 document.addEventListener('pointerdown', e => {
@@ -2181,9 +2248,10 @@ document.addEventListener('click', e => {
   if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
   if (e.target.classList && e.target.classList.contains('back')) { close(); return; }
   const el = e.target.closest('[data-act]'); if (!el) return;
+  if (isViewer() && !VIEWER_ACTS.has(el.dataset.act)) return;
   const f = A[el.dataset.act]; if (f) f(el.dataset);
 });
-document.addEventListener('change', e => { const el = e.target.closest('[data-chg]'); if (el && C[el.dataset.chg]) C[el.dataset.chg](el); });
+document.addEventListener('change', e => { const el = e.target.closest('[data-chg]'); if (!el || (isViewer() && !VIEWER_CHG.has(el.dataset.chg))) return; if (C[el.dataset.chg]) C[el.dataset.chg](el); });
 /* champs de formulaire en brouillon : on retient la saisie sans redessiner (pas de perte de focus) */
 document.addEventListener('input', e => { const el = e.target.closest('[data-inp]'); if (el && S.sheet) { S.sheet[el.dataset.inp] = el.value; if (S.sheet.err) { S.sheet.err = ''; } } });
 document.addEventListener('keydown', e => {
@@ -2229,7 +2297,37 @@ async function loadBusinessData(){
   subscribeTable(bizChannels, 'posts', 'id', r => { S.posts[r.id] = rowToPost(r); later(); }, id => { delete S.posts[id]; later(); });
   subscribeTable(bizChannels, 'nights', 'date', r => { S.nights[r.date] = rowToNight(r); later(); }, date => { delete S.nights[date]; later(); });
   subscribeTable(bizChannels, 'config', 'key', r => { if (r.key === 'main') S.cfg = Object.assign({}, DEFAULT_CFG, r.value || {}); later(); }, () => {});
+  await loadFeedback();
   render();
+}
+/* suggestions des TL/GL : chargées et suivies en temps réel uniquement pour l'Admin */
+async function loadFeedback(){
+  S.feedback = {};
+  if (!isAdmin()) { updateTitle(); return; }
+  const {data} = await sb.from('feedback').select('*').order('created_at', {ascending:false}).limit(300);
+  (data || []).forEach(r => { S.feedback[r.id] = r; });
+  subscribeTable(bizChannels, 'feedback', 'id', r => {
+    const isNew = !S.feedback[r.id];
+    S.feedback[r.id] = r;
+    if (isNew && !r.read) notifyFeedback(r);
+    later(); updateTitle();
+  }, id => { delete S.feedback[id]; later(); updateTitle(); });
+  updateTitle();
+  /* demande l'autorisation des notifications système une seule fois, à la connexion Admin */
+  try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+}
+const BASE_TITLE = document.title;
+function updateTitle(){ const n = isAdmin() ? unreadFeedback() : 0; document.title = (n ? '(' + n + ') ' : '') + BASE_TITLE; }
+function notifyFeedback(r){
+  const txt = String(r.message || '');
+  toast('💬 Nouvelle suggestion de ' + (r.author_name || '?') + ' : ' + (txt.length > 80 ? txt.slice(0, 80) + '…' : txt));
+  if (navigator.vibrate) try { navigator.vibrate([20, 60, 20]); } catch (e) {}
+  try {
+    if (window.Notification && Notification.permission === 'granted' && document.hidden) {
+      const nt = new Notification('Suggestion de ' + (r.author_name || '?'), {body:txt.slice(0, 200), tag:'fb-' + r.id});
+      nt.onclick = () => { window.focus(); A.messages(); nt.close(); };
+    }
+  } catch (e) {}
 }
 async function boot(){
   await loadProfiles();
@@ -2242,9 +2340,9 @@ async function boot(){
     const changed = (newUser && newUser.id) !== (S.authUser && S.authUser.id);
     S.authUser = newUser; S.authReady = true;
     if (newUser) { S._forcedOut = false; if (changed) await loadBusinessData(); else render(); }
-    else { teardownBiz(); S.people = {}; S.posts = {}; S.nights = {}; S.ready = false; S._forcedOut = false; render(); }
+    else { teardownBiz(); S.people = {}; S.posts = {}; S.nights = {}; S.feedback = {}; updateTitle(); S.ready = false; S._forcedOut = false; render(); }
   });
-  /* tient à jour l'écran « fermé hors horaires » sans que le TL ait à recharger */
+  /* tient à jour l'écran « fermé hors horaires » et le bonjour/bonsoir sans recharger */
   setInterval(() => { if (S.authUser && profile()) render(); }, 60000);
 }
 render();
