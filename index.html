@@ -34,7 +34,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.35}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.35;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2.5px solid var(--red);outline-offset:2px}
@@ -45,8 +45,10 @@ h1,h2{font-family:var(--f-cond);font-weight:700;margin:0;letter-spacing:.01em}
 .brand{display:flex;align-items:center;gap:10px;font-family:var(--f-cond);font-weight:700;font-size:22px;white-space:nowrap}
 .brand i{width:14px;height:14px;background:var(--red);border-radius:3px;display:block}
 .brand span{color:var(--muted);font-weight:600}
-.tabs{display:flex;gap:4px;margin-left:auto}
-.tabs button{border:0;background:none;padding:10px 16px;border-radius:9px;font-weight:600;color:var(--ink-2);min-height:46px;font-size:16px}
+.tabs{display:flex;gap:4px;margin-left:auto;min-width:0;max-width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;border:0;background:none;padding:10px 16px;border-radius:9px;font-weight:600;color:var(--ink-2);min-height:46px;font-size:16px;white-space:nowrap}
+.tabs button .s{display:none}
 .tabs button[aria-current="page"]{background:var(--ink);color:var(--surface)}
 main{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:14px}
 
@@ -132,9 +134,10 @@ table{border-collapse:separate;border-spacing:0}
 .dotbtn{border:0;background:none;padding:10px 6px;display:inline-flex}
 .linkbtn{border:0;background:none;padding:6px 0;text-align:left;display:flex;align-items:center;gap:8px;min-height:36px}
 
-.back{position:fixed;inset:0;background:rgba(12,14,16,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--surface);width:min(620px,100%);max-height:88vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (min-width:760px){.back{align-items:center}.sheet{border-radius:16px;max-height:84vh}}
+.back{position:fixed;inset:0;background:rgba(12,14,16,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center;overscroll-behavior:contain}
+.sheet{background:var(--surface);width:min(620px,100%);max-height:88vh;max-height:88dvh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px);min-width:0}
+@media (min-width:760px) and (min-height:520px){.back{align-items:center}.sheet{border-radius:16px;max-height:84vh;max-height:84dvh}}
+@media (max-height:520px){.sheet{max-height:96vh;max-height:96dvh}.sh{padding:8px 14px}.sf{padding:8px 14px}}
 .sheet.wide{width:min(1100px,100%)}
 .sh{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
 .sh h2{flex:1;font-size:22px}
@@ -155,9 +158,20 @@ table{border-collapse:separate;border-spacing:0}
 .field{display:grid;gap:6px}
 .field span{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .eq{min-width:max-content}
-.eq th,.eq td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center;font-variant-numeric:tabular-nums}
-.eq thead th{position:sticky;top:0;background:var(--surface);font-family:var(--f-cond);font-size:17px;z-index:1}
-.eq th.n{position:sticky;left:0;background:var(--surface);text-align:left;white-space:nowrap}
+.eq th,.eq td{border-bottom:1px solid var(--line);padding:6px 4px;min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+.eq thead th{position:sticky;top:0;background:var(--surface);font-family:var(--f-cond);font-size:17px;z-index:2;white-space:nowrap;border-bottom:2px solid var(--ink)}
+.eq thead th .dot{display:block;margin:0 auto 3px}
+.eq th.n{position:sticky;left:0;background:var(--surface);text-align:left;white-space:nowrap;z-index:1;border-right:1px solid var(--line);max-width:170px;overflow:hidden;text-overflow:ellipsis;padding:6px 10px}
+.eq thead th.n{z-index:3}
+.eq td.tot,.eq th.tot{background:var(--surface-2);font-weight:700}
+@media (max-width:900px){.eq th,.eq td{min-width:34px;font-size:14px;padding:5px 3px}.eq thead th{font-size:15px}.eq th.n{max-width:120px;font-size:14px}}
+.bal .mrow{min-height:48px}
+.bal .bar-in{flex:0 0 72px;height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-left:8px}
+.bal .bar-in i{display:block;height:100%;background:var(--ink-2);border-radius:99px}
+.bal .mrow .pname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eqsum{display:flex;gap:8px;flex-wrap:wrap}
+.eqsum span{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:14px;color:var(--ink-2)}
+.eqsum b{font-family:var(--f-cond);font-size:19px;color:var(--ink);margin-left:4px}
 .eq td.z{color:var(--line-2)}
 .eq td.c{font-weight:700}
 .eq td.no{background:var(--surface-2);color:var(--line-2)}
@@ -166,6 +180,8 @@ table{border-collapse:separate;border-spacing:0}
 .m-head .night{text-align:center;font-size:21px}
 .m-acts{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .m-acts .btn{min-height:44px;padding:6px 4px;font-size:14px;white-space:normal;line-height:1.1;text-align:center}
+.m-acts3{grid-template-columns:repeat(auto-fit,minmax(0,1fr))}
+.m-acts3 .btn{font-size:13.5px;padding:6px 2px}
 .m-gen{width:100%}
 .qtabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:var(--surface-3,var(--surface));padding:4px;border-radius:12px;border:1px solid var(--line)}
 .qtabs button{min-height:48px;border:0;border-radius:9px;background:transparent;font-weight:700;font-size:17px;color:var(--ink-2)}
@@ -192,24 +208,26 @@ table{border-collapse:separate;border-spacing:0}
 .st3 button[aria-pressed="true"]{background:var(--red-soft);box-shadow:inset 0 0 0 2px var(--red)}
 .st3 .sw{width:24px;height:20px}
 .mrow.static{cursor:default}
-.bal .mrow .cntv{margin-left:auto;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+.bal .mrow .cntv{margin-left:8px;min-width:28px;text-align:right;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:10px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
 .muted{color:var(--muted)}
 .note{margin:0;font-size:14px;color:var(--muted)}
-@media (max-width:700px){.top{position:static}.top-in{gap:6px 12px}.tabs{width:100%}.tabs button{flex:1}}
-@media (max-width:560px){.night{font-size:22px}.tabs{margin-left:0}.plan .ph{min-width:120px;width:130px}.plan .pname{display:none}.plan td{min-width:110px}.authhead .brand{font-size:21px}.authhead .verbadge{display:none}}
+@media (max-width:700px){.top{position:static}.top-in{gap:6px 10px;padding:6px 12px}.tabs{width:100%;order:3;margin-left:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);gap:2px}.tabs button{padding:8px 6px;min-height:44px;font-size:14px}.tabs button .l{display:none}.tabs button .s{display:inline}.acct{margin-left:auto}.acct .who{display:none}}
+@media (max-width:560px){.night{font-size:22px}.plan .ph{min-width:120px;width:130px}.plan .pname{display:none}.plan td{min-width:110px}.authhead .brand{font-size:21px}.authhead .verbadge{display:none}.brand{font-size:24px}.verbadge{display:none}}
+@media (max-height:520px){.top{position:static}.scroll{max-height:none}}
 /* ---- logo animé ---- */
 .brandbtn{position:relative;border:0;background:none;padding:4px 6px;border-radius:8px;overflow:hidden}
 .brand{position:relative;z-index:1;display:flex;align-items:center;gap:12px;font-family:var(--f-cond);font-weight:700;font-size:28px;white-space:nowrap;letter-spacing:.01em}
 .brand i{width:18px;height:18px;background:var(--red);border-radius:4px;display:block}
 .brand span{color:var(--muted);font-weight:600}
-.road{position:absolute;left:0;right:0;bottom:2px;height:10px;pointer-events:none;overflow:hidden;opacity:.55}
-.road::before{content:"";position:absolute;inset:3px 0;background:repeating-linear-gradient(90deg,var(--line-2) 0 14px,transparent 14px 28px)}
-.car{position:absolute;bottom:-4px;left:-60px;width:40px;height:19px;opacity:0}
+.brandbtn{padding-bottom:37px}
+.road{position:absolute;left:0;right:0;bottom:0;height:41px;pointer-events:none;overflow:hidden}
+.road::before{content:"";position:absolute;left:0;right:0;bottom:2px;height:2px;opacity:.55;background:repeating-linear-gradient(90deg,var(--line-2) 0 14px,transparent 14px 28px)}
+.car{position:absolute;bottom:0;left:2px;width:84px;height:39px}
 .car svg{width:100%;height:100%;display:block}
-.brandbtn.play .car.c1{animation:drive 1.6s ease-in-out 1}
-.brandbtn.play .car.c2{animation:drive 1.6s ease-in-out .35s 1}
-@keyframes drive{0%{opacity:0;transform:translateX(0)}6%{opacity:1}92%{opacity:1}100%{opacity:0;transform:translateX(240px)}}
+/* la 206 CC est garée sous le logo ; un toucher la fait rouler tranquillement puis revenir */
+.brandbtn.play .car{animation:drive 4.2s ease-in-out 1}
+@keyframes drive{0%{transform:translateX(0);opacity:1}45%{transform:translateX(340px);opacity:1}46%{transform:translateX(340px);opacity:0}47%{transform:translateX(-120px);opacity:0}50%{transform:translateX(-120px);opacity:1}100%{transform:translateX(0);opacity:1}}
 /* ---- astuces & aide ---- */
 .hint{display:block;font-size:12.5px;color:var(--muted);font-weight:500;margin-top:2px;white-space:normal}
 .helpbtn{border-radius:99px}
@@ -241,26 +259,66 @@ table{border-collapse:separate;border-spacing:0}
 .eff-row.off{background:var(--surface-2);color:var(--muted)}
 .eff-row .pname{font-size:16px;font-weight:600}
 .eff-row .absbadge{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--red)}
-[data-long]{cursor:pointer}
-@media print{
-  html,body{background:#fff!important}
-  body *{visibility:hidden}
-  #printzone,#printzone *{visibility:visible}
-  #printzone{display:block!important;position:absolute;left:0;top:0;width:100%}
-  #printzone table{width:100%;border-collapse:collapse}
-  #printzone th,#printzone td{border:1px solid #000!important;color:#000!important;background:#fff!important;padding:4px 6px;font-size:12px}
-  #printzone .dot{border-color:#000!important;background:#fff!important}
-  #printzone .dot.vert,#printzone .dot.orange,#printzone .dot.rouge{background:#fff!important;border:1.5px solid #000!important}
-  #printzone h1{color:#000!important;font-size:18px;margin-bottom:6px}
-}
+/* appli tactile : sur iPhone, un appui long sélectionnait le texte sous le doigt (souvent
+   dans la fiche qui venait de s'ouvrir) et affichait la bulle « Copier / Rechercher ».
+   On désactive la sélection partout, sauf dans les champs de saisie et les textes à copier. */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+/* appui long : pas de menu natif (loupe, copier…) qui volerait le geste sur iOS/Android */
+[data-long]{cursor:pointer;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.eff-line{display:flex;align-items:stretch;border-top:1px solid var(--line)}
+.eff-line:first-child{border-top:0}
+.eff-line .eff-row{border-top:0;flex:1;min-width:0}
+.gear{flex:none;width:52px;border:0;border-left:1px solid var(--line);background:var(--surface);font-size:19px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.gear:hover{background:var(--surface-2)}
+.tlrow .gear{border:1px solid var(--line-2);border-radius:9px;min-height:44px;width:46px}
+/* ---- planning : en-têtes de quart, cases, statut ---- */
+.qh{display:flex;align-items:center;gap:6px}
+.qbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qbar .grow{flex:1}
+.cell .uncov,.pickbtn .uncov{color:var(--rouge);font-weight:700;font-size:14px}
+.cell.ro{cursor:default}
+.cell.ro:hover{border-color:transparent;background:transparent}
+.status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:600}
+.status .pill{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line-2)}
+.status.validated{border-color:var(--vert)}
+.status.validated .pill{background:var(--vert);border-color:var(--vert);color:#fff}
+.status.archived .pill{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.status small{color:var(--muted);font-weight:500}
+.status .grow{flex:1}
+.nut{position:relative}
+.nut .badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:99px;background:var(--red);color:var(--red-ink);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.sug{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:8px;background:var(--surface)}
+.sug.high{border-left:4px solid var(--rouge)}
+.sug.med{border-left:4px solid var(--orange)}
+.sug.info{border-left:4px solid var(--line-2)}
+.sug p{margin:0}
+.sug .acts{display:flex;gap:6px;flex-wrap:wrap}
+.opt .rec{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--vert);margin-left:6px}
+.opt .steps{display:grid;gap:2px;font-weight:600}
+.opt .steps small{margin:0;color:var(--muted);font-weight:500}
+.okmsg{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0}
+.arch-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
+.arch-row:first-child{border-top:0}
+.arch-row .d{font-weight:700}
+.arch-row small{display:block;color:var(--muted);font-weight:500}
+.arch-row .grow{flex:1;min-width:140px}
+/* ---- animation de calcul (non bloquante) ---- */
+#genfx{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:70;background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:6px 16px 6px 10px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.22);pointer-events:none;font-weight:600;font-size:14px;white-space:nowrap;animation:gfIn .16s ease-out}
+.gf-road{position:relative;width:140px;height:30px;overflow:hidden}
+.gf-road::before{content:"";position:absolute;left:0;right:0;bottom:2px;height:2px;background:repeating-linear-gradient(90deg,var(--line-2) 0 10px,transparent 10px 20px)}
+.gf-car{position:absolute;left:-60px;bottom:0;width:58px;height:27px;animation:gfDrive 1.5s ease-in-out infinite}
+.gf-car svg{width:100%;height:100%;display:block}
+@keyframes gfIn{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes gfDrive{from{transform:translateX(0)}to{transform:translateX(212px)}}
+.fresh{animation:fresh .55s ease-out both}
+@keyframes fresh{0%{opacity:0;transform:translateY(3px);background:var(--red-soft)}60%{opacity:1;transform:none}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.gf-car,.fresh,.brandbtn.play .car{animation:none!important}}
 </style>
 
 <header class="top"><div class="top-in">
   <button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation">
-    <div class="road" aria-hidden="true">
-      <div class="car c1" title="Toyota Yaris"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M4 20 Q4 10 14 9 L20 9 Q26 3 34 3 L42 9 L52 9 Q58 10 58 16 L58 20 Z" fill="var(--red)"/><circle cx="16" cy="21" r="5" fill="var(--ink)"/><circle cx="46" cy="21" r="5" fill="var(--ink)"/></svg></div>
-      <div class="car c2" title="Toyota Yaris Cross"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M3 21 Q3 9 13 8 L19 8 Q25 1 35 1 L44 8 L53 8 Q59 9 59 15 L59 21 Z" fill="var(--ink-2)"/><rect x="16" y="4" width="26" height="2.4" rx="1.2" fill="var(--ink-2)"/><circle cx="15" cy="22" r="5.5" fill="var(--ink)"/><circle cx="47" cy="22" r="5.5" fill="var(--ink)"/></svg></div>
-    </div>
+    <div class="road" aria-hidden="true" data-road></div>
     <div class="brand"><i aria-hidden="true"></i>PLANNING <span id="teamName">CH2-2</span><span class="verbadge">V0.1 test</span></div>
   </button>
   <nav class="tabs" id="tabsNav" aria-label="Pages"></nav>
@@ -270,6 +328,7 @@ table{border-collapse:separate;border-spacing:0}
 <main id="main"><p class="muted">Chargement…</p></main>
 <div id="sheet"></div>
 <div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="genfx" role="status" aria-live="polite" hidden><div class="gf-road" aria-hidden="true"><div class="gf-car" data-car></div></div><span>Calcul…</span></div>
 
 <script>
 (function(){
@@ -289,12 +348,41 @@ const HIST_NIGHTS = 30;
 const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
 const ROLE_LABEL = {admin:'Admin', tl:'TL'};
 const TAB_DEFS = [
-  {k:'plan', label:'Planning du jour'},
-  {k:'effectifs', label:'Effectifs'},
-  {k:'poly', label:'Polyvalence'},
-  {k:'equilibre', label:'Équilibre', admin:true},
-  {k:'historique', label:'Historique', admin:true}
+  {k:'plan', label:'Planning du jour', short:'Planning'},
+  {k:'effectifs', label:'Effectifs', short:'Effectifs'},
+  {k:'poly', label:'Polyvalence', short:'Polyval.'},
+  {k:'equilibre', label:'Équilibre', short:'Équilibre', admin:true},
+  {k:'archives', label:'Archives', short:'Archives'}
 ];
+const ROLE_SUGGEST = ['TM', 'TL', 'GLP', 'ASP'];
+/* Peugeot 206 CC décapotée, vue de profil (avant à droite), gris bleuté métallisé :
+   silhouette courte et ronde, coffre bombé, capot plongeant, grands phares en amande */
+function car206(){
+  const wheel = x => '<circle cx="' + x + '" cy="36.2" r="8.4" fill="#1B1D20"/><circle cx="' + x + '" cy="36.2" r="5.7" fill="#CBD1D7"/><circle cx="' + x + '" cy="36.2" r="4" fill="#87909A"/>'
+    + '<path d="M' + x + ' 30.6 V41.8 M' + (x - 5.6) + ' 36.2 H' + (x + 5.6) + ' M' + (x - 4) + ' 32.2 L' + (x + 4) + ' 40.2 M' + (x + 4) + ' 32.2 L' + (x - 4) + ' 40.2" stroke="#CBD1D7" stroke-width="1"/><circle cx="' + x + '" cy="36.2" r="1.5" fill="#E6EAED"/>';
+  return '<svg viewBox="0 0 100 46" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><linearGradient id="p206g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A4AFBA"/><stop offset=".42" stop-color="#65707D"/><stop offset="1" stop-color="#3D4550"/></linearGradient></defs>'
+    + '<ellipse cx="50" cy="44.6" rx="46" ry="1.6" fill="#000" opacity=".3"/>'
+    /* sièges (toit replié dans le coffre) */
+    + '<path d="M38.4 18.6 L40.4 11.8 Q41.4 10.4 43.4 10.8 Q44.8 11.3 44.3 13 L42.9 18.4 Z" fill="#262A2F"/>'
+    + '<path d="M28.6 19 L30.2 13.8 Q31 12.7 32.6 13 Q33.7 13.4 33.4 14.7 L32.3 18.9 Z" fill="#262A2F"/>'
+    /* carrosserie */
+    + '<path d="M4 34 Q2.5 27 5.5 22.5 Q8 19.5 16 19 L40 18.2 L60 17.6 Q76 17.8 88 22 Q96 25 97 30 L97 34 Q96.5 37.5 92 37.5 L88.6 37.5 A10.6 10.6 0 0 0 67.4 37.5 L31.6 37.5 A10.6 10.6 0 0 0 10.4 37.5 L7 37.5 Q4.5 37.5 4 34 Z" fill="url(#p206g)" stroke="#2B3138" stroke-width=".6"/>'
+    /* pare-brise et rétroviseur */
+    + '<path d="M51.6 7.8 L53.7 7.5 L63.2 17.6 L59.4 17.7 Z" fill="#CFE0EA" opacity=".75" stroke="#2B3138" stroke-width="1" stroke-linejoin="round"/>'
+    + '<ellipse cx="58.4" cy="16.2" rx="2.4" ry="1.5" fill="#353B42"/>'
+    /* ligne de caisse, portière, poignée */
+    + '<path d="M7 24.6 Q50 22.2 94 25.2" stroke="#FFF" stroke-opacity=".32" stroke-width=".8" fill="none"/>'
+    + '<path d="M41 19 Q40 28 41.6 37.2 M64.2 18.2 Q66.2 28 65 37.2" stroke="#2B3138" stroke-opacity=".55" stroke-width=".7" fill="none"/>'
+    + '<rect x="45.5" y="21.6" width="5" height="1.3" rx=".6" fill="#2B3138" opacity=".6"/>'
+    /* grand phare en amande, prise d'air, feu arrière */
+    + '<path d="M83.6 20.3 Q92.4 21.4 96.4 26.6 Q90 26.9 84.8 22.7 Z" fill="#EEF3F6" stroke="#2B3138" stroke-width=".45"/>'
+    + '<path d="M88 31.6 L96.6 31.4 M89.4 33.8 L96.2 33.6" stroke="#2B3138" stroke-width=".8"/>'
+    + '<path d="M3.4 24.6 Q5 21.8 8 20.8 L8.6 25 L3.5 26.6 Z" fill="#D3203A"/>'
+    + wheel(21) + wheel(78)
+    + '</svg>';
+}
+const roadHtml = () => '<div class="car" title="Peugeot 206 CC">' + car206() + '</div>';
 const ONBOARD_MS = 3 * 60 * 60 * 1000; /* 3h d’astuces au premier lancement sur cet appareil */
 
 /* ---------- Supabase ---------- */
@@ -313,7 +401,10 @@ const S = { ready:false, people:{}, posts:{}, nights:{}, cfg:Object.assign({}, D
 const mq = window.matchMedia ? window.matchMedia('(max-width: 700px)') : null;
 const phone = () => !!(mq && mq.matches);
 if (mq) { const f = () => { render(); if (S.sheet) renderSheet(); }; if (mq.addEventListener) mq.addEventListener('change', f); else if (mq.addListener) mq.addListener(f); }
-if (!['plan', 'effectifs', 'poly', 'equilibre', 'historique'].includes(S.tab)) S.tab = 'plan';
+if (S.tab === 'historique') S.tab = 'archives'; /* l'ancien onglet Historique est remplacé par Archives */
+if (!TAB_DEFS.some(t => t.k === S.tab)) S.tab = 'plan';
+document.querySelectorAll('[data-road]').forEach(el => { el.innerHTML = roadHtml(); });
+document.querySelectorAll('[data-car]').forEach(el => { el.innerHTML = car206(); });
 
 /* ---------- astuces temporaires (3h) ---------- */
 let onboardEnd = LS.get('onboardEnd', 0);
@@ -391,11 +482,54 @@ const isRestricted = (per, pid, date) => !!(per && per.marks && per.marks._restr
    la personne est proposée comme formateur pour tous les postes qu'elle tient déjà (mark G).
    Stockée dans marks._trainer, clé réservée (comme _restrict ci-dessus). */
 const isFormateur = per => !!(per && per.marks && per.marks._trainer);
-const isTL = per => per && per.role === 'TL';
+/* la désignation est libre (TM, TL, GLP, ASP, ou autre) : seul « TL » a un sens pour le moteur */
+const roleOf = per => String((per && per.role) || 'TM').trim() || 'TM';
+const isTL = per => !!per && roleOf(per).toUpperCase() === 'TL';
 const isTemp = per => !!(per && per.temp);
 const nightOf = d => S.nights[d || S.date] || null;
 const generated = n => !!(n && n.generated);
 const nq = n => (n && n.ot) ? 5 : 4;
+/* clés réservées dans la colonne tl d'une nuit (_log, _status, _snap) : jamais des personnes */
+const isMetaKey = k => k.charAt(0) === '_';
+const tlIds = n => Object.keys((n && n.tl) || {}).filter(k => !isMetaKey(k));
+
+/* ---------- cycle de vie d'un planning ----------
+   préparation (brouillon, modifiable) → validé (planning officiel, corrections locales
+   seulement) → terminé : passe dans les Archives à la fin de la journée de travail,
+   en lecture seule. Le statut vit dans tl._status (comme le journal tl._log), pour
+   rester compatible avec la table et les policies RLS existantes. */
+const NIGHT_END = 'T07:00'; /* la nuit du J se termine le J+1 au matin (heure de Paris) */
+function parisNowKey(){
+  try {
+    const f = new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Paris', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false});
+    return f.format(new Date()).replace(' ', 'T');
+  } catch (e) { const d = new Date(); return iso(d) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+}
+const nightEnded = date => parisNowKey() >= addDays(date, 1) + NIGHT_END;
+function nightState(n){
+  if (!n || !generated(n)) return 'empty';
+  const st = n.tl && n.tl._status;
+  if (!st || st.state !== 'validated') return 'draft';
+  return nightEnded(n.date) ? 'archived' : 'validated';
+}
+const isArchived = n => nightState(n) === 'archived';
+function canEdit(date){ if (isArchived(nightOf(date))) { toast('Planning archivé : lecture seule.'); return false; } return true; }
+/* photo des postes et des noms au moment de la validation : l'archive reste lisible
+   même si un poste est supprimé ou une personne renommée plus tard */
+function snapshot(n){
+  const ids = new Set();
+  (n.q || []).forEach(q => Object.values(q || {}).forEach(id => ids.add(id)));
+  (n.train || []).forEach(t => Object.values(t || {}).forEach(id => ids.add(id)));
+  const names = {}; ids.forEach(id => { if (S.people[id]) names[id] = S.people[id].name; });
+  return {posts:posts().map(p => ({id:p.id, code:p.code, name:p.name, zone:p.zone || '', diff:p.diff || '', order:p.order || 0})), names};
+}
+function planPosts(n){ return (isArchived(n) && n.tl._snap && n.tl._snap.posts) ? n.tl._snap.posts.slice() : posts(); }
+function personFor(n, id){
+  if (!id) return null;
+  if (S.people[id]) return S.people[id];
+  const nm = n && n.tl && n.tl._snap && n.tl._snap.names && n.tl._snap.names[id];
+  return {id, name:nm || '?', role:'TM', marks:{}};
+}
 
 /* ---------- engine ---------- */
 function hungarian(cost){
@@ -433,8 +567,8 @@ function history(date){
   return {count, red};
 }
 function holderMap(q){ const m = {}; Object.keys(q || {}).forEach(pid => { if (q[pid]) m[q[pid]] = pid; }); return m; }
-/* ---------- historique (connexions + modifications manuelles) : le journal vit dans
-   les nuits elles-mêmes (clé réservée _log dans la colonne tl, ignorée ailleurs), pour
+/* ---------- journal des modifications manuelles d'une nuit (consultable par l'admin
+   dans Archives → Journal) : il vit dans les nuits elles-mêmes (clé réservée _log dans la colonne tl, ignorée ailleurs), pour
    rester dans les policies RLS déjà en place tant que l'accès Supabase n'est pas donné. */
 function pushLog(n, type, detail, actor){
   const p = actor || profile();
@@ -491,6 +625,32 @@ function autoFindQuartPreferTrainer(n, postId, traineeId){
   const withTrainer = autoFindQuart(n, postId, traineeId, true);
   return withTrainer != null ? withTrainer : autoFindQuart(n, postId, traineeId, false);
 }
+/* présent et disponible sur ce quart (les TL et les renforts seulement sur les quarts cochés) */
+function onQuart(night, k, per){
+  if (!per || per.active === false) return false;
+  if ((night.absent || []).includes(per.id)) return false;
+  if (night.qAbsent && night.qAbsent[k] && night.qAbsent[k][per.id]) return false;
+  if (isTL(per) || isTemp(per)) return !!(night.tl && night.tl[per.id] && night.tl[per.id][k]);
+  return true;
+}
+const fitFor = (per, pid, night) => canHoldAlone(per, pid) && !isRestricted(per, pid, night.date);
+function otherQuarts(night, k){
+  const others = [];
+  for (let j = 0; j < nq(night); j++) if (j !== k && night.q[j] && Object.keys(night.q[j]).length) others.push({j, m:holderMap(night.q[j])});
+  return others;
+}
+/* coût « équité » d'une affectation : historique des 30 dernières nuits, même poste sur
+   un autre quart de la nuit, enchaînement de postes rouges. Partagé par la génération
+   et par les propositions de remplacement, pour qu'elles suivent les mêmes règles. */
+function pairCost(per, p, k, hist, others){
+  let c = 15 * (hist.count[per.id + '|' + p.id] || 0);
+  others.forEach(o => { if (o.m[per.id] === p.id) c += 600; });
+  if (p.diff === 'rouge') {
+    c += 6 * (hist.red[per.id] || 0);
+    others.forEach(o => { if (Math.abs(o.j - k) === 1 && S.posts[o.m[per.id]] && S.posts[o.m[per.id]].diff === 'rouge') c += 150; });
+  }
+  return c;
+}
 /* one quart = best assignment of people to posts, given the other quarts of the night */
 function buildQuart(k, night, hist){
   const absent = new Set(night.absent || []);
@@ -499,10 +659,15 @@ function buildQuart(k, night, hist){
   const lk = (night.lock && night.lock[k]) || {};
   Object.keys(lk).forEach(pid => { const who = lk[pid]; if (S.posts[pid] && S.people[who] && !absent.has(who) && !fixedPeople.has(who)) { fixed[pid] = who; fixedPeople.add(who); } });
   const ps = posts().filter(p => !fixed[p.id]);
-  const cands = activePeople().filter(per => !absent.has(per.id) && !fixedPeople.has(per.id) && ((!isTL(per) && !isTemp(per)) || (night.tl && night.tl[per.id] && night.tl[per.id][k])));
-  const P = ps.length, N = cands.length, n = P + N, BAN = 1e7, EMPTY = 5000;
-  const others = [];
-  for (let j = 0; j < nq(night); j++) if (j !== k && night.q[j] && Object.keys(night.q[j]).length) others.push({j, m:holderMap(night.q[j])});
+  const cands = activePeople().filter(per => !fixedPeople.has(per.id) && onQuart(night, k, per));
+  /* Couvrir les postes passe AVANT l'équité : un poste vide coûte plus cher que n'importe
+     quelle affectation possible. Avant, EMPTY valait 5000 alors que les pénalités d'équité
+     cumulées (historique + même poste aux autres quarts + postes rouges) pouvaient dépasser
+     5000 : l'algorithme préférait alors laisser un poste « non couvert » alors qu'une
+     personne qualifiée était présente (cas typique : poste rare, tenu par 1-2 personnes,
+     nuit avec overtime). */
+  const P = ps.length, N = cands.length, n = P + N, BAN = 1e9, EMPTY = 1e6;
+  const others = otherQuarts(night, k);
   const M = [];
   for (let i = 0; i < n; i++) {
     const row = new Array(n);
@@ -510,15 +675,8 @@ function buildQuart(k, night, hist){
       let c;
       if (i < P && j < N) {
         const p = ps[i], per = cands[j];
-        if (!canHoldAlone(per, p.id) || isRestricted(per, p.id, night.date)) c = BAN;
-        else {
-          c = 15 * (hist.count[per.id + '|' + p.id] || 0) + Math.random() * 12;
-          others.forEach(o => { if (o.m[per.id] === p.id) c += 600; });
-          if (p.diff === 'rouge') {
-            c += 6 * (hist.red[per.id] || 0);
-            others.forEach(o => { if (Math.abs(o.j - k) === 1 && S.posts[o.m[per.id]] && S.posts[o.m[per.id]].diff === 'rouge') c += 150; });
-          }
-        }
+        if (!fitFor(per, p.id, night)) c = BAN;
+        else c = pairCost(per, p, k, hist, others) + Math.random() * 12;
       } else if (i < P) c = (j - N === i) ? EMPTY : BAN;
       else if (j < N) {
         const per = cands[j];
@@ -541,9 +699,109 @@ function generateAll(night){
   for (let k = 0; k < nq(night); k++) night.q[k] = buildQuart(k, night, hist);
   night.lock = [{}, {}, {}, {}, {}]; /* un forçage ne vaut que pour la génération qui vient de tourner */
   night.manual = [{}, {}, {}, {}, {}]; /* une fois régénéré, l’affectation redevient « générée » pour l’équilibre futur */
+  for (let k = 0; k < 5; k++) dropOrphanTrainees(night, k);
   night.generated = true;
 }
-function regenQuart(night, k){ night.q[k] = {}; night.q[k] = buildQuart(k, night, history(night.date)); night.lock[k] = {}; night.manual[k] = {}; }
+function regenQuart(night, k){ night.q[k] = {}; night.q[k] = buildQuart(k, night, history(night.date)); night.lock[k] = {}; night.manual[k] = {}; dropOrphanTrainees(night, k); }
+/* une personne en formation (H) ne reste jamais seule : si le poste n'a plus de titulaire,
+   ou si elle est elle-même placée ailleurs sur ce quart, sa formation est retirée */
+function dropOrphanTrainees(night, k){
+  const t = night.train[k] || {}, q = night.q[k] || {}, placed = holderMap(q);
+  Object.keys(t).forEach(pid => { if (!q[pid] || placed[t[pid]]) delete t[pid]; });
+}
+
+/* ---------- corrections locales (en cours de quart) ----------
+   Retirer quelqu'un d'un quart ou le remplacer sans recalculer la nuit : on cherche les
+   solutions qui changent le moins de cases (1 mouvement : une personne libre prend le
+   poste ; 2 mouvements : quelqu'un du quart glisse sur le poste et une personne libre
+   reprend le sien), en respectant les mêmes règles que la génération (qualifié G, pas de
+   restriction, pas de formation seule, équité). Les cases forcées ne bougent jamais. */
+function unseat(n, k, postId){
+  const old = n.q[k][postId] || null;
+  delete n.q[k][postId]; delete n.lock[k][postId]; delete n.manual[k][postId];
+  if (old) { const p = S.posts[postId]; pushLog(n, 'assign', {date:n.date, k, postCode:p ? p.code : postId, postName:p ? p.name : '', from:S.people[old] ? S.people[old].name : '?', to:'vide'}); }
+  return old;
+}
+function replacementOptions(n, k, postId, banId){
+  const post = S.posts[postId]; if (!post) return [];
+  const q = n.q[k] || {}, lk = n.lock[k] || {}, where = holderMap(q);
+  const inTraining = new Set(Object.values(n.train[k] || {}));
+  const hist = history(n.date), others = otherQuarts(n, k);
+  const pool = activePeople().filter(per => !inTraining.has(per.id));
+  const free = pool.filter(per => onQuart(n, k, per) && !where[per.id]);
+  const tlPenalty = per => isTL(per) ? 800 : 0; /* un TL ne prend un poste qu'en dernier recours */
+  const opts = [], seen = new Set();
+  const add = (steps, cost) => { const key = steps.map(s => s.post + ':' + s.who).join('|'); if (seen.has(key)) return; seen.add(key); opts.push({steps, cost}); };
+  free.forEach(per => { if (per.id !== banId && fitFor(per, postId, n)) add([{post:postId, who:per.id}], pairCost(per, post, k, hist, others) + tlPenalty(per)); });
+  pool.forEach(B => {
+    const p2 = where[B.id];
+    if (!p2 || p2 === postId || B.id === banId || lk[p2] === B.id || !fitFor(B, postId, n)) return;
+    const post2 = S.posts[p2]; if (!post2) return;
+    let best = null;
+    free.forEach(C => { if (!fitFor(C, p2, n)) return; const c = pairCost(C, post2, k, hist, others) + tlPenalty(C); if (!best || c < best.c) best = {C, c}; });
+    if (best) add([{post:postId, who:B.id, from:p2}, {post:p2, who:best.C.id}], pairCost(B, post, k, hist, others) + tlPenalty(B) + best.c);
+  });
+  /* dernier recours : un TL présent cette nuit mais pas prévu sur ce quart */
+  if (!opts.length) pool.forEach(per => {
+    if (!isTL(per) || per.id === banId || where[per.id] || onQuart(n, k, per)) return;
+    if ((n.absent || []).includes(per.id) || (n.qAbsent[k] || {})[per.id] || !fitFor(per, postId, n)) return;
+    add([{post:postId, who:per.id, tlOn:true}], 5000 + pairCost(per, post, k, hist, others));
+  });
+  opts.sort((a, b) => a.steps.length - b.steps.length || a.cost - b.cost);
+  return opts.slice(0, 6);
+}
+function applyOption(n, k, opt){
+  opt.steps.forEach(s => {
+    if (s.tlOn) { const a = (n.tl[s.who] || [false, false, false, false, false]).slice(); a[k] = true; n.tl[s.who] = a; }
+    assignHolder(n, k, s.post, s.who, false);
+  });
+}
+/* applique automatiquement la meilleure correction (utilisé quand un planning validé
+   perd quelqu'un : absence, restriction…) ; renvoie un texte pour le message */
+function autoFill(n, k, postId){
+  const opt = replacementOptions(n, k, postId)[0];
+  const p = S.posts[postId];
+  if (opt) {
+    applyOption(n, k, opt);
+    const nm = s => (S.people[s.who] || {}).name || '?';
+    const s2 = opt.steps[1];
+    return 'Q' + (k + 1) + ' ' + (p ? p.code : '') + ' → ' + nm(opt.steps[0]) + (s2 ? ' (' + nm(s2) + ' reprend ' + ((S.posts[s2.post] || {}).code || '') + ')' : '');
+  }
+  dropOrphanTrainees(n, k);
+  return 'Q' + (k + 1) + ' ' + (p ? p.code : '') + ' reste vide';
+}
+/* retire une personne des quarts donnés (et de ses formations) puis comble les trous ;
+   onlyPosts limite aux postes concernés (restriction) */
+function releasePerson(n, id, ks, onlyPosts){
+  const msgs = [];
+  ks.forEach(k => {
+    const t = n.train[k] || {}; Object.keys(t).forEach(pid => { if (t[pid] === id && !onlyPosts) delete t[pid]; });
+    const pid = holderMap(n.q[k])[id];
+    if (!pid || (onlyPosts && !onlyPosts.has(pid))) return;
+    unseat(n, k, pid);
+    msgs.push(autoFill(n, k, pid));
+  });
+  return msgs;
+}
+const allQuarts = n => Array.from({length:nq(n)}, (z, k) => k);
+/* pourquoi un poste est vide sur un quart : pour expliquer au lieu de masquer */
+function whyEmpty(n, k, postId){
+  const holders = activePeople().filter(per => canHoldAlone(per, postId));
+  if (!holders.length) return 'personne n’est qualifié (G) sur ce poste';
+  const where = holderMap(n.q[k] || {}), parts = [];
+  const cnt = f => holders.filter(f).length;
+  const abs = cnt(per => (n.absent || []).includes(per.id));
+  const qabs = cnt(per => !(n.absent || []).includes(per.id) && (n.qAbsent[k] || {})[per.id]);
+  const rest = cnt(per => isRestricted(per, postId, n.date));
+  const off = cnt(per => (isTL(per) || isTemp(per)) && !(n.absent || []).includes(per.id) && !(n.tl[per.id] && n.tl[per.id][k]));
+  const busy = cnt(per => where[per.id] && onQuart(n, k, per));
+  if (abs) parts.push(abs + ' absent' + (abs > 1 ? 's' : '') + ' cette nuit');
+  if (qabs) parts.push(qabs + ' absent' + (qabs > 1 ? 's' : '') + ' sur ce quart');
+  if (rest) parts.push(rest + ' avec restriction');
+  if (off) parts.push(off + ' TL/renfort non prévu' + (off > 1 ? 's' : '') + ' sur ce quart');
+  if (busy) parts.push(busy + ' déjà placé' + (busy > 1 ? 's' : '') + ' sur un autre poste');
+  return holders.length + ' qualifié' + (holders.length > 1 ? 's' : '') + (parts.length ? ' : ' + parts.join(', ') : '');
+}
 
 /* ---------- persistence (Supabase Postgres ; la vraie protection est faite
    côté serveur par les policies RLS — voir supabase_schema.sql) ---------- */
@@ -555,7 +813,7 @@ function postToRow(p){ return {id:p.id, code:p.code, name:p.name, zone:p.zone ||
 function rowToPost(r){ return {id:r.id, code:r.code, name:r.name, zone:r.zone || '', diff:r.diff || '', order:r.order_num || 0}; }
 const queues = {};
 function queued(key, fn){ const run = () => fn().catch(e => toast('Enregistrement impossible, réessaie.')); queues[key] = (queues[key] || Promise.resolve()).then(run, run); }
-function saveNight(n){ n.updatedAt = new Date().toISOString(); S.nights[n.date] = n; render(); queued('night:' + n.date, () => sb.from('nights').upsert(nightToRow(n))); }
+function saveNight(n){ n.updatedAt = new Date().toISOString(); if (nightState(n) === 'validated') n.tl._snap = snapshot(n); S.nights[n.date] = n; render(); queued('night:' + n.date, () => sb.from('nights').upsert(nightToRow(n))); }
 function savePerson(per){ S.people[per.id] = per; render(); queued('person:' + per.id, () => sb.from('people').upsert(personToRow(per))); }
 function savePost(p){ S.posts[p.id] = p; render(); queued('post:' + p.id, () => sb.from('posts').upsert(postToRow(p))); }
 function saveCfg(){ render(); queued('cfg', () => sb.from('config').upsert({key:'main', value:S.cfg})); }
@@ -564,7 +822,7 @@ function deletePostRow(id){ delete S.posts[id]; render(); queued('post:' + id, (
 const newId = pre => pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
 let tt = null;
-function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, 2800); }
+function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => { t.hidden = true; }, Math.min(7000, Math.max(2800, String(m).length * 45))); }
 
 /* ---------- render ---------- */
 let rq = false;
@@ -585,117 +843,158 @@ function render(){
   if (p.role === 'tl' && !tlWindowOk()) { if (header) header.hidden = true; main.innerHTML = viewClosed(); return; }
   if (!S.ready) { if (header) header.hidden = true; main.innerHTML = '<p class="muted">Chargement…</p>'; return; }
   if (header) header.hidden = false;
-  if ((S.tab === 'equilibre' || S.tab === 'historique') && !isAdmin()) S.tab = 'plan';
+  if (S.tab === 'equilibre' && !isAdmin()) S.tab = 'plan';
   $('#teamName').textContent = S.cfg.team || '';
   renderAcct();
   renderTabs();
   document.querySelectorAll('.tabs button').forEach(b => { if (b.dataset.tab === S.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   const keep = {}; main.querySelectorAll('[data-scroll]').forEach(el => { keep[el.dataset.scroll] = [el.scrollLeft, el.scrollTop]; });
-  main.innerHTML = S.tab === 'poly' ? (phone() ? viewPolyPhone() : viewPoly()) : S.tab === 'effectifs' ? viewEffectifs() : S.tab === 'equilibre' ? (phone() ? viewEquilibrePhone() : viewEquilibre()) : S.tab === 'historique' ? viewHistorique() : (phone() ? viewPlanPhone() : viewPlan());
+  main.innerHTML = S.tab === 'poly' ? (phone() ? viewPolyPhone() : viewPoly()) : S.tab === 'effectifs' ? viewEffectifs() : S.tab === 'equilibre' ? (phone() ? viewEquilibrePhone() : viewEquilibre()) : S.tab === 'archives' ? viewArchives() : (phone() ? viewPlanPhone() : viewPlan());
+  if (S.tab === 'plan' && generated(nightOf())) preloadPdf();
   main.querySelectorAll('[data-scroll]').forEach(el => { const k = keep[el.dataset.scroll]; if (k) { el.scrollLeft = k[0]; el.scrollTop = k[1]; } });
 }
 function renderAcct(){
   const bar = $('#acctBar'); if (!bar) return;
   const p = profile(); if (!p) { bar.innerHTML = ''; return; }
-  bar.innerHTML = '<div class="acct"><span>' + esc(p.name) + '</span><span class="role' + (p.role === 'admin' ? ' admin' : '') + '">' + esc(ROLE_LABEL[p.role] || p.role) + '</span>'
+  bar.innerHTML = '<div class="acct"><span class="who">' + esc(p.name) + '</span><span class="role' + (p.role === 'admin' ? ' admin' : '') + '">' + esc(ROLE_LABEL[p.role] || p.role) + '</span>'
     + (p.role === 'admin' ? '<button type="button" class="btn btn-sm" data-act="accounts">Comptes</button>' : '')
     + '<button type="button" class="btn btn-sm" data-act="logout">Se déconnecter</button></div>';
 }
 function renderTabs(){
   const nav = $('#tabsNav'); if (!nav) return;
   const adm = isAdmin();
-  nav.innerHTML = TAB_DEFS.filter(t => !t.admin || adm).map(t => '<button type="button" data-act="tab" data-tab="' + t.k + '">' + esc(t.label) + '</button>').join('');
+  nav.innerHTML = TAB_DEFS.filter(t => !t.admin || adm).map(t => '<button type="button" data-act="tab" data-tab="' + t.k + '"><span class="l">' + esc(t.label) + '</span><span class="s">' + esc(t.short) + '</span></button>').join('');
 }
 function postHead(p){ return '<button type="button" class="post linkbtn" data-act="trainees" data-id="' + esc(p.id) + '"><span class="dot ' + esc(p.diff || '') + '" aria-hidden="true"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button>'; }
-function viewPlan(){
-  const n = nightOf(), gen = generated(n), Q = nq(n), ps = posts();
+function crewInfoOf(n, shortForm){
   const absent = n ? (n.absent || []).length : 0;
-  const tlOn = n ? Object.keys(n.tl || {}).filter(k => k !== '_log').map(k => n.tl[k]).filter(a => a && a.some(Boolean)).length : 0;
-  const crewInfo = [absent ? absent + ' absent' + (absent > 1 ? 's' : '') : '', tlOn ? tlOn + ' TL' : ''].filter(Boolean).join(' · ');
+  const tlOn = n ? tlIds(n).map(k => n.tl[k]).filter(a => a && a.some(Boolean)).length : 0;
+  return [absent ? absent + (shortForm ? ' abs.' : ' absent' + (absent > 1 ? 's' : '')) : '', tlOn ? tlOn + ' TL' : ''].filter(Boolean).join(' · ');
+}
+/* un quart est « généré » dès qu'il a au moins une affectation : un quart encore vide
+   (nuit générée quart par quart) n'est pas compté comme « non couvert » */
+const quartDone = (n, k) => !!(n && n.q && n.q[k] && Object.keys(n.q[k]).length);
+function coverage(n){
+  let missing = 0, total = 0; const ps = planPosts(n);
+  for (let k = 0; k < nq(n); k++) if (quartDone(n, k)) ps.forEach(p => { total++; if (!(n.q[k] || {})[p.id]) missing++; });
+  return {missing, total};
+}
+function quartCoverage(n, k){ const ps = planPosts(n); return {held:ps.filter(p => (n.q[k] || {})[p.id]).length, total:ps.length}; }
+function statusBar(n){
+  const st = nightState(n); if (st === 'empty') return '';
+  const s = (n.tl && n.tl._status) || {};
+  const t = s.at ? new Date(s.at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '';
+  const cov = coverage(n);
+  const todo = allQuarts(n).filter(k => !quartDone(n, k)).map(k => 'Q' + (k + 1));
+  const covTxt = todo.length ? '<small style="color:var(--orange);font-weight:700">' + todo.join(', ') + ' pas encore généré' + (todo.length > 1 ? 's' : '') + '</small>' : cov.missing ? '<small style="color:var(--rouge);font-weight:700">' + cov.missing + ' case' + (cov.missing > 1 ? 's' : '') + ' non couverte' + (cov.missing > 1 ? 's' : '') + '</small>' : '<small>Tous les postes sont couverts</small>';
+  /* nuit générée quart par quart : un bouton pour compléter les quarts restants */
+  const rest = todo.length ? '<button type="button" class="btn btn-sm btn-red" data-act="genRest">⚡ Générer le reste de la nuit (' + todo.join(', ') + ')</button>' : '';
+  if (st === 'draft') return '<div class="status draft"><span class="pill">En préparation</span>' + covTxt + '<span class="grow"></span>' + rest + '<button type="button" class="btn btn-sm' + (todo.length ? '' : ' btn-red') + '" data-act="validate">✓ Valider le planning</button></div>';
+  if (st === 'validated') return '<div class="status validated"><span class="pill">Validé</span><small>Planning officiel' + (s.by ? ' · validé par ' + esc(s.by) : '') + (t ? ' à ' + t : '') + ' · passera dans les Archives à la fin de la nuit.</small>' + covTxt + '<span class="grow"></span>' + rest + '<button type="button" class="btn btn-sm" data-act="unvalidate">Repasser en préparation</button></div>';
+  return '<div class="status archived"><span class="pill">Archivé</span><small>Lecture seule' + (s.by ? ' · validé par ' + esc(s.by) : '') + '</small></div>';
+}
+/* animation d'apparition des cases qui viennent de changer (génération, remplacement) ;
+   le délai négatif garde l'animation continue si l'écran est redessiné entre-temps */
+function freshFx(k, pid){
+  const f = S.fresh; if (!f || f.date !== S.date || !f.keys.has(k + '|' + pid)) return {cls:'', st:''};
+  const el = Date.now() - f.t; if (el > 1000) return {cls:'', st:''};
+  return {cls:' fresh', st:' style="animation-delay:' + Math.round(k * 70 - el) + 'ms"'};
+}
+function cellInner(n, k, p, compact){
+  const gen = generated(n);
+  const who = n && n.q && n.q[k] ? n.q[k][p.id] : null;
+  const per = personFor(n, who);
+  const trainPer = personFor(n, n && n.train && n.train[k] ? n.train[k][p.id] : null);
+  let h = per ? esc(per.name) + (isTL(per) ? ' <span class="tag">TL</span>' : '') + (mark(per, p.id) === 'H' ? ' <span class="tag h">' + (compact ? '🎓' : '🎓 Formation') + '</span>' : '')
+    : (gen && quartDone(n, k) ? '<span class="uncov">Non couvert</span>' : '<span class="empty">—</span>');
+  if (trainPer) h += ' <span class="tag h">+' + (compact ? '' : ' ') + esc(trainPer.name) + ' 🎓</span>';
+  return h;
+}
+function nutBtn(n, cls){
+  const cnt = nightSuggestions(n, true).filter(x => x.level !== 'info').length;
+  return '<button type="button" class="btn nut' + (cls || '') + '" data-act="suggest" title="Suggestions pour le TL">🥜 Suggestions' + (cnt ? '<span class="badge">' + cnt + '</span>' : '') + '</button>';
+}
+const shareBtns = () => '<button type="button" class="btn" data-act="pdfDownload">⬇️ Télécharger</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button>';
+function viewPlan(){
+  const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived', ps = planPosts(n);
+  const crewInfo = crewInfoOf(n, false);
   let html = '<div class="bar"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button>'
     + '<span class="night">' + esc(fmt(S.date)) + '</span>'
     + '<button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button>'
     + '<input type="date" id="date" data-chg="date" value="' + S.date + '" aria-label="Choisir la date">'
-    + '<span class="grow"></span>'
-    + '<button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? ' · ' + crewInfo : '') + '</button>'
-    + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>')
-    + '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>'
-    + (gen ? '<button type="button" class="btn btn-formation" data-act="formation">🎓 Formation</button>' : '')
-    + (gen ? '<button type="button" class="btn" data-act="print">🖨️ Imprimer</button>' : '') + '</div>';
-  if (!gen) html += '<div class="start"><p>Pas encore de planning pour cette nuit. Indique les absents et les TL dans « Effectifs », puis génère.' + hint(' Astuce : reste appuyé sur un nom dans Effectifs pour plus d’options (absence longue, par quart…).') + '</p><button type="button" class="btn btn-red" data-act="gen">Générer la rotation</button></div>';
+    + '<span class="grow"></span>';
+  if (!ro) {
+    html += '<button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? ' · ' + crewInfo : '') + '</button>'
+      + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>')
+      + (st !== 'validated' ? '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>' : '')
+      + (gen ? '<button type="button" class="btn btn-formation" data-act="formation">🎓 Formation</button>' : '')
+      + nutBtn(n);
+  }
+  if (gen) html += shareBtns();
+  html += '</div>' + statusBar(n);
+  if (!gen) html += '<div class="start"><p>Pas encore de planning pour cette nuit. Indique les absents et les TL dans « Effectifs », puis génère toute la nuit, ou fais un appui long sur un quart (Quart 1, Quart 2…) pour ne générer que celui-là.' + hint(' Astuce : dans Effectifs, le bouton ⚙️ (ou un appui long sur un nom) donne plus d’options : absence longue, par quart…') + '</p><button type="button" class="btn btn-red" data-act="gen">Générer la rotation</button></div>';
   let head = '<tr><th scope="col">Poste</th>';
-  for (let k = 0; k < Q; k++) head += '<th scope="col">Quart ' + (k + 1) + (k === 4 ? '<span class="ot">Overtime</span>' : '') + '</th>';
+  for (let k = 0; k < Q; k++) {
+    head += '<th scope="col"' + (!ro ? ' data-long="quartLong" data-k="' + k + '" title="Appui long : générer uniquement ce quart"' : '') + '><div class="qh"><span>Quart ' + (k + 1) + (k === 4 ? '<span class="ot">Overtime</span>' : '') + '</span>'
+      + '</div></th>';
+  }
   head += '</tr>';
   let body = '';
   zones(ps).forEach(z => {
     body += '<tr class="grp"><th scope="rowgroup">' + esc(z) + '</th><td colspan="' + Q + '"></td></tr>';
     ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
-      body += '<tr><th class="ph" scope="row">' + postHead(p) + '</th>';
+      body += '<tr><th class="ph" scope="row">' + (ro ? '<div class="post"><span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></div>' : postHead(p)) + '</th>';
       for (let k = 0; k < Q; k++) {
         const who = n && n.q && n.q[k] ? n.q[k][p.id] : null;
-        const per = who ? S.people[who] : null;
-        const trainId = n && n.train && n.train[k] ? n.train[k][p.id] : null;
-        const trainPer = trainId ? S.people[trainId] : null;
+        const per = personFor(n, who);
         const locked = !!(n && n.lock && n.lock[k] && n.lock[k][p.id] && n.lock[k][p.id] === who);
-        body += '<td><button type="button" class="cell' + (locked ? ' locked' : '') + '" data-act="pick" data-k="' + k + '" data-post="' + esc(p.id) + '" aria-label="' + esc('Poste ' + p.code + ', quart ' + (k + 1) + ' : ' + (per ? per.name : 'vide')) + '">'
-          + (per ? esc(per.name) + (isTL(per) ? ' <span class="tag">TL</span>' : '') + (mark(per, p.id) === 'H' ? ' <span class="tag h">🎓 Formation</span>' : '') : '<span class="empty">—</span>')
-          + (trainPer ? ' <span class="tag h">+ ' + esc(trainPer.name) + ' 🎓</span>' : '') + '</button></td>';
+        const fx = freshFx(k, p.id);
+        body += ro
+          ? '<td><div class="cell ro">' + cellInner(n, k, p, false) + '</div></td>'
+          : '<td><button type="button" class="cell' + (locked ? ' locked' : '') + fx.cls + '"' + fx.st + ' data-act="pick"' + (gen ? ' data-long="cellMenu"' : '') + ' data-k="' + k + '" data-post="' + esc(p.id) + '" aria-label="' + esc('Poste ' + p.code + ', quart ' + (k + 1) + ' : ' + (per ? per.name : 'vide')) + '">' + cellInner(n, k, p, false) + '</button></td>';
       }
       body += '</tr>';
     });
   });
-  return html + '<div class="scroll" data-scroll="plan"><table class="plan"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div><p class="note">Touche le nom d’un poste pour voir qui est en formation dessus. Case avec une barre rouge : personne forcée, gardée quand tu régénères.' + hint(' Astuce : le bouton « 🖨️ Imprimer » sort toujours un tableau en noir et blanc, même si l’écran est en couleur.') + '</p>' + printZone(n, Q, ps);
-}
-function printZone(n, Q, ps){
-  let head = '<tr><th>Poste</th>';
-  for (let k = 0; k < Q; k++) head += '<th>Quart ' + (k + 1) + (k === 4 ? ' (OT)' : '') + '</th>';
-  head += '</tr>';
-  let body = '';
-  zones(ps).forEach(z => {
-    body += '<tr><th colspan="' + (Q + 1) + '" style="text-align:left">' + esc(z) + '</th></tr>';
-    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
-      body += '<tr><td>' + esc(p.code) + ' · ' + esc(p.name) + '</td>';
-      for (let k = 0; k < Q; k++) {
-        const who = n && n.q && n.q[k] ? n.q[k][p.id] : null;
-        const per = who ? S.people[who] : null;
-        body += '<td>' + (per ? esc(per.name) : '—') + '</td>';
-      }
-      body += '</tr>';
-    });
-  });
-  return '<div id="printzone" hidden><h1>PLANNING CH2-2 — ' + esc(fmt(S.date)) + '</h1><table>' + head + body + '</table></div>';
+  return html + '<div class="scroll" data-scroll="plan"><table class="plan"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>'
+    + (ro ? '' : '<p class="note">Touche une case pour changer qui tient le poste ; appui long (ou clic droit) sur une case pour retirer ou remplacer la personne sur ce quart ; appui long sur l’en-tête d’un quart pour ne générer que celui-là. Case avec une barre rouge : personne forcée, gardée quand tu régénères.</p>');
 }
 function viewPlanPhone(){
-  const n = nightOf(), gen = generated(n), Q = nq(n), ps = posts();
+  const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived', ps = planPosts(n);
   if (S.qk >= Q) S.qk = 0;
   const k = S.qk;
-  const absent = n ? (n.absent || []).length : 0;
-  const tlOn = n ? Object.keys(n.tl || {}).filter(k => k !== '_log').map(k => n.tl[k]).filter(a => a && a.some(Boolean)).length : 0;
-  const crewInfo = [absent ? absent + ' abs.' : '', tlOn ? tlOn + ' TL' : ''].filter(Boolean).join(' · ');
+  const crewInfo = crewInfoOf(n, true);
   const a = S.date.split('-').map(Number);
   const short = new Date(a[0], a[1] - 1, a[2]).toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
-  let html = '<div class="m-head"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button><span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span><button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button></div>'
-    + '<div class="m-acts"><button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? '<br><small class="muted">' + crewInfo + '</small>' : '') + '</button>'
-    + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>') + '</div>'
-    + '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>'
-    + (gen ? '<button type="button" class="btn btn-formation m-gen" data-act="formation">🎓 Mettre en formation</button>' : '')
-    + (gen ? '<button type="button" class="btn m-gen" data-act="print">🖨️ Imprimer</button>' : '');
+  let html = '<div class="m-head"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button><span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span><button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button></div>';
+  if (!ro) {
+    html += '<div class="m-acts"><button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? '<br><small class="muted">' + crewInfo + '</small>' : '') + '</button>'
+      + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>') + '</div>'
+      + (st !== 'validated' ? '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>' : '')
+      + (gen ? '<button type="button" class="btn btn-formation m-gen" data-act="formation">🎓 Mettre en formation</button>' : '');
+  }
+  if (gen || !ro) html += '<div class="m-acts m-acts3">' + (ro ? '' : nutBtn(n)) + (gen ? shareBtns() : '') + '</div>';
+  html += statusBar(n);
   html += '<div class="qtabs" role="group" aria-label="Quart">';
-  for (let j = 0; j < Q; j++) html += '<button type="button" data-act="qk" data-k="' + j + '" aria-pressed="' + (j === k) + '">Q' + (j + 1) + (j === 4 ? '<small>OT</small>' : '') + '</button>';
-  html += '</div><div class="mlist">';
+  for (let j = 0; j < Q; j++) html += '<button type="button" data-act="qk" data-k="' + j + '"' + (!ro ? ' data-long="quartLong"' : '') + ' aria-pressed="' + (j === k) + '">Q' + (j + 1) + (j === 4 ? '<small>OT</small>' : '') + '</button>';
+  html += '</div>';
+  if (!gen && !ro) html += '<p class="note">Appui long sur Q1, Q2… pour générer uniquement ce quart.</p>';
+  if (gen) { const c = quartCoverage(n, k); html += '<div class="qbar"><span class="muted">Quart ' + (k + 1) + ' · ' + c.held + '/' + c.total + ' postes couverts</span></div>'; }
+  html += '<div class="mlist">';
   zones(ps).forEach(z => {
     html += '<div class="g">' + esc(z) + '</div>';
     ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
       const who = n && n.q && n.q[k] ? n.q[k][p.id] : null;
-      const per = who ? S.people[who] : null;
-      const trainId = n && n.train && n.train[k] ? n.train[k][p.id] : null;
-      const trainPer = trainId ? S.people[trainId] : null;
       const locked = !!(n && n.lock && n.lock[k] && n.lock[k][p.id] && n.lock[k][p.id] === who);
-      html += '<div class="mrow split' + (locked ? ' locked' : '') + '"><button type="button" class="linkbtn" data-act="trainees" data-id="' + esc(p.id) + '"><span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button>'
-        + '<button type="button" class="pickbtn" data-act="pick" data-k="' + k + '" data-post="' + esc(p.id) + '">' + (per ? esc(per.name) + (isTL(per) ? ' <span class="tag">TL</span>' : '') + (mark(per, p.id) === 'H' ? ' <span class="tag h">🎓</span>' : '') : '<span class="empty">—</span>') + (trainPer ? ' <span class="tag h">+' + esc(trainPer.name) + ' 🎓</span>' : '') + '</button></div>';
+      const fx = freshFx(k, p.id);
+      const label = '<span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span>';
+      html += ro
+        ? '<div class="mrow split"><span class="linkbtn">' + label + '</span><span class="pickbtn">' + cellInner(n, k, p, true) + '</span></div>'
+        : '<div class="mrow split' + (locked ? ' locked' : '') + '"><button type="button" class="linkbtn" data-act="trainees" data-id="' + esc(p.id) + '">' + label + '</button>'
+          + '<button type="button" class="pickbtn' + fx.cls + '"' + fx.st + ' data-act="pick"' + (gen ? ' data-long="cellMenu"' : '') + ' data-k="' + k + '" data-post="' + esc(p.id) + '">' + cellInner(n, k, p, true) + '</button></div>';
     });
   });
-  return html + '</div>' + printZone(n, Q, ps);
+  return html + '</div>' + (ro || !gen ? '' : '<p class="note">Touche un nom pour le changer ; appui long pour le retirer de ce quart ou le remplacer.</p>');
 }
 function viewPolyPhone(){
   const ps = posts(), pp = activePeople().filter(p => !isTemp(p));
@@ -755,64 +1054,98 @@ function viewPoly(){
 }
 
 /* ---------- équilibre (admin) ---------- */
-function viewEquilibre(){
-  if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
+function eqData(){
   const span = S.eqSpan || 7;
   const from = addDays(S.date, -(span - 1));
   const list = Object.values(S.nights).filter(n => generated(n) && n.date >= from && n.date <= S.date);
-  const ps = posts(), count = {}, tot = {};
+  const count = {}, tot = {};
   list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { const w = q[pid]; if (!w) return; count[w + '|' + pid] = (count[w + '|' + pid] || 0) + 1; tot[w] = (tot[w] || 0) + 1; })));
-  const pp = people().filter(per => !isTL(per) || tot[per.id]);
-  let t = '<table class="eq"><thead><tr><th class="n" scope="col"></th>' + ps.map(p => '<th scope="col"><span class="dot ' + esc(p.diff || '') + '" style="margin-right:3px"></span>' + esc(p.code) + '</th>').join('') + '<th scope="col">Total</th></tr></thead><tbody>';
+  return {span, list, count, tot};
+}
+const eqSpanBtns = (span, n, long) => '<button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="7">' + (long ? '7 derniers jours' : '7 jours') + '</button>'
+  + '<button type="button" class="btn btn-sm' + (span === 30 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="30">' + (long ? '30 derniers jours' : '30 jours') + '</button>'
+  + '<span class="muted">' + n + ' nuit' + (n > 1 ? 's' : '') + '</span>';
+function viewEquilibre(){
+  if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
+  const {span, list, count, tot} = eqData();
+  const ps = posts();
+  /* équipe active + anciens membres qui ont encore des quarts sur la période ; TL seulement s'ils ont tenu un poste */
+  const pp = people().filter(per => (per.active !== false || tot[per.id]) && (!isTL(per) || tot[per.id]));
+  let t = '<table class="eq"><thead><tr><th class="n" scope="col">Personne</th>' + ps.map(p => '<th scope="col" title="' + esc(p.name) + '"><span class="dot ' + esc(p.diff || '') + '"></span>' + esc(p.code) + '</th>').join('') + '<th scope="col" class="tot">Total</th></tr></thead><tbody>';
   pp.forEach(per => {
-    t += '<tr><th class="n" scope="row">' + esc(per.name) + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c">' + (tot[per.id] || 0) + '</td></tr>';
+    t += '<tr><th class="n" scope="row" title="' + esc(per.name) + '">' + esc(per.name) + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c tot">' + (tot[per.id] || 0) + '</td></tr>';
   });
   t += '</tbody></table>';
-  return '<div class="bar"><h1>Équilibre · ' + esc(S.cfg.team) + '</h1><span class="grow"></span>'
-    + '<button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="7">7 derniers jours</button>'
-    + '<button type="button" class="btn btn-sm' + (span === 30 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="30">30 derniers jours</button>'
-    + '<span class="muted">' + list.length + ' nuit' + (list.length > 1 ? 's' : '') + '</span></div>'
-    + '<div class="scroll" data-scroll="eq" style="max-height:74vh">' + t + '</div>'
+  return '<div class="bar"><h1>Équilibre · ' + esc(S.cfg.team) + '</h1><span class="grow"></span>' + eqSpanBtns(span, list.length, true) + '</div>'
+    + '<div class="scroll" data-scroll="eq">' + t + '</div>'
     + '<p class="note">Nombre de quarts faits sur chaque poste, sur la période choisie à partir de la nuit affichée dans Planning du jour. « · » : poste qu’il ne tient pas.</p>';
 }
 function viewEquilibrePhone(){
   if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
-  const span = S.eqSpan || 7;
-  const from = addDays(S.date, -(span - 1));
-  const list = Object.values(S.nights).filter(n => generated(n) && n.date >= from && n.date <= S.date);
-  const ps = posts(), pp = activePeople().filter(per => !isTL(per));
+  const {span, list, count, tot} = eqData();
+  const ps = posts(), pp = activePeople().filter(per => !isTL(per) && !isTemp(per));
   if (!S.balPerson || !S.people[S.balPerson]) S.balPerson = pp.length ? pp[0].id : null;
-  const count = {};
-  list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { if (q[pid] === S.balPerson) count[pid] = (count[pid] || 0) + 1; })));
   const per = S.people[S.balPerson];
+  const rows = ps.filter(p => (per && canHold(per, p.id)) || count[S.balPerson + '|' + p.id]);
+  const max = Math.max(1, ...rows.map(p => count[S.balPerson + '|' + p.id] || 0));
+  const done = rows.filter(p => count[S.balPerson + '|' + p.id]).length;
   let html = '<h1>Équilibre</h1>'
-    + '<select class="pp-sel" id="balSel" data-chg="balPerson" aria-label="Personne">' + pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.balPerson ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select>'
-    + '<div class="bar"><button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="7">7 jours</button><button type="button" class="btn btn-sm' + (span === 30 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="30">30 jours</button><span class="muted">' + list.length + ' nuit' + (list.length > 1 ? 's' : '') + '</span></div><div class="mlist bal">';
-  ps.filter(p => (per && canHold(per, p.id)) || count[p.id]).forEach(p => { html += '<div class="mrow static"><span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span><span class="cntv">' + (count[p.id] || 0) + '</span></div>'; });
-  return html + '</div><p class="note">Nombre de quarts faits sur chaque poste qu’il tient.</p>';
+    + '<select class="pp-sel" id="balSel" data-chg="balPerson" aria-label="Personne">' + pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.balPerson ? ' selected' : '') + '>' + esc(x.name) + ' · ' + (tot[x.id] || 0) + ' quarts</option>').join('') + '</select>'
+    + '<div class="bar">' + eqSpanBtns(span, list.length, false) + '</div>'
+    + '<div class="eqsum"><span>Quarts<b>' + (tot[S.balPerson] || 0) + '</b></span><span>Postes faits<b>' + done + '/' + rows.length + '</b></span></div>'
+    + '<div class="mlist bal">';
+  rows.forEach(p => {
+    const v = count[S.balPerson + '|' + p.id] || 0;
+    html += '<div class="mrow static"><span class="dot ' + esc(p.diff || '') + '"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span><span class="bar-in" aria-hidden="true"><i style="width:' + Math.round(100 * v / max) + '%"></i></span><span class="cntv">' + v + '</span></div>';
+  });
+  if (!rows.length) html += '<div class="mrow static"><span class="muted">Aucun poste tenu.</span></div>';
+  return html + '</div><p class="note">Nombre de quarts faits sur chaque poste qu’il/elle tient, sur la période. Tourne l’écran ou utilise un ordinateur pour le tableau complet.</p>';
 }
-/* ---------- historique (admin) ---------- */
+/* ---------- archives : plannings validés dont la nuit est terminée ---------- */
 function fmtTs(ts){ try { const d = new Date(ts); const s = d.toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}); return s; } catch (e) { return ts || ''; } }
+function archRow(n){
+  const s = (n.tl && n.tl._status) || {}, c = coverage(n);
+  return '<div class="arch-row"><div class="grow"><span class="d">' + esc(fmt(n.date)) + '</span><small>Validé' + (s.by ? ' par ' + esc(s.by) : '') + (s.at ? ' le ' + esc(fmtTs(s.at)) : '') + ' · ' + (c.total - c.missing) + '/' + c.total + ' cases couvertes' + (n.ot ? ' · overtime' : '') + '</small></div>'
+    + '<button type="button" class="btn btn-sm" data-act="openNight" data-d="' + esc(n.date) + '">Ouvrir</button>'
+    + '<button type="button" class="btn btn-sm" data-act="pdfDownload" data-d="' + esc(n.date) + '">⬇️ PDF</button>'
+    + (isAdmin() ? '<button type="button" class="btn btn-sm" data-act="nightLog" data-d="' + esc(n.date) + '">Journal</button>' : '') + '</div>';
+}
+function viewArchives(){
+  const nights = Object.values(S.nights);
+  const arch = nights.filter(n => nightState(n) === 'archived').sort((a, b) => b.date.localeCompare(a.date));
+  const cur = nights.filter(n => nightState(n) === 'validated').sort((a, b) => b.date.localeCompare(a.date));
+  let html = '<div class="bar"><h1>Archives</h1><span class="grow"></span><span class="muted">' + arch.length + ' planning' + (arch.length > 1 ? 's' : '') + ' archivé' + (arch.length > 1 ? 's' : '') + '</span></div>'
+    + '<p class="note">Un planning passe ici quand il a été validé et que sa nuit est terminée (le lendemain à 7h). Il est alors en lecture seule. Un planning non validé n’est jamais archivé.</p>';
+  if (cur.length) html += '<div class="lbl">Planning officiel (validé, nuit pas encore terminée)</div><div class="mlist">' + cur.map(archRow).join('') + '</div>';
+  if (!arch.length) return html + '<div class="lbl">Archivés</div><p class="note">Aucun planning archivé pour l’instant.</p>';
+  let month = '';
+  arch.forEach(n => {
+    const a = n.date.split('-').map(Number);
+    const m = new Date(a[0], a[1] - 1, 1).toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
+    if (m !== month) { html += (month ? '</div>' : '') + '<div class="lbl">' + esc(m.charAt(0).toUpperCase() + m.slice(1)) + '</div><div class="mlist">'; month = m; }
+    html += archRow(n);
+  });
+  return html + '</div>';
+}
 function logRow(e){
   const who = esc(e.by || '?') + (e.role ? ' <span class="tag' + (e.role === 'admin' ? '' : ' h') + '">' + esc(ROLE_LABEL[e.role] || e.role) + '</span>' : '');
   const d = e.detail || {};
   let txt;
-  if (e.type === 'login') txt = '🔑 Connexion — ' + who;
-  else if (e.type === 'assign') txt = '✏️ ' + who + ' — ' + esc(d.postCode || '') + (d.postName ? ' · ' + esc(d.postName) : '') + ', nuit du ' + esc(fmt(d.date)) + ', quart ' + (Number(d.k) + 1) + ' : ' + esc(d.from) + ' → ' + esc(d.to);
-  else if (e.type === 'train') txt = '🎓 ' + who + ' a mis ' + esc(d.trainee || '') + ' en formation — ' + esc(d.postCode || '') + ', nuit du ' + esc(fmt(d.date)) + ', quart ' + (Number(d.k) + 1) + (d.trainer ? ' avec ' + esc(d.trainer) : '');
-  else if (e.type === 'untrain') txt = '🎓 ' + who + ' a retiré ' + esc(d.trainee || '') + ' de la formation — ' + esc(d.postCode || '') + ', nuit du ' + esc(fmt(d.date)) + ', quart ' + (Number(d.k) + 1);
+  if (e.type === 'assign') txt = '✏️ ' + who + ' — ' + esc(d.postCode || '') + (d.postName ? ' · ' + esc(d.postName) : '') + ', quart ' + (Number(d.k) + 1) + ' : ' + esc(d.from) + ' → ' + esc(d.to);
+  else if (e.type === 'train') txt = '🎓 ' + who + ' a mis ' + esc(d.trainee || '') + ' en formation — ' + esc(d.postCode || '') + ', quart ' + (Number(d.k) + 1) + (d.trainer ? ' avec ' + esc(d.trainer) : '');
+  else if (e.type === 'untrain') txt = '🎓 ' + who + ' a retiré ' + esc(d.trainee || '') + ' de la formation — ' + esc(d.postCode || '') + ', quart ' + (Number(d.k) + 1);
+  else if (e.type === 'remove') txt = '➖ ' + who + ' a retiré ' + esc(d.person || '') + ' du quart ' + (Number(d.k) + 1);
+  else if (e.type === 'regenQuart') txt = '⚡ ' + who + ' a régénéré le quart ' + (Number(d.k) + 1);
+  else if (e.type === 'validate') txt = '✓ ' + who + ' a validé le planning';
+  else if (e.type === 'unvalidate') txt = '↩︎ ' + who + ' a repassé le planning en préparation';
+  else if (e.type === 'login') return '';
   else txt = esc(e.type);
   return '<div class="mrow static" style="align-items:flex-start;min-height:auto;padding:10px 14px;flex-direction:column;gap:2px"><div>' + txt + '</div><div class="muted" style="font-size:12.5px">' + esc(fmtTs(e.ts)) + '</div></div>';
 }
-function viewHistorique(){
-  if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
-  const entries = [];
-  Object.keys(S.nights).forEach(date => { const n = S.nights[date]; ((n.tl && n.tl._log) || []).forEach(e => entries.push(e)); });
-  entries.sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
-  const list = entries.slice(0, 300);
-  return '<div class="bar"><h1>Historique</h1><span class="grow"></span>' + (list.length ? '<button type="button" class="btn btn-sm" data-act="clearLog">Effacer l’historique</button>' : '') + '</div>'
-    + '<p class="note">Connexions des comptes, et modifications manuelles du planning (changement ou retrait d’un poste, mise en formation). Limité aux nuits encore en mémoire.</p>'
-    + (list.length ? '<div class="mlist">' + list.map(logRow).join('') + '</div>' : '<p class="note">Aucun évènement enregistré pour l’instant.</p>');
+function shNightLog(s){
+  const n = nightOf(s.date); if (!n) return null;
+  const rows = ((n.tl && n.tl._log) || []).slice().sort((a, b) => (b.ts || '').localeCompare(a.ts || '')).map(logRow).filter(Boolean);
+  return {title:'Journal · ' + esc(fmt(s.date)), body:rows.length ? '<div class="mlist">' + rows.join('') + '</div>' : '<p class="note">Aucune modification enregistrée pour cette nuit.</p>', foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
 /* ---------- fiche « mettre en formation » ---------- */
 function shFormation(s){
@@ -858,9 +1191,289 @@ function shFormation(s){
   return {title:'🎓 Mettre en formation', body, foot:'<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn btn-red" data-act="formConfirm">Confirmer</button>'};
 }
 
+/* ---------- calcul avec animation (rapide, non bloquante) ---------- */
+let genBusy = false;
+function runWithAnim(label, fn){
+  if (genBusy) return; genBusy = true;
+  const fx = $('#genfx');
+  const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (fx) { fx.querySelector('span').textContent = label; fx.hidden = false; }
+  setTimeout(() => {
+    try { fn(); } catch (e) { console.error(e); toast('Erreur pendant le calcul.'); }
+    finally { genBusy = false; setTimeout(() => { if (fx) fx.hidden = true; }, reduce ? 0 : 1050); } /* la voiture finit sa traversée, sans bloquer l'écran */
+  }, reduce ? 0 : 450);
+}
+/* repère les cases qui changent, pour les faire apparaître en douceur */
+function markFresh(n, before){
+  const keys = new Set();
+  for (let k = 0; k < 5; k++) {
+    const a = (before && before[k]) || {}, b = n.q[k] || {};
+    new Set(Object.keys(a).concat(Object.keys(b))).forEach(pid => { if (a[pid] !== b[pid]) keys.add(k + '|' + pid); });
+  }
+  S.fresh = {date:n.date, keys, t:Date.now()};
+}
+
+/* ---------- suggestions pour les TL (🥜) ----------
+   light = true : version rapide pour le compteur du bouton (sans chercher de solutions) */
+function nightSuggestions(n, light){
+  const out = [];
+  if (!n) n = editable(S.date);
+  if (nightState(n) === 'archived') return out;
+  const ps = posts(), Q = nq(n), gen = generated(n);
+  const nm = id => (S.people[id] || {}).name || '?';
+  if (!gen) {
+    ps.forEach(p => {
+      const anyone = allQuarts(n).some(k => activePeople().some(per => onQuart(n, k, per) && fitFor(per, p.id, n)));
+      if (!anyone) out.push({level:'high', text:p.code + ' · ' + p.name + ' : aucune personne qualifiée présente cette nuit (' + whyEmpty(n, 0, p.id) + '). Ce poste restera vide.', acts:[]});
+    });
+    out.push({level:'info', text:'Pas encore de planning : vérifie les absents et les TL dans Effectifs, puis génère la rotation.', acts:[{label:'Générer', act:'gen'}]});
+    return out;
+  }
+  for (let k = 0; k < Q; k++) {
+    const q = n.q[k] || {}, t = n.train[k] || {};
+    if (!quartDone(n, k)) { out.push({level:'med', text:'Q' + (k + 1) + ' n’est pas encore généré.', acts:[{label:'Générer le Q' + (k + 1), act:'regenOne', data:{k}}]}); continue; }
+    ps.forEach(p => {
+      if (q[p.id]) return;
+      const item = {level:'high', text:'Q' + (k + 1) + ' · ' + p.code + ' ' + p.name + ' non couvert — ' + whyEmpty(n, k, p.id) + '.', acts:[]};
+      if (!light) {
+        const o = replacementOptions(n, k, p.id);
+        if (o.length) item.acts.push({label:o[0].steps.length === 1 ? 'Proposer quelqu’un' : 'Proposer une solution (2 changements)', act:'openReplace', data:{k, post:p.id, mode:'fill'}});
+        else item.text += ' Aucune solution sans renfort ni TL supplémentaire.';
+      }
+      out.push(item);
+    });
+    Object.keys(t).forEach(pid => { if (!q[pid] && S.posts[pid]) out.push({level:'high', text:'Q' + (k + 1) + ' · ' + nm(t[pid]) + ' est en formation sur ' + S.posts[pid].code + ' sans titulaire : une personne en formation ne doit jamais être seule.', acts:[{label:'Choisir un titulaire', act:'openReplace', data:{k, post:pid, mode:'fill'}}]}); });
+  }
+  for (let k = 0; k + 1 < Q; k++) {
+    const a = holderMap(n.q[k] || {}), b = holderMap(n.q[k + 1] || {});
+    Object.keys(b).forEach(id => {
+      const p1 = S.posts[a[id]], p2 = S.posts[b[id]];
+      if (!p1 || !p2) return;
+      /* inutile de signaler si personne d'autre ne sait tenir ce poste */
+      const locked = (n.lock[k + 1] || {})[p2.id] === id || !activePeople().some(per => per.id !== id && fitFor(per, p2.id, n));
+      if (p1.id === p2.id && !locked) out.push({level:'med', text:nm(id) + ' tient ' + p2.code + ' en Q' + (k + 1) + ' et Q' + (k + 2) + ' (même poste deux quarts de suite).', acts:[{label:'Remplacer au Q' + (k + 2), act:'openReplace', data:{k:k + 1, post:p2.id, mode:'replace', who:id}}]});
+      else if (p1.diff === 'rouge' && p2.diff === 'rouge' && !locked) out.push({level:'med', text:nm(id) + ' enchaîne deux postes rouges : ' + p1.code + ' (Q' + (k + 1) + ') puis ' + p2.code + ' (Q' + (k + 2) + ').', acts:[{label:'Remplacer au Q' + (k + 2), act:'openReplace', data:{k:k + 1, post:p2.id, mode:'replace', who:id}}]});
+    });
+  }
+  for (let k = 0; k < Q; k++) {
+    const placed = holderMap(n.q[k] || {});
+    tlIds(n).forEach(id => { const per = S.people[id]; if (per && isTL(per) && onQuart(n, k, per) && !placed[id]) out.push({level:'info', text:per.name + ' (TL) est coché(e) sur Q' + (k + 1) + ' mais ne tient aucun poste (aucun poste libre qu’il/elle sait tenir).', acts:[]}); });
+  }
+  activePeople().filter(per => !isTL(per) && !isTemp(per) && !(n.absent || []).includes(per.id)).forEach(per => {
+    const busy = allQuarts(n).some(k => holderMap(n.q[k] || {})[per.id] || Object.values(n.train[k] || {}).includes(per.id));
+    const nbPosts = posts().filter(p => canHoldAlone(per, p.id)).length;
+    if (!busy) out.push({level:'info', text:per.name + ' est présent(e) mais placé(e) sur aucun quart' + (nbPosts ? '.' : ' : aucun poste coché « tient le poste » dans Polyvalence.'), acts:[]});
+  });
+  if (!light) {
+    let shown = 0;
+    activePeople().filter(per => !isTL(per) && !isTemp(per) && !(n.absent || []).includes(per.id)).forEach(per => {
+      if (shown >= 5 || allQuarts(n).some(k => Object.values(n.train[k] || {}).includes(per.id))) return;
+      const hp = posts().find(p => mark(per, p.id) === 'H' && autoFindQuartPreferTrainer(n, p.id, per.id) != null);
+      if (!hp) return;
+      const k = autoFindQuartPreferTrainer(n, hp.id, per.id), holder = S.people[n.q[k][hp.id]];
+      out.push({level:'info', text:'🎓 ' + per.name + ' pourrait être formé(e) sur ' + hp.code + ' au Q' + (k + 1) + ' avec ' + (holder ? holder.name : '') + (isFormateur(holder) ? ' (formateur)' : '') + ', sans rien changer d’autre.', acts:[{label:'Mettre en formation', act:'sugTrain', data:{id:per.id, post:hp.id, k}}]});
+      shown++;
+    });
+  }
+  if (nightState(n) === 'draft') out.push({level:'info', text:'Planning en préparation : valide-le quand il est prêt pour en faire le planning officiel (il sera archivé à la fin de la nuit).', acts:[{label:'✓ Valider', act:'validate'}]});
+  const rank = {high:0, med:1, info:2};
+  return out.sort((a, b) => rank[a.level] - rank[b.level]);
+}
+function shSuggest(){
+  const n = nightOf();
+  const list = nightSuggestions(n, false);
+  const dataAttrs = d => Object.keys(d || {}).map(k => ' data-' + k + '="' + esc(d[k]) + '"').join('');
+  const body = list.length ? list.map(x => '<div class="sug ' + x.level + '"><p>' + esc(x.text) + '</p>' + (x.acts.length ? '<div class="acts">' + x.acts.map(a => '<button type="button" class="btn btn-sm" data-act="' + a.act + '"' + dataAttrs(a.data) + '>' + esc(a.label) + '</button>').join('') + '</div>' : '') + '</div>').join('')
+    : '<p class="okmsg">Rien à signaler pour cette nuit 👌</p>';
+  return {title:'🥜 Suggestions · ' + esc(fmt(S.date)), body, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+}
+
+/* ---------- menus d'une case et d'un quart (appui long ou clic droit) ---------- */
+function shCellMenu(s){
+  const n = nightOf(), p = S.posts[s.post]; if (!n || !p) return null;
+  const who = n.q[s.k] && n.q[s.k][s.post], per = who ? S.people[who] : null;
+  const at = ' data-k="' + s.k + '" data-post="' + esc(p.id) + '"';
+  let body = '';
+  if (per) {
+    body += '<button type="button" class="opt" data-act="removeFromQuart"' + at + '>➖ Retirer de Q' + (s.k + 1) + '<small>reste disponible pour les autres quarts</small></button>';
+    body += '<button type="button" class="opt" data-act="openReplace"' + at + ' data-mode="replace" data-who="' + esc(who) + '">🔁 Remplacer sur ce quart<small>proposition automatique</small></button>';
+  } else body += '<button type="button" class="opt" data-act="openReplace"' + at + ' data-mode="fill">🔎 Proposer quelqu’un<small>' + esc(whyEmpty(n, s.k, p.id)) + '</small></button>';
+  body += '<button type="button" class="opt" data-act="pick"' + at + '>✏️ Choisir à la main…</button>';
+  return {title:(per ? esc(per.name) + ' · ' : '') + esc(p.code) + ' · Quart ' + (s.k + 1), body, foot:'<button type="button" class="btn" data-act="close">Fermer</button>'};
+}
+function shQuartMenu(s){
+  const n = nightOf();
+  const c = n ? quartCoverage(n, s.k) : {held:0, total:posts().length};
+  let body = '<p class="note">' + c.held + '/' + c.total + ' postes couverts sur ce quart.</p>'
+    + '<button type="button" class="opt" data-act="regenOne" data-k="' + s.k + '">⚡ Générer uniquement ce quart<small>les autres quarts ne bougent pas</small></button>'
+    + '<p class="note">Les personnes forcées (barre rouge) restent à leur place. Le calcul tient compte des autres quarts (pas le même poste deux fois, postes rouges) et laisse les absents de ce quart de côté.</p>';
+  if (c.held < c.total) body += '<button type="button" class="opt" data-act="suggest">🥜 Voir pourquoi des postes sont vides</button>';
+  return {title:'Quart ' + (s.k + 1) + (s.k === 4 ? ' · Overtime' : ''), body, foot:'<button type="button" class="btn" data-act="close">Fermer</button>'};
+}
+/* ---------- remplacement : retirer / remplacer / combler une case ---------- */
+function replaceBase(s){ const n = editable(); if (s.mode === 'replace' && n.q[s.k][s.post] === s.who) delete n.q[s.k][s.post]; return n; }
+function shReplace(s){
+  const p = S.posts[s.post]; if (!p) return null;
+  const n = replaceBase(s);
+  const opts = replacementOptions(n, s.k, s.post, s.mode === 'replace' ? s.who : null);
+  s.opts = opts;
+  const whoName = s.who && S.people[s.who] ? S.people[s.who].name : '';
+  let body = '';
+  if (s.mode === 'remove') body += '<p class="okmsg">✓ <b>' + esc(whoName) + '</b> est retiré(e) du quart ' + (s.k + 1) + '. Il/elle reste disponible pour les autres quarts.</p>';
+  if (s.mode === 'replace') body += '<p class="note">' + esc(whoName) + ' quitte ce poste sur le quart ' + (s.k + 1) + ' et reste dans l’équipe cette nuit.</p>';
+  body += '<div class="lbl">Remplaçants proposés · le moins de changements possible</div>';
+  if (!opts.length) body += '<p class="note">Aucune personne qualifiée et libre sur ce quart, même en déplaçant quelqu’un (' + esc(whyEmpty(n, s.k, s.post)) + ').</p>';
+  opts.forEach((o, i) => {
+    const lines = o.steps.map(st => {
+      const per = S.people[st.who] || {name:'?'}, tgt = S.posts[st.post] || {code:'?'};
+      return (st.from ? esc(per.name) + ' quitte ' + esc((S.posts[st.from] || {}).code || '') + ' → ' + esc(tgt.code) : esc(per.name) + ' → ' + esc(tgt.code)) + (isTL(per) ? ' <span class="tag">TL</span>' : '') + (st.tlOn ? ' <small>(TL ajouté sur ce quart)</small>' : '');
+    });
+    body += '<button type="button" class="opt" data-act="replApply" data-i="' + i + '"><span class="steps">' + lines.map(l => '<span>' + l + '</span>').join('') + '<small>' + o.steps.length + ' changement' + (o.steps.length > 1 ? 's' : '') + '</small></span>' + (i === 0 ? '<span class="rec" style="margin-left:auto">Recommandé</span>' : '') + '</button>';
+  });
+  const trainee = n.train[s.k] && n.train[s.k][s.post];
+  if (trainee && S.people[trainee]) body += '<p class="note">🎓 ' + esc(S.people[trainee].name) + ' (en formation) reste sur le poste avec le remplaçant ; si le poste reste vide, sa formation est retirée.</p>';
+  const foot = (s.mode === 'replace' ? '<button type="button" class="btn" data-act="close">Annuler</button>' : '<button type="button" class="btn" data-act="replLeave">Laisser vide</button>')
+    + '<button type="button" class="btn" data-act="pick" data-k="' + s.k + '" data-post="' + esc(s.post) + '">Choisir à la main…</button>';
+  return {title:'Poste ' + esc(p.code) + ' · Quart ' + (s.k + 1), body, foot};
+}
+
+/* ---------- création / modification d'une personne (brouillon : rien n'est
+   enregistré avant « Créer » / « Enregistrer », « Annuler » ne laisse aucune trace) ---------- */
+function roleDatalist(){
+  const set = new Set(ROLE_SUGGEST); people().forEach(p => set.add(roleOf(p)));
+  return '<datalist id="roleList">' + Array.from(set).map(r => '<option value="' + esc(r) + '"></option>').join('') + '</datalist>';
+}
+function shPersonForm(s){
+  const per = s.id ? S.people[s.id] : null;
+  if (s.id && !per) return null;
+  s.form = true;
+  if (s.name == null) { s.name = per ? per.name : ''; s.role = per ? roleOf(per) : 'TM'; }
+  const left = !!(per && per.active === false);
+  let body = '<label class="field" for="fName"><span>Nom</span><input type="text" id="fName" data-inp="name" value="' + esc(s.name) + '" autocomplete="off" autocapitalize="words" enterkeyhint="next" maxlength="60" placeholder="Prénom Nom"></label>'
+    + '<label class="field" for="fRole"><span>Désignation / fonction</span><input type="text" id="fRole" data-inp="role" list="roleList" value="' + esc(s.role) + '" autocomplete="off" enterkeyhint="done" maxlength="30" placeholder="TM, TL, GLP, ASP…"></label>' + roleDatalist()
+    + '<p class="note">Saisie libre. « TL » = team leader : il n’est placé que sur les quarts cochés dans Effectifs. Les autres désignations sont traitées comme des membres.</p>';
+  if (s.err) body += '<p class="note" style="color:var(--red)">' + esc(s.err) + '</p>';
+  if (left) body += '<p class="note">Cette personne a été retirée de l’équipe active (démission). Son historique des nuits déjà planifiées est conservé.</p>';
+  let foot;
+  if (!per) foot = '<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="personSave">Créer la personne</button>';
+  else if (s.del) foot = '<button type="button" class="btn" data-act="delNo">Annuler</button><button type="button" class="btn btn-red" data-act="delPerson">Confirmer le retrait de l’équipe</button>';
+  else foot = (left ? '<button type="button" class="btn" data-act="reactivatePerson" style="margin-right:auto">Réactiver</button>' : '<button type="button" class="btn" data-act="delAsk" style="margin-right:auto">Retirer de l’équipe</button>')
+    + '<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="personSave">Enregistrer</button>';
+  return {title:per ? 'Modifier · ' + esc(per.name) : 'Nouvelle personne', body, foot};
+}
+
+/* ---------- PDF : télécharger / partager (remplace l'impression, qui posait problème
+   sur iPhone). Document A4 noir et blanc, une page quand c'est possible. ---------- */
+const PDF_LIBS = ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'];
+let pdfLoading = null;
+function loadScript(src){ return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = ok; s.onerror = () => ko(new Error('script')); document.head.appendChild(s); }); }
+const pdfReady = () => !!(window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.API && window.jspdf.jsPDF.API.autoTable);
+function preloadPdf(){
+  if (pdfReady()) return Promise.resolve();
+  if (!pdfLoading) { pdfLoading = loadScript(PDF_LIBS[0]).then(() => loadScript(PDF_LIBS[1])); pdfLoading.catch(() => { pdfLoading = null; }); }
+  return pdfLoading;
+}
+/* polices PDF standard : alphabet latin uniquement (pas d'emoji) */
+const pdfTxt = s => String(s == null ? '' : s).replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[^\x20-\x7E\n -ÿŒœ]/g, '').replace(/ +/g, ' ').trim();
+function pdfName(n){ return ('Planning-' + (S.cfg.team || 'equipe') + '-' + n.date).replace(/[^A-Za-z0-9._-]+/g, '-') + '.pdf'; }
+function buildPdf(n){
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+  const W = 210, H = 297, M = 10, Q = nq(n), ps = planPosts(n), st = nightState(n), s = (n.tl && n.tl._status) || {};
+  const rows = [], zoneRows = new Set();
+  let lines = 1;
+  zones(ps).forEach(z => {
+    zoneRows.add(rows.length); rows.push([{content:pdfTxt(z).toUpperCase(), colSpan:Q + 1}]); lines += 1;
+    ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
+      const row = [pdfTxt(p.code + '  ' + p.name)]; let maxL = 1;
+      for (let k = 0; k < Q; k++) {
+        const per = personFor(n, (n.q[k] || {})[p.id]), tr = personFor(n, (n.train[k] || {})[p.id]);
+        let c = per ? per.name + (isTL(per) ? ' (TL)' : '') : 'NON COUVERT';
+        if (tr) { c += '\n+ ' + tr.name + ' (F)'; maxL = 2; }
+        row.push(pdfTxt(c));
+      }
+      lines += maxL; rows.push(row);
+    });
+  });
+  /* pied de page : absents, absences par quart, TL */
+  const foot = [];
+  const absent = (n.absent || []).map(id => (personFor(n, id) || {}).name).filter(Boolean);
+  if (absent.length) foot.push('Absents : ' + absent.join(', '));
+  const qa = allQuarts(n).map(k => { const ids = Object.keys(n.qAbsent[k] || {}); return ids.length ? 'Q' + (k + 1) + ' : ' + ids.map(id => (personFor(n, id) || {}).name).join(', ') : ''; }).filter(Boolean);
+  if (qa.length) foot.push('Absents sur un quart - ' + qa.join(' ; '));
+  const tls = tlIds(n).map(id => { const per = S.people[id]; const a = n.tl[id] || []; const ks = allQuarts(n).filter(k => a[k]); return per && ks.length ? per.name + ' (' + ks.map(k => 'Q' + (k + 1)).join(', ') + ')' : ''; }).filter(Boolean);
+  if (tls.length) foot.push('TL / renforts : ' + tls.join(' ; '));
+  foot.push('(F) = en formation, toujours accompagné du titulaire.  Édité le ' + new Date().toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + '.');
+  /* taille de police la plus grande qui tient sur une page (entre 11 et 7 pt) */
+  const avail = H - 2 * M - 16 - foot.length * 4.6 - 4;
+  let fs = 12;
+  while (fs > 7 && lines * (fs * 0.3528 * 1.18) + rows.length * 2.4 + 8 > avail) fs -= 0.5;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.text(pdfTxt('PLANNING ' + (S.cfg.team || '')), M, M + 6);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.text(pdfTxt(fmt(n.date) + ' - nuit' + (n.ot ? ' (avec overtime)' : '')), M, M + 12);
+  doc.setFontSize(9.5);
+  doc.text(pdfTxt(st === 'validated' || st === 'archived' ? 'Planning validé' + (s.by ? ' par ' + s.by : '') : 'BROUILLON - non validé'), W - M, M + 6, {align:'right'});
+  const colW = Math.min(36, (W - 2 * M) * 0.22), qW = (W - 2 * M - colW) / Q;
+  const colStyles = {0:{cellWidth:colW, fontStyle:'bold'}};
+  for (let k = 1; k <= Q; k++) colStyles[k] = {cellWidth:qW};
+  doc.autoTable({
+    startY:M + 16, margin:{left:M, right:M, top:M, bottom:M},
+    head:[['Poste'].concat(allQuarts(n).map(k => 'Quart ' + (k + 1) + (k === 4 ? ' (OT)' : '')))],
+    body:rows, theme:'grid',
+    styles:{font:'helvetica', fontSize:fs, textColor:0, lineColor:120, lineWidth:0.15, cellPadding:1.2, valign:'middle', overflow:'linebreak', fillColor:255},
+    headStyles:{fontStyle:'bold', fillColor:255, textColor:0, lineColor:0, lineWidth:{top:0.15, bottom:0.5, left:0.15, right:0.15}},
+    columnStyles:colStyles,
+    didParseCell(d){
+      if (d.section !== 'body') return;
+      if (zoneRows.has(d.row.index)) { d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = Math.max(7, fs - 1.5); d.cell.styles.cellPadding = {top:1.8, bottom:0.8, left:1.2, right:1.2}; }
+      else if (d.cell.raw === 'NON COUVERT') d.cell.styles.fontStyle = 'bold';
+    }
+  });
+  let y = doc.lastAutoTable.finalY + 5;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+  foot.forEach(t => {
+    const wrapped = doc.splitTextToSize(pdfTxt(t), W - 2 * M);
+    if (y + wrapped.length * 4 > H - M) { doc.addPage(); y = M + 4; }
+    doc.text(wrapped, M, y); y += wrapped.length * 4 + 0.6;
+  });
+  return doc.output('blob');
+}
+async function makePdf(date){
+  const n = nightOf(date);
+  if (!generated(n)) { toast('Pas de planning à exporter pour cette nuit.'); return null; }
+  if (!pdfReady()) { toast('Préparation du PDF…'); try { await preloadPdf(); } catch (e) { toast('Impossible de créer le PDF : vérifie la connexion internet.'); return null; } }
+  try { return {blob:buildPdf(n), name:pdfName(n)}; } catch (e) { console.error(e); toast('Erreur pendant la création du PDF.'); return null; }
+}
+function downloadBlob(blob, name){
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+async function sharePdf(pdf){
+  const file = new File([pdf.blob], pdf.name, {type:'application/pdf'});
+  if (navigator.canShare && navigator.share && navigator.canShare({files:[file]})) {
+    try { await navigator.share({files:[file], title:pdf.name.replace(/\.pdf$/, '')}); return 'ok'; }
+    catch (e) { if (e && e.name === 'AbortError') return 'cancel'; if (e && e.name === 'NotAllowedError') return 'gesture'; }
+  }
+  downloadBlob(pdf.blob, pdf.name);
+  toast('Partage non disponible sur cet appareil : le PDF a été téléchargé.');
+  return 'download';
+}
+function shShareReady(s){
+  return {title:'Partager le planning', body:'<p class="note">Le PDF « ' + esc(s.name) + ' » est prêt.</p>', foot:'<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn btn-red" data-act="pdfShareNow">📤 Partager maintenant</button>'};
+}
+
 /* ---------- sheets ---------- */
 function open(s){ S.sheet = s; renderSheet(); }
-function close(){ S.sheet = null; $('#sheet').innerHTML = ''; }
+function close(){
+  const s = S.sheet;
+  S.sheet = null; $('#sheet').innerHTML = '';
+  /* fiche de remplacement fermée sans choisir : une personne en formation ne reste pas seule */
+  if (s && s.type === 'replace' && s.mode !== 'replace' && !s.done) {
+    const n = nightOf(), t = n && n.train && n.train[s.k];
+    if (t && t[s.post] && !(n.q[s.k] || {})[s.post] && !isArchived(n)) { const c = editable(); dropOrphanTrainees(c, s.k); saveNight(c); toast('Formation retirée : le poste est resté vide.'); }
+  }
+}
 /* confirmation générique pour les actions importantes : ouvre une petite sheet avec
    le message et un bouton « Confirmer », sans perdre la sheet déjà ouverte (ex. Comptes,
    Restrictions) — elle est restaurée juste avant d'exécuter l'action (voir A.confirmYes). */
@@ -880,10 +1493,10 @@ function shConfirm(s){
 }
 function renderSheet(){
   const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
-  const c = ({pick:shPick, person:shPerson, post:shPost, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm})[s.type](s);
+  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm})[s.type](s);
   if (!c) { close(); return; }
-  const prev = $('#sheet .sb'); const st = prev ? prev.scrollTop : 0;
-  $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
+  const prev = $('#sheet .sb'); const st = prev && prev.dataset.t === s.type ? prev.scrollTop : 0;
+  $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb" data-t="' + esc(s.type) + '">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
   const b = $('#sheet .sb'); if (b) b.scrollTop = st;
 }
 function shPick(s){
@@ -903,7 +1516,12 @@ function shPick(s){
   const Q = n ? nq(n) : 4;
   const adjRepeat = per => [s.k - 1, s.k + 1].some(kk => kk >= 0 && kk < Q && n && n.q && n.q[kk] && n.q[kk][p.id] === per.id);
   const warn = per => adjRepeat(per) ? ' <small class="muted">⚠️ déjà ce poste au quart voisin</small>' : '';
-  let body = '<button type="button" class="force" data-act="force" aria-pressed="' + !!s.force + '"><span class="sw2" aria-hidden="true"></span>Forcer : garder cette personne ici à la prochaine génération</button>';
+  const at = ' data-k="' + s.k + '" data-post="' + esc(p.id) + '"';
+  let body = '';
+  /* accès sans appui long aux corrections locales */
+  if (generated(n) && curPer) body += '<div class="opt-row"><button type="button" class="opt" data-act="removeFromQuart"' + at + '>➖ Retirer de Q' + (s.k + 1) + '</button><button type="button" class="opt" data-act="openReplace"' + at + ' data-mode="replace" data-who="' + esc(cur) + '">🔁 Remplacer</button></div>';
+  else if (generated(n)) body += '<button type="button" class="opt" data-act="openReplace"' + at + ' data-mode="fill">🔎 Proposer quelqu’un automatiquement</button>';
+  body += '<button type="button" class="force" data-act="force" aria-pressed="' + !!s.force + '"><span class="sw2" aria-hidden="true"></span>Forcer : garder cette personne ici à la prochaine génération</button>';
   if (locked && cur) body += '<button type="button" class="opt" data-act="unlock">Retirer le forçage (' + esc((S.people[cur] || {}).name || '') + ')</button>';
   body += '<div class="lbl">TL</div>' + (tls.length ? tls.map(per => '<button type="button" class="opt" data-act="choose" data-id="' + esc(per.id) + '"' + (cur === per.id ? ' aria-current="true"' : '') + '>' + esc(per.name) + ' <span class="tag">TL</span>' + (where[per.id] && where[per.id] !== p.id && S.posts[where[per.id]] ? '<small>sur ' + esc(S.posts[where[per.id]].code) + '</small>' : '') + warn(per) + '</button>').join('') : '<p class="note">Aucun TL habilité et présent.</p>');
   body += '<div class="lbl">Autres membres habilités</div><select class="pp-sel" data-chg="pickPerson" aria-label="Choisir une personne"><option value="">— choisir —</option>' + others.map(per => {
@@ -941,7 +1559,7 @@ function viewEffectifs(){
     + '<span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span>'
     + '<button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button>'
     + '<span class="grow"></span><button type="button" class="btn btn-red btn-sm" data-act="addPerson">+ Ajouter une personne</button></div>';
-  html += '<p class="note">Touche un nom pour le marquer présent/absent cette nuit.' + hint(' Reste appuyé sur un nom pour plus d’options : absence sur certains quarts, absence de plusieurs jours, modifier ou supprimer.') + '</p>';
+  html += '<p class="note">Touche un nom pour le marquer présent/absent cette nuit. ⚙️ (ou appui long sur le nom) : absence sur certains quarts, absence de plusieurs jours, restriction, modifier ou retirer.</p>';
   html += '<div class="lbl">TL · touche les quarts où il tient un poste, ou « Absent »</div><div class="mlist">';
   pp.filter(isTL).sort(byAbsentFirst).forEach(per => {
     const at = (n.tl && n.tl[per.id]) || [];
@@ -949,6 +1567,7 @@ function viewEffectifs(){
     html += '<div class="tlrow" data-long="openPersonMenu" data-id="' + esc(per.id) + '"><b>' + esc(per.name) + '</b>';
     if (!off) for (let k = 0; k < Q; k++) html += '<button type="button" class="qb" data-act="tlq" data-id="' + esc(per.id) + '" data-k="' + k + '" aria-pressed="' + !!at[k] + '">Q' + (k + 1) + '</button>';
     html += '<button type="button" class="qb" data-act="abs" data-id="' + esc(per.id) + '" aria-pressed="' + off + '" style="margin-left:auto' + (off ? ';background:var(--red-soft);border-color:var(--red)' : '') + '">Absent</button>';
+    html += '<button type="button" class="gear" data-act="openPersonMenu" data-id="' + esc(per.id) + '" aria-label="Options pour ' + esc(per.name) + '" title="Options">⚙️</button>';
     html += '</div>';
   });
   html += '</div>';
@@ -964,12 +1583,14 @@ function viewEffectifs(){
     return row;
   }).join('') + '</div>';
   html += '<button type="button" class="btn btn-sm" data-act="addRenfort">+ Renfort</button>';
-  html += '<div class="lbl">Équipe</div><div class="mlist">' + pp.filter(p => !isTL(p) && !isTemp(p)).sort(byAbsentFirst).map(per => {
+  html += '<div class="lbl">Membres</div><div class="mlist">' + pp.filter(p => !isTL(p) && !isTemp(p)).sort(byAbsentFirst).map(per => {
     const off = absent.has(per.id);
     const qa = [0, 1, 2, 3, 4].filter(k => k < Q && ((n.qAbsent[k] || {})[per.id]));
     const restricted = ((per.marks && per.marks._restrict) || []).some(r => r.from <= S.date && S.date <= r.to);
     const badge = off ? 'Absent cette nuit' : [qa.length ? 'Absent Q' + qa.map(k => k + 1).join(', Q') : '', restricted ? 'Restriction' : ''].filter(Boolean).join(' · ');
-    return '<button type="button" class="eff-row' + (off ? ' off' : '') + '" data-act="abs" data-id="' + esc(per.id) + '" data-long="openPersonMenu"><span class="pname">' + esc(per.name) + (isTL(per) ? '' : '') + '</span>' + (badge ? '<span class="absbadge">' + esc(badge) + '</span>' : '') + '</button>';
+    const role = roleOf(per);
+    return '<div class="eff-line"><button type="button" class="eff-row' + (off ? ' off' : '') + '" data-act="abs" data-id="' + esc(per.id) + '" data-long="openPersonMenu"><span class="pname">' + esc(per.name) + '</span>' + (role !== 'TM' ? '<span class="tag" style="background:var(--surface-2);color:var(--ink-2)">' + esc(role) + '</span>' : '') + (badge ? '<span class="absbadge">' + esc(badge) + '</span>' : '') + '</button>'
+      + '<button type="button" class="gear" data-act="openPersonMenu" data-id="' + esc(per.id) + '" aria-label="Options pour ' + esc(per.name) + '" title="Options">⚙️</button></div>';
   }).join('') + '</div>';
   return html;
 }
@@ -982,7 +1603,7 @@ function shPersonMenu(s){
   if (s.showQ) body += '<div class="opt-row">' + [0, 1, 2, 3, 4].filter(k => k < Q).map(k => '<button type="button" class="qb" data-act="qAbsToggle" data-id="' + esc(s.id) + '" data-k="' + k + '" aria-pressed="' + !!((n.qAbsent[k] || {})[s.id]) + '">Q' + (k + 1) + '</button>').join('') + '</div>';
   body += '<button type="button" class="opt" data-act="openAbsRange" data-id="' + esc(s.id) + '">Absent sur plusieurs jours (période)</button>';
   body += '<button type="button" class="opt" data-act="openRestriction" data-id="' + esc(s.id) + '">Restriction sur un ou plusieurs postes</button>';
-  body += '<button type="button" class="opt" data-act="editPerson" data-id="' + esc(s.id) + '">Modifier / supprimer cette personne</button>';
+  body += '<button type="button" class="opt" data-act="editPerson" data-id="' + esc(s.id) + '">Modifier (nom, désignation) / retirer de l’équipe</button>';
   return {title:esc(per.name) + (isTL(per) ? ' · TL' : ''), body, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
 function shRestriction(s){
@@ -1023,7 +1644,7 @@ function shAbsPeriod(s){
 function shAccounts(){
   const meId = S.authUser && S.authUser.id;
   const rows = Object.values(S.profiles).sort((x, y) => (x.role === y.role ? x.name.localeCompare(y.name, 'fr') : x.role === 'admin' ? -1 : 1));
-  let body = S.accountsErr ? '<p class="note" style="color:var(--red)">' + esc(S.accountsErr) + '</p>' : '';
+  let body = S.accountsErr ? '<p class="note selectable" style="color:var(--red)">' + esc(S.accountsErr) + '</p>' : '';
   body += rows.map(a => '<div class="tlrow"><b>' + esc(a.name) + '</b><span class="tag' + (a.role === 'admin' ? '' : ' h') + '">' + esc(ROLE_LABEL[a.role] || a.role) + '</span>'
     + (a.must_change_password ? '<small class="muted">mot de passe provisoire</small>' : '') + (a.active === false ? '<small class="muted">désactivé</small>' : '')
     + '<span class="grow"></span><button type="button" class="btn btn-sm" data-act="resetPass" data-id="' + esc(a.id) + '">Réinitialiser le mot de passe</button>'
@@ -1046,19 +1667,23 @@ function shRenfortPosts(s){
   return {title:'Postes · ' + esc(per.name), body, foot:'<button type="button" class="btn btn-red" data-act="close">Terminé</button>'};
 }
 function shHelp(){
-  const body = '<div class="lbl">Planning du jour</div><p class="note">Choisis la nuit, va dans « Effectifs » pour les absences, puis touche « Générer ». Touche une case du tableau pour changer qui tient le poste.</p>'
+  const body = '<div class="lbl">Planning du jour</div><p class="note">Choisis la nuit, va dans « Effectifs » pour les absences, puis touche « Générer ». Touche une case du tableau pour changer qui tient le poste. Une case « Non couvert » signifie qu’aucune personne qualifiée n’était disponible : 🥜 Suggestions explique pourquoi et propose une solution.</p>'
+    + '<div class="lbl">En cours de nuit</div><p class="note">Appui long (ou clic droit sur ordinateur) sur un nom du planning : « Retirer de ce quart » (la personne reste disponible pour les autres quarts) ou « Remplacer ». L’appli propose aussitôt les remplaçants qui changent le moins de cases. Sans appui long : touche la case, les mêmes boutons sont en haut de la fiche.</p>'
+    + '<div class="lbl">Générer un seul quart</div><p class="note">Appui long (ou clic droit) sur l’en-tête d’un quart (Q1, Q2…) : il est généré seul, même si la nuit n’a pas encore été générée. Les autres quarts ne bougent pas.</p>'
+    + '<div class="lbl">Valider · Archives</div><p class="note">« ✓ Valider » fait du planning le planning officiel : il ne peut plus être régénéré en entier (seulement corrigé case par case ou quart par quart). À la fin de la nuit (le lendemain 7h), il passe dans « Archives », en lecture seule. Un brouillon non validé n’est jamais archivé.</p>'
+    + '<div class="lbl">🥜 Suggestions</div><p class="note">Pour les TL : postes non couverts et pourquoi, même poste deux quarts de suite, postes rouges enchaînés, formations possibles sans rien changer, personnes non placées.</p>'
     + '<div class="lbl">🎓 Formation</div><p class="note">Une fois la rotation générée, ce bouton propose de mettre quelqu’un en formation sur un poste (marqué hachuré dans Polyvalence) : automatiquement (l’appli choisit un quart et un formateur sans rien changer d’autre) ou manuellement (tu choisis le quart, le poste et avec qui).</p>'
-    + '<div class="lbl">Effectifs</div><p class="note">Toute l’équipe en un coup d’œil. Touche un nom pour le mettre présent/absent cette nuit. Reste appuyé sur un nom pour : absence sur certains quarts seulement, absence sur plusieurs jours, restriction sur un ou plusieurs postes (ex. médicale), ou modifier/supprimer la personne.</p>'
+    + '<div class="lbl">Effectifs</div><p class="note">Toute l’équipe en un coup d’œil. Touche un nom pour le mettre présent/absent cette nuit. Le bouton ⚙️ (ou un appui long sur le nom) donne : absence sur certains quarts seulement, absence sur plusieurs jours, restriction sur un ou plusieurs postes (ex. médicale), modifier ou retirer la personne. Sur un planning validé, une absence est corrigée localement (remplaçant automatique) au lieu de tout recalculer.</p>'
     + '<div class="lbl">Polyvalence</div><p class="note">Qui sait tenir quel poste. Touche une case pour faire tourner : vide → tient le poste → en formation → vide. Le bouton 🎓 à côté du nom marque une personne comme « Formateur » (apte à former, pour tous les postes qu’elle tient) : le mode automatique du bouton Formation la propose alors en priorité.</p>'
-    + '<div class="lbl">Imprimer</div><p class="note">Le bouton « 🖨️ Imprimer » sort toujours le planning en noir et blanc, même si l’écran est en couleur.</p>'
-    + '<div class="lbl">Équilibre et Historique</div><p class="note">Réservés à l’administrateur : « Équilibre » compte les quarts faits par poste sur 7 ou 30 jours, « Historique » liste les connexions et les modifications manuelles du planning.</p>';
+    + '<div class="lbl">Télécharger · Partager</div><p class="note">Crée un PDF A4 en noir et blanc, sur une page quand c’est possible, prêt à imprimer ou à envoyer (WhatsApp, mail…).</p>'
+    + '<div class="lbl">Équilibre</div><p class="note">Réservé à l’administrateur : nombre de quarts faits par poste sur 7 ou 30 jours.</p>';
   return {title:'Aide', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
 function viewLogin(){
   const rows = Object.values(S.profiles).filter(a => a.active !== false && a.role !== 'admin').sort((x, y) => x.name.localeCompare(y.name, 'fr'));
   const adminRows = Object.values(S.profiles).filter(a => a.active !== false && a.role === 'admin');
   if (!S.loginPick) {
-    return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation"><div class="road" aria-hidden="true"><div class="car c1" title="Toyota Yaris"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M4 20 Q4 10 14 9 L20 9 Q26 3 34 3 L42 9 L52 9 Q58 10 58 16 L58 20 Z" fill="var(--red)"/><circle cx="16" cy="21" r="5" fill="var(--ink)"/><circle cx="46" cy="21" r="5" fill="var(--ink)"/></svg></div><div class="car c2" title="Toyota Yaris Cross"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M3 21 Q3 9 13 8 L19 8 Q25 1 35 1 L44 8 L53 8 Q59 9 59 15 L59 21 Z" fill="var(--ink-2)"/><rect x="16" y="4" width="26" height="2.4" rx="1.2" fill="var(--ink-2)"/><circle cx="15" cy="22" r="5.5" fill="var(--ink)"/><circle cx="47" cy="22" r="5.5" fill="var(--ink)"/></svg></div></div><div class="brand"><i aria-hidden="true"></i>PLANNING <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button><button type="button" class="gearbtn" data-act="toggleAdminMenu" aria-label="Réglages">⚙</button></div>'
+    return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation"><div class="road" aria-hidden="true">' + roadHtml() + '</div><div class="brand"><i aria-hidden="true"></i>PLANNING <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button><button type="button" class="gearbtn" data-act="toggleAdminMenu" aria-label="Réglages">⚙</button></div>'
       + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
       + '<p class="note">Touche ton nom pour te connecter.</p><div class="namegrid">'
       + (rows.length ? rows.map(a => '<button type="button" class="namebtn" data-act="pickAccount" data-id="' + esc(a.id) + '">' + esc(a.name) + '</button>').join('') : '<p class="note">Chargement des comptes…</p>')
@@ -1068,7 +1693,7 @@ function viewLogin(){
   }
   const acc = S.profiles[S.loginPick];
   const pickTitle = acc && acc.role === 'admin' ? 'Admin' : (acc ? acc.name : '');
-  return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation"><div class="road" aria-hidden="true"><div class="car c1" title="Toyota Yaris"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M4 20 Q4 10 14 9 L20 9 Q26 3 34 3 L42 9 L52 9 Q58 10 58 16 L58 20 Z" fill="var(--red)"/><circle cx="16" cy="21" r="5" fill="var(--ink)"/><circle cx="46" cy="21" r="5" fill="var(--ink)"/></svg></div><div class="car c2" title="Toyota Yaris Cross"><svg viewBox="0 0 60 28" xmlns="http://www.w3.org/2000/svg"><path d="M3 21 Q3 9 13 8 L19 8 Q25 1 35 1 L44 8 L53 8 Q59 9 59 15 L59 21 Z" fill="var(--ink-2)"/><rect x="16" y="4" width="26" height="2.4" rx="1.2" fill="var(--ink-2)"/><circle cx="15" cy="22" r="5.5" fill="var(--ink)"/><circle cx="47" cy="22" r="5.5" fill="var(--ink)"/></svg></div></div><div class="brand"><i aria-hidden="true"></i>PLANNING <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button></div><h1>' + esc(pickTitle) + '</h1>'
+  return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation"><div class="road" aria-hidden="true">' + roadHtml() + '</div><div class="brand"><i aria-hidden="true"></i>PLANNING <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button></div><h1>' + esc(pickTitle) + '</h1>'
     + '<label class="field" for="loPass"><span>Mot de passe</span><input type="text" id="loPass" data-chg="loginPass" autocomplete="off" value="' + esc(S.loginPass || '') + '"></label>'
     + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
     + '<div class="bar">' + (S.loginBusy ? '<span class="muted">Connexion…</span>' : '<button type="button" class="btn" data-act="loginBack">‹ Retour</button><button type="button" class="btn btn-red grow" data-act="doLogin">Se connecter</button>') + '</div></div></div>';
@@ -1087,18 +1712,6 @@ function viewClosed(){
   return '<div class="authwrap"><div class="authcard"><h1>Application fermée</h1><p class="note">' + esc(msg) + '</p><button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
 }
 function shRegen(){ return {title:'Régénérer la nuit ?', body:'<p style="margin:0">Le planning de cette nuit sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>', foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="genGo">Régénérer</button>'}; }
-function shPerson(s){
-  const per = S.people[s.id]; if (!per) return null; s.form = true;
-  const left = per.active === false;
-  const body = '<label class="field" for="fName"><span>Nom</span><input type="text" id="fName" data-chg="pName" value="' + esc(per.name) + '" autocomplete="off"></label>'
-    + '<label class="field" for="fRole"><span>Rôle</span><select id="fRole" data-chg="pRole">' + ['TM', 'TL', 'GLP', 'ASP'].map(r => '<option' + ((per.role || 'TM') === r ? ' selected' : '') + '>' + r + '</option>').join('') + '</select></label>'
-    + (left ? '<p class="note">Cette personne a été retirée de l’équipe active (démission). Son historique des nuits déjà planifiées est conservé.</p>' : '<p class="note">Un TL n’est placé que sur les quarts cochés dans « Effectifs ».</p>');
-  let foot;
-  if (s.del) foot = '<button type="button" class="btn" data-act="delNo">Annuler</button><button type="button" class="btn btn-red" data-act="delPerson">Confirmer le retrait de l’équipe</button>';
-  else if (left) foot = '<button type="button" class="btn" data-act="reactivatePerson" style="margin-right:auto">Réactiver dans l’équipe</button><button type="button" class="btn btn-red" data-act="close">Terminé</button>';
-  else foot = '<button type="button" class="btn" data-act="delAsk" style="margin-right:auto">Retirer de l’équipe (démission)</button><button type="button" class="btn btn-red" data-act="close">Terminé</button>';
-  return {title:'Personne', body, foot};
-}
 function shPost(s){
   const p = S.posts[s.id]; if (!p) return null; s.form = true;
   const body = '<label class="field" for="fCode"><span>Code</span><input type="text" id="fCode" data-chg="poCode" value="' + esc(p.code) + '"></label>'
@@ -1116,14 +1729,25 @@ const A = {
   tab(d){ S.tab = d.tab; LS.set('tab', d.tab); close(); render(); window.scrollTo(0, 0); },
   day(d){ S.date = addDays(S.date, Number(d.d)); render(); },
   close(){ close(); },
-  gen(){ if (generated(nightOf())) { open({type:'regen'}); return; } const n = editable(); generateAll(n); saveNight(n); toast('Rotation générée'); },
-  genGo(){ close(); const n = editable(); generateAll(n); saveNight(n); toast('Rotation recalculée'); },
-  pick(d){ open({type:'pick', k:Number(d.k), post:d.post}); },
+  gen(){
+    if (!canEdit()) return;
+    const cur = nightOf();
+    if (nightState(cur) === 'validated') { toast('Planning validé : repasse-le en préparation pour tout régénérer, ou génère un seul quart (appui long sur Q1, Q2…).'); return; }
+    if (generated(cur)) { open({type:'regen'}); return; }
+    runWithAnim('Calcul de la rotation…', () => { const n = editable(); const before = clone(n.q); generateAll(n); markFresh(n, before); saveNight(n); toast('Rotation générée'); });
+  },
+  genGo(){
+    close(); if (!canEdit()) return;
+    runWithAnim('Calcul de la rotation…', () => { const n = editable(); const before = clone(n.q); generateAll(n); markFresh(n, before); saveNight(n); toast('Rotation recalculée'); });
+  },
+  pick(d){ if (!canEdit()) return; if (S.sheet && S.sheet.type === 'replace') S.sheet.done = true; open({type:'pick', k:Number(d.k), post:d.post}); },
   trainees(d){ open({type:'trainees', id:d.id}); },
   toggleFrm(){ S.sheet.showFrm = !S.sheet.showFrm; renderSheet(); },
   choose(d){
+    if (!canEdit()) return;
     const s = S.sheet, n = editable();
     assignHolder(n, s.k, s.post, d.id || null, s.force);
+    dropOrphanTrainees(n, s.k);
     close(); saveNight(n);
   },
   addRenfort(){
@@ -1141,37 +1765,51 @@ const A = {
     renderSheet();
   },
   force(){ S.sheet.force = !S.sheet.force; renderSheet(); },
-  unlock(){ const s = S.sheet, n = editable(); delete n.lock[s.k][s.post]; close(); saveNight(n); },
-  chooseTrain(d){ const n = editable(); const k = Number(d.k); const post = S.posts[d.post]; const trainerId = n.q[k] ? n.q[k][d.post] : null; n.train[k][d.post] = d.id; pushLog(n, 'train', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:(S.people[d.id] || {}).name || '', trainer:(trainerId && S.people[trainerId]) ? S.people[trainerId].name : ''}); saveNight(n); renderSheet(); },
-  unTrain(d){ const n = editable(); const k = Number(d.k); const post = S.posts[d.post]; const prevId = n.train[k][d.post]; delete n.train[k][d.post]; if (prevId && S.people[prevId]) pushLog(n, 'untrain', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:S.people[prevId].name}); saveNight(n); renderSheet(); },
+  unlock(){ if (!canEdit()) return; const s = S.sheet, n = editable(); delete n.lock[s.k][s.post]; close(); saveNight(n); },
+  chooseTrain(d){ if (!canEdit()) return; const n = editable(); const k = Number(d.k); const post = S.posts[d.post]; const trainerId = n.q[k] ? n.q[k][d.post] : null; n.train[k][d.post] = d.id; pushLog(n, 'train', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:(S.people[d.id] || {}).name || '', trainer:(trainerId && S.people[trainerId]) ? S.people[trainerId].name : ''}); saveNight(n); renderSheet(); },
+  unTrain(d){ if (!canEdit()) return; const n = editable(); const k = Number(d.k); const post = S.posts[d.post]; const prevId = n.train[k][d.post]; delete n.train[k][d.post]; if (prevId && S.people[prevId]) pushLog(n, 'untrain', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:S.people[prevId].name}); saveNight(n); renderSheet(); },
   abs(d){
+    if (!canEdit()) return;
     const n = editable(); const off = (n.absent || []).includes(d.id);
     if (off) { A.absReal(d); return; } /* remettre présent : correction immédiate, sans confirmation */
     const per = S.people[d.id];
-    askConfirm((per ? per.name : '') + ' — marquer absent(e) cette nuit ?', 'absReal', d);
+    const extra = nightState(n) === 'validated' ? ' Le planning validé sera corrigé localement (remplaçant automatique).' : '';
+    askConfirm((per ? per.name : '') + ' — marquer absent(e) cette nuit ?' + extra, 'absReal', d);
   },
   absReal(d){
+    if (!canEdit()) return;
     const n = editable(); const set = new Set(n.absent);
-    if (set.has(d.id)) set.delete(d.id); else set.add(d.id);
+    const nowAbsent = !set.has(d.id);
+    if (nowAbsent) set.add(d.id); else set.delete(d.id);
     n.absent = [...set];
-    n.train = n.train.map(m => { const c = Object.assign({}, m); Object.keys(c).forEach(pid => { if (c[pid] === d.id) delete c[pid]; }); return c; });
-    if (n.generated) generateAll(n);
+    const name = (S.people[d.id] || {}).name || '';
+    if (nightState(n) === 'validated') {
+      /* planning officiel : on ne recalcule pas toute la nuit, on comble seulement les trous */
+      if (nowAbsent) { const before = clone(n.q); const msgs = releasePerson(n, d.id, allQuarts(n)); markFresh(n, before); if (msgs.length) toast(name + ' absent(e) · ' + msgs.join(' · ')); }
+      else toast(name + ' de nouveau disponible (le planning validé n’est pas modifié).');
+    } else {
+      n.train = n.train.map(m => { const c = Object.assign({}, m); Object.keys(c).forEach(pid => { if (c[pid] === d.id) delete c[pid]; }); return c; });
+      if (n.generated) generateAll(n);
+    }
     saveNight(n); renderSheet();
   },
   tlq(d){
+    if (!canEdit()) return;
     const n = editable(); const k = Number(d.k);
     const a = (n.tl[d.id] || [false, false, false, false, false]).slice(); a[k] = !a[k]; n.tl[d.id] = a;
-    if (n.generated) regenQuart(n, k);
+    if (nightState(n) === 'validated') { if (!a[k]) { const msgs = releasePerson(n, d.id, [k]); if (msgs.length) toast(msgs.join(' · ')); } }
+    else if (n.generated) regenQuart(n, k);
     saveNight(n); renderSheet();
   },
-  otOn(){ askConfirm('Ajouter un overtime (Quart 5) pour toute l’équipe cette nuit ?', 'otOnReal', null); },
-  otOnReal(){ const n = editable(); n.ot = 1; if (n.generated) regenQuart(n, 4); saveNight(n); },
-  otOff(){ const n = editable(); n.ot = 0; n.q[4] = {}; n.lock[4] = {}; saveNight(n); },
+  otOn(){ if (!canEdit()) return; askConfirm('Ajouter un overtime (Quart 5) pour toute l’équipe cette nuit ?', 'otOnReal', null); },
+  otOnReal(){ if (!canEdit()) return; const n = editable(); n.ot = 1; if (n.generated) { const before = clone(n.q); regenQuart(n, 4); markFresh(n, before); } saveNight(n); },
+  otOff(){ if (!canEdit()) return; const n = editable(); n.ot = 0; n.q[4] = {}; n.lock[4] = {}; n.train[4] = {}; saveNight(n); },
   eqSpan(d){ S.eqSpan = Number(d.v); render(); },
-  formation(){ open({type:'formation', mode:'auto', done:[]}); },
+  formation(){ if (!canEdit()) return; open({type:'formation', mode:'auto', done:[]}); },
   formMode(d){ S.sheet.mode = d.v; S.sheet.k = null; S.sheet.trainer = ''; S.sheet.err = ''; renderSheet(); },
   formK(d){ S.sheet.k = Number(d.k); S.sheet.trainer = ''; renderSheet(); },
   formConfirm(){
+    if (!canEdit()) return;
     const s = S.sheet;
     if (!s.trainee || !s.post) { s.err = 'Choisis une personne et un poste.'; renderSheet(); return; }
     const n = editable();
@@ -1194,17 +1832,114 @@ const A = {
     renderSheet();
     toast(traineeName + ' mis(e) en formation.');
   },
-  clearLog(){
-    if (!isAdmin()) return;
-    askConfirm('Effacer tout l’historique (connexions et modifications) ? Cette action est définitive.', 'clearLogReal', null, {danger:true, okLabel:'Effacer définitivement'});
+  /* ---- cycle de vie : valider / repasser en préparation ---- */
+  validate(){
+    if (!canEdit()) return;
+    const n = nightOf(); if (!generated(n)) return;
+    const cov = coverage(n), todo = allQuarts(n).filter(k => !quartDone(n, k));
+    askConfirm('Valider le planning de la nuit du ' + fmt(n.date) + ' ? ' + (nightEnded(n.date) ? 'Cette nuit est terminée : il passera directement dans les Archives, en lecture seule.' : 'Il devient le planning officiel et passera dans les Archives à la fin de la nuit.') + (cov.missing ? ' Attention : ' + cov.missing + ' case(s) non couverte(s).' : '') + (todo.length ? ' Attention : ' + todo.map(k => 'Q' + (k + 1)).join(', ') + ' pas encore généré(s).' : ''), 'validateReal', null, {okLabel:'✓ Valider'});
   },
-  clearLogReal(){
-    Object.keys(S.nights).forEach(date => {
-      const raw = S.nights[date];
-      if (raw && raw.tl && raw.tl._log && raw.tl._log.length) { const c = editable(date); delete c.tl._log; saveNight(c); }
+  validateReal(){
+    if (!canEdit()) return;
+    const n = editable(); if (!generated(n)) return;
+    const p = profile();
+    n.tl._status = {state:'validated', at:new Date().toISOString(), by:(p && p.name) || ''};
+    n.tl._snap = snapshot(n);
+    pushLog(n, 'validate', {date:n.date});
+    if (S.sheet && S.sheet.type === 'suggest') close();
+    saveNight(n); toast('Planning validé : c’est le planning officiel.');
+  },
+  unvalidate(){ if (!canEdit()) return; askConfirm('Repasser ce planning en préparation ? Il ne sera plus le planning officiel tant qu’il n’est pas revalidé, et ne sera pas archivé.', 'unvalidateReal', null); },
+  unvalidateReal(){ if (!canEdit()) return; const n = editable(); delete n.tl._status; delete n.tl._snap; pushLog(n, 'unvalidate', {date:n.date}); saveNight(n); toast('Planning repassé en préparation.'); },
+  /* ---- suggestions, menus, remplacements ---- */
+  suggest(){ open({type:'suggest'}); },
+  cellMenu(d){ if (!canEdit()) return; open({type:'cellMenu', k:Number(d.k), post:d.post}); },
+  quartMenu(d){ if (!canEdit()) return; open({type:'quartMenu', k:Number(d.k)}); },
+  openReplace(d){ if (!canEdit()) return; open({type:'replace', k:Number(d.k), post:d.post, mode:d.mode || 'fill', who:d.who || null}); },
+  removeFromQuart(d){
+    if (!canEdit()) return;
+    const k = Number(d.k), n = nightOf(), who = n && n.q[k] && n.q[k][d.post];
+    if (!who) return;
+    askConfirm('Retirer ' + ((S.people[who] || {}).name || '') + ' du quart ' + (k + 1) + ' ? Il/elle reste disponible pour les autres quarts.', 'removeReal', {k, post:d.post, who}, {okLabel:'Retirer du Q' + (k + 1)});
+  },
+  removeReal(d){
+    if (!canEdit()) return;
+    const k = Number(d.k), n = editable();
+    if (n.q[k][d.post] !== d.who) { toast('Le planning a changé entre-temps, rien n’a été modifié.'); return; }
+    unseat(n, k, d.post);
+    n.qAbsent[k] = Object.assign({}, n.qAbsent[k]); n.qAbsent[k][d.who] = true; /* ne sera pas replacé sur ce quart */
+    const t = n.train[k]; Object.keys(t).forEach(pid => { if (t[pid] === d.who) delete t[pid]; });
+    pushLog(n, 'remove', {date:n.date, k, person:(S.people[d.who] || {}).name || ''});
+    saveNight(n);
+    open({type:'replace', k, post:d.post, mode:'remove', who:d.who});
+  },
+  replApply(d){
+    if (!canEdit()) return;
+    const s = S.sheet; const o = s && s.opts && s.opts[Number(d.i)]; if (!o) return;
+    const n = editable(); const before = clone(n.q);
+    if (s.mode === 'replace') {
+      if (n.q[s.k][s.post] !== s.who) { toast('Le planning a changé entre-temps, rien n’a été modifié.'); s.done = true; close(); return; }
+      unseat(n, s.k, s.post);
+    }
+    applyOption(n, s.k, o); dropOrphanTrainees(n, s.k);
+    markFresh(n, before);
+    s.done = true; close(); saveNight(n);
+    toast('Remplacement appliqué · ' + o.steps.length + ' changement' + (o.steps.length > 1 ? 's' : '') + '.');
+  },
+  replLeave(){
+    const s = S.sheet; s.done = true; close();
+    const n = nightOf(); const t = n && n.train[s.k];
+    if (t && t[s.post] && !(n.q[s.k] || {})[s.post]) { const c = editable(); dropOrphanTrainees(c, s.k); saveNight(c); toast('Poste laissé vide · la formation sur ce poste est retirée.'); }
+  },
+  /* génère seulement les quarts encore vides, sans toucher à ceux déjà faits ; chaque quart
+     tient compte des précédents (pas le même poste deux fois, postes rouges) */
+  genRest(){
+    if (!canEdit()) return;
+    runWithAnim('Calcul du reste de la nuit…', () => {
+      const n = editable(); const before = clone(n.q); const hist = history(n.date); const done = [];
+      allQuarts(n).forEach(k => { if (!quartDone(n, k)) { n.q[k] = buildQuart(k, n, hist); n.lock[k] = {}; n.manual[k] = {}; dropOrphanTrainees(n, k); done.push('Q' + (k + 1)); } });
+      if (!done.length) return;
+      n.generated = true;
+      done.forEach(q => pushLog(n, 'regenQuart', {date:n.date, k:Number(q.slice(1)) - 1}));
+      markFresh(n, before); saveNight(n);
+      toast(done.join(', ') + ' générés · les quarts déjà faits n’ont pas bougé.');
     });
-    toast('Historique effacé.');
   },
+  /* appui long sur Q1, Q2… : génère directement ce quart seul */
+  quartLong(d){ S.qk = Number(d.k); A.regenOne(d); },
+  regenOne(d){
+    if (!canEdit()) return;
+    const k = Number(d.k);
+    if (nightState(nightOf()) === 'validated') { askConfirm('Le planning est validé. Régénérer le quart ' + (k + 1) + ' remplacera ses affectations (sauf les personnes forcées). Les autres quarts ne bougent pas.', 'regenOneReal', {k}, {okLabel:'Générer le Q' + (k + 1)}); return; }
+    A.regenOneReal({k});
+  },
+  regenOneReal(d){
+    if (!canEdit()) return;
+    const k = Number(d.k); close();
+    runWithAnim('Calcul du quart ' + (k + 1) + '…', () => { const n = editable(); const before = clone(n.q); const first = !quartDone(n, k); regenQuart(n, k); n.generated = true; pushLog(n, 'regenQuart', {date:n.date, k}); markFresh(n, before); saveNight(n); toast('Quart ' + (k + 1) + (first ? ' généré' : ' recalculé') + ' · les autres quarts n’ont pas bougé.'); });
+  },
+  sugTrain(d){
+    if (!canEdit()) return;
+    const n = editable(); let k = Number(d.k);
+    if (autoFindQuart(n, d.post, d.id, false) !== k) k = autoFindQuartPreferTrainer(n, d.post, d.id);
+    if (k == null) { toast('Cette formation n’est plus possible sans modifier le planning.'); renderSheet(); return; }
+    n.train[k][d.post] = d.id;
+    const post = S.posts[d.post], holder = S.people[n.q[k][d.post]];
+    pushLog(n, 'train', {date:n.date, k, postCode:post ? post.code : d.post, postName:post ? post.name : '', trainee:(S.people[d.id] || {}).name || '', trainer:holder ? holder.name : ''});
+    saveNight(n); renderSheet();
+    toast(((S.people[d.id] || {}).name || '') + ' mis(e) en formation au Q' + (k + 1) + '.');
+  },
+  /* ---- archives & export ---- */
+  openNight(d){ S.date = d.d; S.tab = 'plan'; LS.set('tab', 'plan'); close(); render(); window.scrollTo(0, 0); },
+  nightLog(d){ if (!isAdmin()) return; open({type:'nightLog', date:d.d}); },
+  async pdfDownload(d){ const pdf = await makePdf(d.d || S.date); if (pdf) { downloadBlob(pdf.blob, pdf.name); toast('PDF téléchargé : ' + pdf.name); } },
+  async pdfShare(d){
+    const pdf = await makePdf(d.d || S.date); if (!pdf) return;
+    S._pdf = pdf;
+    const r = await sharePdf(pdf);
+    if (r === 'gesture') open({type:'shareReady', name:pdf.name}); /* le navigateur exige un nouveau toucher */
+  },
+  pdfShareNow(){ const pdf = S._pdf; close(); if (pdf) sharePdf(pdf); },
   openRestriction(d){ open({type:'restriction', id:d.id, sel:new Set()}); },
   restToggle(d){ const s = S.sheet; if (s.sel.has(d.post)) s.sel.delete(d.post); else s.sel.add(d.post); renderSheet(); },
   restGo(d){
@@ -1216,7 +1951,11 @@ const A = {
     s.sel.forEach(postId => { per.marks._restrict.push({id:newId('rs'), postId, from, to}); });
     savePerson(per);
     Object.keys(S.nights).forEach(date => {
-      if (date >= from && date <= to) { const raw = S.nights[date]; if (raw && generated(raw)) { const c = editable(date); generateAll(c); saveNight(c); } }
+      if (date < from || date > to) return;
+      const raw = S.nights[date], st = nightState(raw);
+      if (st === 'draft') { const c = editable(date); generateAll(c); saveNight(c); }
+      else if (st === 'validated') { const c = editable(date); releasePerson(c, d.id, allQuarts(c), new Set(s.sel)); saveNight(c); }
+      /* archivé : on ne réécrit pas le passé */
     });
     close();
     toast('Restriction enregistrée.');
@@ -1233,17 +1972,33 @@ const A = {
   cycleReal(d){ const src = S.people[d.per]; const per = clone(src); per.marks = per.marks || {}; if (d.nx) per.marks[d.post] = d.nx; else delete per.marks[d.post]; savePerson(per); },
   toggleTrainer(d){ const src = S.people[d.id]; if (!src) return; const per = clone(src); per.marks = per.marks || {}; if (per.marks._trainer) delete per.marks._trainer; else per.marks._trainer = true; savePerson(per); },
   diff(d){ const p = clone(S.posts[d.id]); p.diff = DIFF[(DIFF.indexOf(p.diff || '') + 1) % DIFF.length]; savePost(p); },
-  editPerson(d){ open({type:'person', id:d.id}); },
+  editPerson(d){ open({type:'personForm', id:d.id}); },
   editPost(d){ open({type:'post', id:d.id}); },
-  addPerson(){ const id = newId('pe'); const order = Math.max(0, ...people().map(p => p.order || 0)) + 1; savePerson({id, name:'Nouvelle personne', role:'TM', order, marks:{}}); open({type:'person', id}); setTimeout(() => { const i = $('#fName'); if (i) { i.focus(); i.select(); } }, 30); },
+  addPerson(){ open({type:'personForm'}); setTimeout(() => { const i = $('#fName'); if (i) i.focus(); }, 60); },
+  personSave(){
+    const s = S.sheet; if (!s || s.type !== 'personForm') return;
+    const name = String(s.name || '').trim().replace(/\s+/g, ' ');
+    let role = String(s.role || '').trim().replace(/\s+/g, ' ') || 'TM';
+    if (role.toUpperCase() === 'TL') role = 'TL';
+    if (!name) { s.err = 'Indique un nom.'; renderSheet(); const i = $('#fName'); if (i) i.focus(); return; }
+    const dup = people().some(p => p.id !== s.id && p.active !== false && p.name.toLowerCase() === name.toLowerCase());
+    if (dup && s.dupOk !== name) { s.err = 'Une personne s’appelle déjà « ' + name + ' ». Touche encore le bouton pour confirmer.'; s.dupOk = name; renderSheet(); return; }
+    if (s.id) {
+      const per = clone(S.people[s.id]); per.name = name; per.role = role;
+      close(); savePerson(per); toast('Modifications enregistrées.');
+    } else {
+      const id = newId('pe'); const order = Math.max(0, ...people().map(p => p.order || 0)) + 1;
+      close(); savePerson({id, name, role, order, marks:{}, active:true});
+      toast(name + ' ajouté(e)' + (role === 'TL' ? ' (TL)' : '') + '. Indique ses postes dans Polyvalence.');
+    }
+  },
   addPost(){ const id = newId('po'); const ps = posts(); const order = Math.max(0, ...ps.map(p => p.order || 0)) + 1; savePost({id, code:'?', name:'Nouveau poste', zone:ps.length ? ps[ps.length - 1].zone : 'Team', diff:'', order}); open({type:'post', id}); setTimeout(() => { const i = $('#fCode'); if (i) { i.focus(); i.select(); } }, 30); },
   delAsk(){ S.sheet.del = true; renderSheet(); },
   delNo(){ S.sheet.del = false; renderSheet(); },
   delPerson(){ const id = S.sheet.id; const per = clone(S.people[id]); per.active = false; close(); savePerson(per); },
   reactivatePerson(){ const per = clone(S.people[S.sheet.id]); per.active = true; savePerson(per); renderSheet(); },
   delPost(){ deletePostRow(S.sheet.id); close(); },
-  print(){ window.print(); },
-  playRoad(){ const all = document.querySelectorAll('.brandbtn'); const btn = Array.prototype.find.call(all, b => b.offsetParent !== null) || all[0]; if (!btn) return; btn.classList.remove('play'); void btn.offsetWidth; btn.classList.add('play'); setTimeout(() => btn.classList.remove('play'), 1700); },
+  playRoad(){ const all = document.querySelectorAll('.brandbtn'); const btn = Array.prototype.find.call(all, b => b.offsetParent !== null) || all[0]; if (!btn) return; btn.classList.remove('play'); void btn.offsetWidth; btn.classList.add('play'); setTimeout(() => btn.classList.remove('play'), 4400); },
   help(){ open({type:'help'}); },
   accounts(){ if (!isAdmin()) return; S.accountsErr = ''; open({type:'accounts'}); },
   openPersonMenu(d){ open({type:'personMenu', id:d.id}); },
@@ -1251,22 +2006,35 @@ const A = {
   renfortMark(d){ const src = S.people[d.id]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; askConfirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?', 'renfortMarkReal', Object.assign({}, d, {nx})); },
   renfortMarkReal(d){ const src = S.people[d.id]; const per = clone(src); per.marks = per.marks || {}; if (d.nx) per.marks[d.post] = d.nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
   toggleQAbs(){ S.sheet.showQ = !S.sheet.showQ; renderSheet(); },
-  qAbsToggle(d){ const n = editable(); const k = Number(d.k); const c = Object.assign({}, n.qAbsent[k]); if (c[d.id]) delete c[d.id]; else c[d.id] = true; n.qAbsent[k] = c; if (n.generated) regenQuart(n, k); saveNight(n); renderSheet(); },
+  qAbsToggle(d){
+    if (!canEdit()) return;
+    const n = editable(); const k = Number(d.k); const c = Object.assign({}, n.qAbsent[k]);
+    const nowAbsent = !c[d.id];
+    if (nowAbsent) c[d.id] = true; else delete c[d.id];
+    n.qAbsent[k] = c;
+    if (nightState(n) === 'validated') { if (nowAbsent) { const msgs = releasePerson(n, d.id, [k]); if (msgs.length) toast(msgs.join(' · ')); } }
+    else if (n.generated) regenQuart(n, k);
+    saveNight(n); renderSheet();
+  },
   openAbsRange(d){ open({type:'absPeriod', id:d.id}); },
   absRangeGo(d){
     const s = S.sheet, id = d.id;
     let from = s.from || S.date, to = s.to || S.date;
     if (from > to) { const t = from; from = to; to = t; }
-    let cur = from, guard = 0;
+    let cur = from, guard = 0, skipped = 0;
     while (cur <= to && guard < 400) {
-      const n = editable(cur);
-      if (!n.absent.includes(id)) n.absent.push(id);
-      if (n.generated) generateAll(n);
-      saveNight(n);
+      const n = editable(cur), st = nightState(nightOf(cur));
+      if (st === 'archived') skipped++;
+      else {
+        if (!n.absent.includes(id)) n.absent.push(id);
+        if (st === 'validated') releasePerson(n, id, allQuarts(n));
+        else if (n.generated) generateAll(n);
+        saveNight(n);
+      }
       cur = addDays(cur, 1); guard++;
     }
     close();
-    toast('Absence enregistrée du ' + fmt(from) + ' au ' + fmt(to) + '.');
+    toast('Absence enregistrée du ' + fmt(from) + ' au ' + fmt(to) + '.' + (skipped ? ' (' + skipped + ' nuit(s) archivée(s) non modifiée(s))' : ''));
   },
   logout(){ sb.auth.signOut(); S.loginPick = null; S.loginPass = ''; S.loginErr = ''; close(); },
   pickAccount(d){ S.loginPick = d.id; S.loginPass = ''; S.loginErr = ''; render(); setTimeout(() => A.playRoad(), 350); },
@@ -1281,7 +2049,6 @@ const A = {
     const {error} = await sb.auth.signInWithPassword({email:acc.login_email, password:S.loginPass || ''});
     S.loginBusy = false;
     if (error) { S.loginErr = 'Mot de passe incorrect.'; S.loginPass = ''; render(); return; }
-    S._pendingLoginLog = {name:acc.name, role:acc.role};
     S.loginPick = null; S.loginPass = ''; S.loginErr = '';
     render();
   },
@@ -1353,8 +2120,6 @@ const C = {
   date(el){ S.date = el.value || today(); render(); },
   countH(el){ S.cfg.countH = el.checked; saveCfg(); },
   countX(el){ S.cfg.countX = el.checked; saveCfg(); },
-  pName(el){ const v = el.value.trim(); if (!v) return; const per = clone(S.people[S.sheet.id]); per.name = v; savePerson(per); },
-  pRole(el){ const per = clone(S.people[S.sheet.id]); per.role = el.value; savePerson(per); },
   poCode(el){ const v = el.value.trim(); if (!v) return; const p = clone(S.posts[S.sheet.id]); p.code = v; savePost(p); },
   poName(el){ const v = el.value.trim(); if (!v) return; const p = clone(S.posts[S.sheet.id]); p.name = v; savePost(p); },
   poZone(el){ const p = clone(S.posts[S.sheet.id]); p.zone = el.value.trim(); savePost(p); },
@@ -1371,26 +2136,63 @@ const C = {
   formPost(el){ S.sheet.post = el.value; S.sheet.k = null; S.sheet.trainer = ''; S.sheet.err = ''; renderSheet(); },
   formTrainer(el){ S.sheet.trainer = el.value; renderSheet(); }
 };
-let pressTimer = null, suppressClick = false;
-function cancelPress(){ clearTimeout(pressTimer); pressTimer = null; }
-document.addEventListener('pointerdown', e => {
-  const el = e.target.closest('[data-long]'); if (!el) return;
-  cancelPress();
-  pressTimer = setTimeout(() => {
-    suppressClick = true;
-    const f = A[el.dataset.long]; if (f) f(el.dataset);
-    if (navigator.vibrate) try { navigator.vibrate(10); } catch (e2) {}
-  }, 480);
+/* ---------- appui long ----------
+   Avant : le moindre « pointermove » annulait l'appui, et le délai (480 ms) était plus
+   long que celui d'Android (~400-500 ms) : Chrome Android déclenchait son propre appui
+   long (contextmenu + pointercancel) et annulait le nôtre → rien ne se passait. En plus,
+   le clic ignoré après un appui long restait « en attente » quand aucun clic ne suivait,
+   et avalait le toucher suivant.
+   Maintenant : tolérance de 10 px au doigt qui tremble, l'évènement contextmenu (appui
+   long Android, clic droit sur PC) déclenche aussi l'action, et le clic à ignorer expire.
+   Chaque action a de toute façon une alternative visible (⚙️, boutons des fiches). */
+const LONG_MS = 450, LONG_TOL = 10;
+let press = null, suppressClick = false, suppressTimer = null, longUntil = 0;
+/* bloque le début d'une sélection de texte pendant un appui (sauf dans les champs) */
+document.addEventListener('selectstart', e => {
+  const t = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement;
+  if (t && t.closest && t.closest('input,textarea,[contenteditable],.selectable')) return;
+  if (press || Date.now() < longUntil) e.preventDefault();
 });
-['pointerup', 'pointercancel', 'pointermove', 'pointerleave'].forEach(ev => document.addEventListener(ev, cancelPress));
+function cancelPress(){ if (press) clearTimeout(press.timer); press = null; }
+function fireLong(el){
+  cancelPress();
+  longUntil = Date.now() + 1500;
+  try { const sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges(); } catch (e2) {}
+  suppressClick = true; clearTimeout(suppressTimer); suppressTimer = setTimeout(() => { suppressClick = false; }, 900);
+  const f = A[el.dataset.long]; if (f) f(Object.assign({}, el.dataset));
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch (e2) {}
+}
+document.addEventListener('pointerdown', e => {
+  suppressClick = false;
+  if (e.button > 0) return;
+  const el = e.target.closest('[data-long]'); cancelPress(); if (!el) return;
+  press = {el, x:e.clientX, y:e.clientY, id:e.pointerId, timer:setTimeout(() => fireLong(el), LONG_MS)};
+});
+document.addEventListener('pointermove', e => {
+  if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > LONG_TOL) cancelPress();
+});
+['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, e => { if (press && e.pointerId === press.id) cancelPress(); }));
+document.addEventListener('contextmenu', e => {
+  const el = e.target.closest('[data-long]'); if (!el) return;
+  e.preventDefault();
+  if (!suppressClick) fireLong(el); /* pas deux fois si le minuteur a déjà déclenché */
+});
 document.addEventListener('click', e => {
-  if (suppressClick) { suppressClick = false; return; }
+  if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
   if (e.target.classList && e.target.classList.contains('back')) { close(); return; }
   const el = e.target.closest('[data-act]'); if (!el) return;
   const f = A[el.dataset.act]; if (f) f(el.dataset);
 });
 document.addEventListener('change', e => { const el = e.target.closest('[data-chg]'); if (el && C[el.dataset.chg]) C[el.dataset.chg](el); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.sheet) close(); });
+/* champs de formulaire en brouillon : on retient la saisie sans redessiner (pas de perte de focus) */
+document.addEventListener('input', e => { const el = e.target.closest('[data-inp]'); if (el && S.sheet) { S.sheet[el.dataset.inp] = el.value; if (S.sheet.err) { S.sheet.err = ''; } } });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && S.sheet) { close(); return; }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.inp && S.sheet && S.sheet.type === 'personForm') {
+    e.preventDefault();
+    if (e.target.id === 'fName') { const r = $('#fRole'); if (r) r.focus(); } else A.personSave();
+  }
+});
 
 /* ---------- boot (Supabase : chargement + temps réel) ---------- */
 let profileChannel = null, bizChannels = [];
@@ -1427,7 +2229,6 @@ async function loadBusinessData(){
   subscribeTable(bizChannels, 'posts', 'id', r => { S.posts[r.id] = rowToPost(r); later(); }, id => { delete S.posts[id]; later(); });
   subscribeTable(bizChannels, 'nights', 'date', r => { S.nights[r.date] = rowToNight(r); later(); }, date => { delete S.nights[date]; later(); });
   subscribeTable(bizChannels, 'config', 'key', r => { if (r.key === 'main') S.cfg = Object.assign({}, DEFAULT_CFG, r.value || {}); later(); }, () => {});
-  if (S._pendingLoginLog) { const info = S._pendingLoginLog; S._pendingLoginLog = null; const n = editable(today()); pushLog(n, 'login', {}, info); saveNight(n); }
   render();
 }
 async function boot(){
