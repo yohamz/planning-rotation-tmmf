@@ -242,6 +242,7 @@ table{border-collapse:separate;border-spacing:0}
 .authhead .brandbtn{padding:2px 4px 10px 2px}
 .authcard h1{font-size:24px}
 .namegrid{display:grid;gap:8px}
+.namegrid .sep{height:10px}
 .authhead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 .gearbtn{background:none;border:1px solid var(--line-2);border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted);cursor:pointer;flex:none}
 .namebtn.admin{border-color:var(--red)}
@@ -1660,8 +1661,8 @@ function shAbsPeriod(s){
 }
 function shAccounts(){
   const meId = S.authUser && S.authUser.id;
-  /* ordre : Admin, puis TL et GL mélangés (mêmes droits) par ordre alphabétique, puis TM */
-  const rank = r => r === 'admin' ? 0 : r === 'tm' ? 2 : 1;
+  /* ordre : Admin, TL, GL, TM, puis par ordre alphabétique */
+  const rank = r => ({admin:0, tl:1, gl:2, tm:3})[r] ?? 4;
   const rows = Object.values(S.profiles).sort((x, y) => (rank(x.role) - rank(y.role)) || x.name.localeCompare(y.name, 'fr'));
   let body = S.accountsErr ? '<p class="note selectable" style="color:var(--red)">' + esc(S.accountsErr) + '</p>' : '';
   const roleOpts = cur => ACCOUNT_ROLES.map(r => '<option value="' + r.k + '"' + (r.k === cur ? ' selected' : '') + '>' + esc(r.label) + '</option>').join('');
@@ -1708,6 +1709,11 @@ function shHelp(){
     + '<div class="lbl">Équilibre</div><p class="note">Réservé à l’administrateur : nombre de quarts faits par poste sur 7 ou 30 jours.</p>';
   return {title:'Aide', body, wide:true, foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
+/* écran de connexion : les TL d'abord, puis les GL tout en bas, légèrement séparés, puis les TM */
+function loginGroups(rows){
+  const btn = a => '<button type="button" class="namebtn" data-act="pickAccount" data-id="' + esc(a.id) + '">' + esc(a.name) + '</button>';
+  return ['tl', 'gl', 'tm'].map(r => rows.filter(a => a.role === r)).filter(g => g.length).map(g => g.map(btn).join('')).join('<div class="sep" aria-hidden="true"></div>');
+}
 function viewLogin(){
   const rows = Object.values(S.profiles).filter(a => a.active !== false && a.role !== 'admin').sort((x, y) => x.name.localeCompare(y.name, 'fr'));
   const adminRows = Object.values(S.profiles).filter(a => a.active !== false && a.role === 'admin');
@@ -1715,7 +1721,7 @@ function viewLogin(){
     return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation"><div class="road" aria-hidden="true">' + roadHtml() + '</div><div class="brand"><i aria-hidden="true"></i>PLANNING <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button><button type="button" class="gearbtn" data-act="toggleAdminMenu" aria-label="Réglages">⚙</button></div>'
       + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
       + '<p class="note">Touche ton nom pour te connecter.</p><div class="namegrid">'
-      + (rows.length ? rows.map(a => '<button type="button" class="namebtn" data-act="pickAccount" data-id="' + esc(a.id) + '">' + esc(a.name) + '</button>').join('') : '<p class="note">Chargement des comptes…</p>')
+      + (rows.length ? loginGroups(rows) : '<p class="note">Chargement des comptes…</p>')
       + '</div>'
       + (S.showAdminMenu ? '<p class="note" style="margin-top:14px">Accès administrateur</p><div class="namegrid">' + adminRows.map(a => '<button type="button" class="namebtn admin" data-act="pickAccount" data-id="' + esc(a.id) + '">Admin</button>').join('') + '</div>' : '')
       + '</div></div>';
