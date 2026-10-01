@@ -1660,7 +1660,9 @@ function shAbsPeriod(s){
 }
 function shAccounts(){
   const meId = S.authUser && S.authUser.id;
-  const rows = Object.values(S.profiles).sort((x, y) => (x.role === y.role ? x.name.localeCompare(y.name, 'fr') : x.role === 'admin' ? -1 : 1));
+  /* ordre : Admin, puis TL et GL mélangés (mêmes droits) par ordre alphabétique, puis TM */
+  const rank = r => r === 'admin' ? 0 : r === 'tm' ? 2 : 1;
+  const rows = Object.values(S.profiles).sort((x, y) => (rank(x.role) - rank(y.role)) || x.name.localeCompare(y.name, 'fr'));
   let body = S.accountsErr ? '<p class="note selectable" style="color:var(--red)">' + esc(S.accountsErr) + '</p>' : '';
   const roleOpts = cur => ACCOUNT_ROLES.map(r => '<option value="' + r.k + '"' + (r.k === cur ? ' selected' : '') + '>' + esc(r.label) + '</option>').join('');
   /* pastille de rôle : modifiable (TL / GL / TM) sauf pour les comptes Admin */
