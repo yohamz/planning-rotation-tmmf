@@ -1,5 +1,4 @@
-<!doctype html><html data-theme="dark"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#131517;color:#ECEEF0}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>PLANNING CH2-2</title>
+<!doctype html><html data-theme="dark"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>PLANNING CH2-2</title><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#131517;color:#ECEEF0}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
@@ -58,6 +57,8 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:14px
 .btn-red:hover{background:var(--red);filter:brightness(1.07)}
 .btn-formation{background:var(--orange);border-color:var(--orange);color:#1E2125;font-weight:700}
 .btn-formation:hover{filter:brightness(1.06)}
+.btn-suggest{background:var(--orange);border-color:var(--orange);color:#1E2125;font-weight:700}
+.btn-suggest:hover{filter:brightness(1.06)}
 .btn-sm{min-height:38px;padding:6px 12px;font-size:15px}
 .icon{width:46px;height:46px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-size:24px;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none}
 input[type=date],input[type=text],select{min-height:46px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);padding:6px 10px}
@@ -291,11 +292,11 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .status .grow{flex:1}
 .nut{position:relative}
 .nut .badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:99px;background:var(--red);color:var(--red-ink);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
-.sug{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:8px;background:var(--surface)}
+.sug{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:8px;background:var(--surface);min-width:0}
 .sug.high{border-left:4px solid var(--rouge)}
 .sug.med{border-left:4px solid var(--orange)}
 .sug.info{border-left:4px solid var(--line-2)}
-.sug p{margin:0}
+.sug p{margin:0;overflow-wrap:anywhere;word-break:break-word}
 .fbtext{width:100%;min-height:96px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface);padding:8px 10px;font:inherit;color:inherit;resize:vertical}
 .msgbtn{position:relative}
 .msgbtn .badge{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;border-radius:99px;background:var(--red);color:var(--red-ink);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
@@ -447,10 +448,10 @@ const isAdmin = () => { const p = profile(); return !!(p && p.role === 'admin' &
    (côté serveur, les policies RLS ne lui renvoient que les nuits validées, en lecture) */
 const isViewer = () => { const p = profile(); return !!(p && p.role === 'tm'); };
 /* Horaires d'accès, heure de Paris :
-   - Admin : 24h/24 ;
-   - TL, GL et TM : de 21h à 7h30 ; en dehors (7h30-21h), écran « Maintenance en cours ».
+   - Admin, TL, GL : 24h/24, sans restriction ;
+   - TM (spectateur) uniquement : de 21h à 7h30 ; en dehors (7h30-21h), écran « Maintenance en cours ».
    Pour les TM la limite est aussi appliquée par la base de données (fonction SQL
-   tm_window_ok() via is_viewer() et les policies RLS) ; pour TL/GL c'est l'écran seul. */
+   tm_window_ok() via is_viewer() et les policies RLS). */
 function parisParts(){
   const f = new Intl.DateTimeFormat('fr-FR', {timeZone:'Europe/Paris', hour:'2-digit', minute:'2-digit', hour12:false});
   const parts = f.formatToParts(new Date());
@@ -458,7 +459,7 @@ function parisParts(){
   return {h:get('hour') % 24, m:get('minute')};
 }
 function appWindowOk(){ const {h, m} = parisParts(); const mins = h * 60 + m; return mins >= 21 * 60 || mins < 7 * 60 + 30; }
-function appOpenForMe(){ const p = profile(); if (!p) return true; return p.role === 'admin' || appWindowOk(); }
+function appOpenForMe(){ const p = profile(); if (!p) return true; return p.role !== 'tm' || appWindowOk(); }
 /* « Bonjour » de 5h à 18h, « Bonsoir » le reste du temps (heure de Paris) */
 const greeting = () => { const {h} = parisParts(); return h >= 5 && h < 18 ? 'Bonjour' : 'Bonsoir'; };
 async function callAdminAction(payload){
@@ -654,6 +655,9 @@ function otherQuarts(night, k){
    et par les propositions de remplacement, pour qu'elles suivent les mêmes règles. */
 function pairCost(per, p, k, hist, others){
   let c = 15 * (hist.count[per.id + '|' + p.id] || 0);
+  /* fait tourner un maximum de personnes sur la nuit (et l'overtime en particulier) plutôt
+     que de réutiliser toujours les mêmes : pénalité pour qui tient déjà un autre quart ce soir */
+  c += 30 * others.filter(o => o.m[per.id]).length;
   others.forEach(o => { if (o.m[per.id] === p.id) c += 600; });
   if (p.diff === 'rouge') {
     c += 6 * (hist.red[per.id] || 0);
@@ -678,6 +682,13 @@ function buildQuart(k, night, hist){
      nuit avec overtime). */
   const P = ps.length, N = cands.length, n = P + N, BAN = 1e9, EMPTY = 1e6;
   const others = otherQuarts(night, k);
+  /* quand l'effectif dépasse le nombre de postes (19 process), certaines personnes restent
+     sans poste ce quart-là : on préfère que ce soit celles qui ont une formation (H) en
+     cours plutôt que des personnes déjà pleinement polyvalentes — ça les laisse libres pour
+     être formées (voir bouton Formation), au lieu de leur faire tenir un process au hasard
+     alors qu'une personne moins chargée pourrait le faire. */
+  const allPosts = posts();
+  const inTraining = new Set(cands.filter(per => allPosts.some(p => mark(per, p.id) === 'H')).map(per => per.id));
   const M = [];
   for (let i = 0; i < n; i++) {
     const row = new Array(n);
@@ -691,7 +702,7 @@ function buildQuart(k, night, hist){
       else if (j < N) {
         const per = cands[j];
         if (isTL(per)) c = 3000;
-        else { c = 0; others.forEach(o => { if (!o.m[per.id]) c += 60; }); }
+        else { c = inTraining.has(per.id) ? -300 : 0; others.forEach(o => { if (!o.m[per.id]) c += 60; }); }
       } else c = 0;
       row[j] = c;
     }
@@ -836,7 +847,7 @@ function toast(m){ if (S.deferToasts) { S.deferToasts.push(m); return; } const t
 
 /* ---------- render ---------- */
 let rq = false;
-function later(){ if (rq) return; rq = true; requestAnimationFrame(() => { rq = false; render(); if (S.sheet && !S.sheet.form) renderSheet(); }); }
+function later(){ if (rq) return; rq = true; requestAnimationFrame(() => { rq = false; render(); if (S.sheet && !S.sheet.form && !typingInSheet()) renderSheet(); }); }
 /* écran de chargement : la même voiture que pendant la génération, jusqu'à ce que les données soient là
    (pas redessiné s'il est déjà affiché, pour que l'animation ne redémarre pas) */
 function showLoading(main){
@@ -877,6 +888,7 @@ function renderAcct(){
   const p = profile(); if (!p) { bar.innerHTML = ''; return; }
   bar.innerHTML = '<div class="acct"><span class="who">' + greeting() + ' ' + esc(p.name) + '</span><span class="role' + (p.role === 'admin' ? ' admin' : '') + '">' + esc(ROLE_LABEL[p.role] || p.role) + '</span>'
     + (p.role === 'admin' ? '<button type="button" class="btn btn-sm msgbtn" data-act="messages" aria-label="Suggestions reçues' + (unreadFeedback() ? ', ' + unreadFeedback() + ' non lue(s)' : '') + '">💬 Suggestions' + (unreadFeedback() ? '<span class="badge">' + unreadFeedback() + '</span>' : '') + '</button><button type="button" class="btn btn-sm" data-act="accounts">Comptes</button>' : '')
+    + (!isAdmin() && !isViewer() ? '<button type="button" class="btn btn-sm btn-suggest" data-act="suggest" title="Proposer une amélioration à l’Admin">💡</button>' : '')
     + '<button type="button" class="btn btn-sm" data-act="logout">Se déconnecter</button></div>';
 }
 function renderTabs(){
@@ -938,10 +950,13 @@ function cellContent(n, k, p, compact){
   if (per && k > 0 && n.q[k - 1] && n.q[k - 1][p.id] === who && !spinning(k - 1)) h += ' <span class="warnq" title="Attention : même poste que le quart précédent (Q' + k + ')" aria-label="Attention : même poste deux quarts d’affilée">!</span>';
   return h;
 }
-/* TL et GL proposent des améliorations (pas les TM) ; l'Admin les reçoit dans 💬 Suggestions */
+/* TL et GL proposent des améliorations (pas les TM) ; l'Admin les reçoit dans 💬 Suggestions.
+   Bouton orange (comme 🎓 Formation) pour qu'il se voie bien, plutôt qu'un bouton gris
+   perdu parmi les autres ; il est aussi toujours visible dans l'en-tête (renderAcct), sur
+   tous les onglets, pas seulement sur Planning du jour. */
 function nutBtn(n, cls){
   if (isAdmin() || isViewer()) return '';
-  return '<button type="button" class="btn nut' + (cls || '') + '" data-act="suggest" title="Proposer une amélioration à l’Admin">💡 ' + (phone() ? 'Proposer' : 'Proposer une amélioration') + '</button>';
+  return '<button type="button" class="btn btn-suggest nut' + (cls || '') + '" data-act="suggest" title="Proposer une amélioration à l’Admin">💡 ' + (phone() ? 'Proposer' : 'Proposer une amélioration') + '</button>';
 }
 const shareBtns = () => '<button type="button" class="btn" data-act="pdfDownload">⬇️ Télécharger</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button>';
 function viewPlan(){
@@ -954,7 +969,7 @@ function viewPlan(){
     + '<span class="grow"></span>';
   if (!ro) {
     html += '<button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? ' · ' + crewInfo : '') + '</button>'
-      + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>')
+      + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’overtime</button>')
       + (st !== 'validated' ? '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>' : '')
       + (gen ? '<button type="button" class="btn btn-formation" data-act="formation">🎓 Formation</button>' : '');
   }
@@ -999,7 +1014,7 @@ function viewPlanPhone(){
   let html = '<div class="m-head"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button><span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span><button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button></div>';
   if (!ro) {
     html += '<div class="m-acts"><button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? '<br><small class="muted">' + crewInfo + '</small>' : '') + '</button>'
-      + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">+ Overtime</button>') + '</div>'
+      + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’OT</button>') + '</div>'
       + (st !== 'validated' ? '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>' : '')
       + (gen ? '<button type="button" class="btn btn-formation m-gen" data-act="formation">🎓 Mettre en formation</button>' : '');
   }
@@ -1182,9 +1197,14 @@ function shNightLog(s){
 /* ---------- fiche « mettre en formation » ---------- */
 function shFormation(s){
   const n = editable(); const Q = nq(n);
-  const pp = activePeople().filter(per => !isTL(per) && !isTemp(per) && !(n.absent || []).includes(per.id));
+  const allPosts = posts();
+  const heldCount = per => allPosts.filter(p => mark(per, p.id) === 'G').length;
+  /* priorité aux personnes qui tiennent le moins de postes : former en premier celles qui
+     ont le moins de polyvalence, pour maximiser la couverture globale des process */
+  const pp = activePeople().filter(per => !isTL(per) && !isTemp(per) && !(n.absent || []).includes(per.id))
+    .sort((a, b) => heldCount(a) - heldCount(b) || a.name.localeCompare(b.name, 'fr'));
   if (s.trainee && !S.people[s.trainee]) s.trainee = '';
-  const traineeOpts = '<option value="">— choisir —</option>' + pp.map(per => '<option value="' + esc(per.id) + '"' + (s.trainee === per.id ? ' selected' : '') + '>' + esc(per.name) + '</option>').join('');
+  const traineeOpts = '<option value="">— choisir —</option>' + pp.map(per => '<option value="' + esc(per.id) + '"' + (s.trainee === per.id ? ' selected' : '') + '>' + esc(per.name) + ' · ' + heldCount(per) + ' poste' + (heldCount(per) > 1 ? 's' : '') + '</option>').join('');
   let body = '<div class="lbl">Mode</div><span class="st3" style="width:100%"><button type="button" style="flex:1" data-act="formMode" data-v="auto" aria-pressed="' + (s.mode !== 'manual') + '">Automatique</button><button type="button" style="flex:1" data-act="formMode" data-v="manual" aria-pressed="' + (s.mode === 'manual') + '">Manuel</button></span>';
   body += '<label class="field" for="fTrainee"><span>Personne à mettre en formation</span><select id="fTrainee" data-chg="formTrainee">' + traineeOpts + '</select></label>';
   const per = s.trainee ? S.people[s.trainee] : null;
@@ -1676,7 +1696,7 @@ function shAccounts(){
     + '<span class="grow"></span><button type="button" class="btn btn-sm" data-act="resetPass" data-id="' + esc(a.id) + '">Réinitialiser le mot de passe</button>'
     + (manageable(a) ? '<button type="button" class="btn btn-sm" data-act="toggleActive" data-id="' + esc(a.id) + '">' + (a.active === false ? 'Réactiver' : 'Désactiver') + '</button>'
       + '<button type="button" class="btn btn-sm" style="color:var(--red)" data-act="deleteAcc" data-id="' + esc(a.id) + '">Supprimer</button>' : '') + '</div>').join('');
-  body += '<p class="note">TL et GL gèrent le planning (mêmes droits). TM = spectateur : il voit uniquement les plannings validés, sans rien pouvoir modifier. Sauf l’Admin, tout le monde accède à l’appli de 21h à 7h30 (écran « Maintenance » de 7h30 à 21h).</p>';
+  body += '<p class="note">TL et GL gèrent le planning (mêmes droits), sans restriction d’horaires. TM = spectateur : il voit uniquement les plannings validés, sans rien pouvoir modifier, et accède à l’appli de 21h à 7h30 seulement (écran « Maintenance » de 7h30 à 21h).</p>';
   body += '<div class="lbl">Ajouter un compte</div><label class="field" for="fNewTL"><span>Nom</span><input type="text" id="fNewTL" data-chg="newTLName" value="' + esc(S.newTLName || '') + '" placeholder="Nom de la personne" autocomplete="off"></label>'
     + '<label class="field" for="fNewRole"><span>Rôle</span><select id="fNewRole" data-chg="newAccRole">' + roleOpts(S.newAccRole || 'tl') + '</select></label>'
     + '<button type="button" class="btn btn-sm" data-act="addTL">+ Créer ce compte</button>';
@@ -1741,7 +1761,7 @@ function viewChangePass(){
     + (S.newPassErr ? '<p class="note" style="color:var(--red)">' + esc(S.newPassErr) + '</p>' : '')
     + '<button type="button" class="btn btn-red" data-act="doChangePass"' + (S.newPassBusy ? ' disabled' : '') + '>' + (S.newPassBusy ? 'Enregistrement…' : 'Valider') + '</button></div></div>';
 }
-/* écran hors horaires (7h30-21h, tous sauf Admin) : « Maintenance en cours » avec la 206 CC qui roule */
+/* écran hors horaires (7h30-21h, uniquement pour le rôle TM) : « Maintenance en cours » avec la 206 CC qui roule */
 function viewClosed(){
   return '<div class="authwrap"><div class="authcard maint"><div class="maint-road" aria-hidden="true"><div class="maint-car">' + car206() + '</div></div>'
     + '<h1>Maintenance en cours</h1><p class="note">' + greeting() + (profile() ? ' ' + esc(profile().name) : '') + ', l’appli est accessible de 21h à 7h30. Reviens ce soir !</p>'
@@ -1760,8 +1780,8 @@ function shPost(s){
 /* ---------- actions ---------- */
 const A = {
   qk(d){ S.qk = Number(d.k); render(); },
-  setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient pas le poste'; askConfirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?', 'setMarkReal', d); },
-  setMarkReal(d){ const src = S.people[d.per]; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); },
+  /* changement de polyvalence : enregistré tout de suite, sans confirmation (ce n'est pas une absence) */
+  setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient plus le poste'; toast(src.name + ' — ' + (post ? post.code : d.post) + ' : ' + lbl + '.'); },
   tab(d){ S.tab = d.tab; LS.set('tab', d.tab); close(); render(); window.scrollTo(0, 0); },
   day(d){ S.date = addDays(S.date, Number(d.d)); render(); },
   close(){ close(); },
@@ -1837,8 +1857,15 @@ const A = {
     else if (n.generated) regenQuart(n, k);
     saveNight(n); renderSheet();
   },
-  otOn(){ if (!canEdit()) return; askConfirm('Ajouter un overtime (Quart 5) pour toute l’équipe cette nuit ?', 'otOnReal', null); },
-  otOnReal(){ if (!canEdit()) return; const n = editable(); n.ot = 1; if (n.generated) { const before = clone(n.q); regenQuart(n, 4); markFresh(n, before); } saveNight(n); },
+  /* overtime = un quart à part : son propre bouton de génération (comme « Générer » pour les
+     quarts 1-4), qui tient compte de ce qui a déjà été réparti ce soir et de l'historique
+     pour rester équitable, plutôt que de simplement rajouter une case vide. */
+  otOn(){
+    if (!canEdit()) return;
+    const cur = nightOf();
+    if (!generated(cur)) { const n = editable(); n.ot = 1; saveNight(n); toast('Overtime ajouté : sera réparti à la génération de la nuit.'); return; }
+    runWithAnim('Calcul de l’overtime…', () => { const n = editable(); n.ot = 1; const before = clone(n.q); regenQuart(n, 4); markFresh(n, before); saveNight(n); toast('Overtime généré, Quart 5 — réparti équitablement avec le reste de la nuit.'); }, [4]);
+  },
   otOff(){ if (!canEdit()) return; const n = editable(); n.ot = 0; n.q[4] = {}; n.lock[4] = {}; n.train[4] = {}; saveNight(n); },
   eqSpan(d){ S.eqSpan = Number(d.v); render(); },
   formation(){ if (!canEdit()) return; open({type:'formation', mode:'auto', done:[]}); },
@@ -2020,8 +2047,7 @@ const A = {
     per.marks._restrict = per.marks._restrict.filter(r => r.id !== d.rid);
     savePerson(per); renderSheet();
   },
-  cycle(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; askConfirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?', 'cycleReal', Object.assign({}, d, {nx})); },
-  cycleReal(d){ const src = S.people[d.per]; const per = clone(src); per.marks = per.marks || {}; if (d.nx) per.marks[d.post] = d.nx; else delete per.marks[d.post]; savePerson(per); },
+  cycle(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient plus le poste'; toast(src.name + ' — ' + (post ? post.code : d.post) + ' : ' + lbl + '.'); },
   toggleTrainer(d){ const src = S.people[d.id]; if (!src) return; const per = clone(src); per.marks = per.marks || {}; if (per.marks._trainer) delete per.marks._trainer; else per.marks._trainer = true; savePerson(per); },
   diff(d){ const p = clone(S.posts[d.id]); p.diff = DIFF[(DIFF.indexOf(p.diff || '') + 1) % DIFF.length]; savePost(p); },
   editPerson(d){ open({type:'personForm', id:d.id}); },
@@ -2052,11 +2078,10 @@ const A = {
   delPost(){ deletePostRow(S.sheet.id); close(); },
   playRoad(){ const all = document.querySelectorAll('.brandbtn'); const btn = Array.prototype.find.call(all, b => b.offsetParent !== null) || all[0]; if (!btn) return; btn.classList.remove('play'); void btn.offsetWidth; btn.classList.add('play'); setTimeout(() => btn.classList.remove('play'), 4400); },
   help(){ open({type:'help'}); },
-  accounts(){ if (!isAdmin()) return; S.accountsErr = ''; open({type:'accounts'}); },
+  accounts(){ if (!isAdmin()) return; S.accountsErr = ''; open({type:'accounts', form:true}); },
   openPersonMenu(d){ open({type:'personMenu', id:d.id}); },
   renfortPosts(d){ open({type:'renfortPosts', id:d.id}); },
-  renfortMark(d){ const src = S.people[d.id]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const lbl = nx === 'G' ? 'tient le poste' : nx === 'H' ? 'en formation' : 'ne tient pas le poste'; askConfirm(src.name + ' — ' + (post ? post.code + ' ' + post.name : d.post) + ' : confirmer « ' + lbl + ' » ?', 'renfortMarkReal', Object.assign({}, d, {nx})); },
-  renfortMarkReal(d){ const src = S.people[d.id]; const per = clone(src); per.marks = per.marks || {}; if (d.nx) per.marks[d.post] = d.nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
+  renfortMark(d){ const src = S.people[d.id]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
   toggleQAbs(){ S.sheet.showQ = !S.sheet.showQ; renderSheet(); },
   qAbsToggle(d){
     if (!canEdit()) return;
@@ -2269,6 +2294,29 @@ document.addEventListener('keydown', e => {
     if (e.target.id === 'fName') { const r = $('#fRole'); if (r) r.focus(); } else A.personSave();
   }
 });
+/* pendant la frappe dans un champ texte d'une fiche ouverte, on ne la redessine jamais toute
+   seule (un évènement temps réel en arrière-plan ne doit pas effacer ce qui est en train
+   d'être tapé, ni faire sauter le curseur, ni fermer le clavier) : la mise à jour attend que
+   le champ perde le focus. Protège Comptes (nom du compte, nom de l'équipe) comme les autres
+   fiches, TL, GL et Admin. */
+function typingInSheet(){
+  const el = document.activeElement, sheet = document.getElementById('sheet');
+  return !!(el && sheet && sheet.contains(el) && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'date'))));
+}
+
+/* ---------- bouton retour (Android notamment) ----------
+   Sans historique, le premier retour quitte directement l'appli : pas pratique sur téléphone,
+   tablette ou PC. On garde toujours une entrée « tampon » : un retour referme la fiche
+   ouverte (ou revient à l'écran de choix du compte, ou à l'onglet Planning) au lieu de
+   fermer l'appli ; il faut fermer tout ce qu'il y a à fermer avant qu'un retour quitte. */
+function pushNavState(){ try { history.pushState({app:true}, document.title); } catch (e) {} }
+window.addEventListener('popstate', () => {
+  if (S.sheet) close();
+  else if (S.loginPick) { S.loginPick = null; render(); }
+  else if (S.tab !== 'plan') { S.tab = 'plan'; LS.set('tab', 'plan'); render(); window.scrollTo(0, 0); }
+  pushNavState();
+});
+pushNavState();
 
 /* ---------- boot (Supabase : chargement + temps réel) ---------- */
 let profileChannel = null, bizChannels = [];
