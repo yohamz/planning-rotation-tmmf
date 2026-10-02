@@ -37,7 +37,8 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.35;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{overflow-x:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.35;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2.5px solid var(--red);outline-offset:2px}
@@ -53,7 +54,7 @@ h1,h2{font-family:var(--f-cond);font-weight:700;margin:0;letter-spacing:.01em}
 .tabs button{flex:none;border:0;background:none;padding:10px 16px;border-radius:9px;font-weight:600;color:var(--ink-2);min-height:46px;font-size:16px;white-space:nowrap}
 .tabs button .s{display:none}
 .tabs button[aria-current="page"]{background:var(--ink);color:var(--surface)}
-main{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:14px}
+main{max-width:1280px;margin:0 auto;padding:16px 16px 48px;display:grid;gap:14px;min-width:0}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:8px 16px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-weight:600;white-space:nowrap}
 .btn:hover{background:var(--surface-2)}
@@ -72,7 +73,7 @@ input[type=text]{width:100%}
 .bar .grow{flex:1}
 .night{font-family:var(--f-cond);font-size:26px;font-weight:700}
 
-.scroll{overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:min(78vh,1100px)}
+.scroll{overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:min(78vh,1100px);min-width:0}
 table{border-collapse:separate;border-spacing:0}
 .plan{width:100%;min-width:640px}
 .plan th,.plan td{border-bottom:1px solid var(--line)}
