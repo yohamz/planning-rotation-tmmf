@@ -372,6 +372,19 @@ const MARKS = ['', 'G', 'H'];
 const DIFF = ['', 'vert', 'orange', 'rouge'];
 const HIST_NIGHTS = 30;
 const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
+/* popup « Quoi de neuf » : affichée une seule fois par appareil quand APP_VERSION change
+   (comparée à une valeur enregistrée dans localStorage). Mettre à jour la date et la liste
+   à chaque évolution notable de l'appli. */
+const APP_VERSION = '2026-10-02';
+const CHANGELOG = [
+  'Overtime : un bouton dédié « Générer l’overtime », qui tient compte des 4 quarts précédents pour rester équitable.',
+  'Rotation plus équitable sur une même nuit : on évite de faire reposer le travail sur toujours les mêmes personnes.',
+  'Formation : priorité donnée à ceux qui ont le moins de postes validés.',
+  'Horaires d’accès 21h-7h30 : ne concernent plus que les TM (TL et GL ont désormais accès à tout moment).',
+  'Polyvalence : le changement s’applique directement, sans écran de confirmation.',
+  'Bouton retour (téléphone/Android) : ferme une fiche ouverte au lieu de quitter l’appli.',
+  'Sécurité : une personne encore en formation ne peut plus être choisie comme seule titulaire d’un poste.'
+];
 const ROLE_LABEL = {admin:'Admin', tl:'TL', gl:'GL', tm:'TM'};
 /* rôles qu'un Admin attribue : TL et GL gèrent le planning (mêmes droits), TM est spectateur */
 const ACCOUNT_ROLES = [{k:'tl', label:'TL'}, {k:'gl', label:'GL'}, {k:'tm', label:'TM (spectateur)'}];
@@ -492,6 +505,12 @@ const isRestricted = (per, pid, date) => !!(per && per.marks && per.marks._restr
    la personne est proposée comme formateur pour tous les postes qu'elle tient déjà (mark G).
    Stockée dans marks._trainer, clé réservée (comme _restrict ci-dessus). */
 const isFormateur = per => !!(per && per.marks && per.marks._trainer);
+/* date d'arrivée dans l'équipe (AAAA-MM-JJ), optionnelle. Stockée dans marks._joined, clé réservée
+   (comme _restrict/_trainer ci-dessus). Sert uniquement à rendre le tableau Équilibre conscient de
+   l'ancienneté : un nouvel arrivant n'a pas encore pu faire ses quarts sur toute la période choisie,
+   il ne doit donc pas paraître « à la traîne » par rapport aux autres. */
+const joinedOf = per => (per && per.marks && per.marks._joined) || null;
+const daysBetween = (a, b) => { const pa = a.split('-').map(Number), pb = b.split('-').map(Number); return Math.round((new Date(pb[0], pb[1] - 1, pb[2]) - new Date(pa[0], pa[1] - 1, pa[2])) / 86400000); };
 /* la désignation est libre (TM, TL, GLP, ASP, ou autre) : seul « TL » a un sens pour le moteur */
 const roleOf = per => String((per && per.role) || 'TM').trim() || 'TM';
 const isTL = per => !!per && roleOf(per).toUpperCase() === 'TL';
@@ -1119,13 +1138,18 @@ function viewEquilibre(){
   /* équipe active + anciens membres qui ont encore des quarts sur la période ; TL seulement s'ils ont tenu un poste */
   const pp = people().filter(per => (per.active !== false || tot[per.id]) && (!isTL(per) || tot[per.id]));
   let t = '<table class="eq"><thead><tr><th class="n" scope="col">Personne</th>' + ps.map(p => '<th scope="col" title="' + esc(p.name) + '"><span class="dot ' + esc(p.diff || '') + '"></span>' + esc(p.code) + '</th>').join('') + '<th scope="col" class="tot">Total</th></tr></thead><tbody>';
+  let anyNew = false;
   pp.forEach(per => {
-    t += '<tr><th class="n" scope="row" title="' + esc(per.name) + '">' + esc(per.name) + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c tot">' + (tot[per.id] || 0) + '</td></tr>';
+    const joined = joinedOf(per);
+    const tenureD = joined ? Math.max(0, Math.min(span, daysBetween(joined, S.date) + 1)) : span;
+    const isNew = !!(joined && tenureD < span);
+    if (isNew) anyNew = true;
+    t += '<tr><th class="n" scope="row" title="' + esc(per.name) + '">' + esc(per.name) + (isNew ? ' <small class="muted" title="Arrivé(e) le ' + esc(fmt(joined)) + '">🆕</small>' : '') + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c tot">' + (tot[per.id] || 0) + (isNew ? '<br><small class="muted">' + tenureD + '/' + span + ' j dans l’équipe</small>' : '') + '</td></tr>';
   });
   t += '</tbody></table>';
   return '<div class="bar"><h1>Équilibre · ' + esc(S.cfg.team) + '</h1><span class="grow"></span>' + eqSpanBtns(span, list.length, true) + '</div>'
     + '<div class="scroll" data-scroll="eq">' + t + '</div>'
-    + '<p class="note">Nombre de quarts faits sur chaque poste, sur la période choisie à partir de la nuit affichée dans Planning du jour. « · » : poste qu’il ne tient pas.</p>';
+    + '<p class="note">Nombre de quarts faits sur chaque poste, sur la période choisie à partir de la nuit affichée dans Planning du jour. « · » : poste qu’il ne tient pas.' + (anyNew ? ' 🆕 : nouvel(le) arrivant(e), encore présent(e) sur une partie seulement de la période — ses totaux plus bas sont normaux.' : '') + '</p>';
 }
 function viewEquilibrePhone(){
   if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
@@ -1136,10 +1160,15 @@ function viewEquilibrePhone(){
   const rows = ps.filter(p => (per && canHold(per, p.id)) || count[S.balPerson + '|' + p.id]);
   const max = Math.max(1, ...rows.map(p => count[S.balPerson + '|' + p.id] || 0));
   const done = rows.filter(p => count[S.balPerson + '|' + p.id]).length;
+  const joined = per ? joinedOf(per) : null;
+  const tenureD = joined ? Math.max(0, Math.min(span, daysBetween(joined, S.date) + 1)) : span;
+  const isNew = !!(joined && tenureD < span);
+  const pctAdj = rows.length ? Math.min(100, Math.round(100 * done / Math.max(1, rows.length * (tenureD / span)))) : 0;
   let html = '<h1>Équilibre</h1>'
     + '<select class="pp-sel" id="balSel" data-chg="balPerson" aria-label="Personne">' + pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.balPerson ? ' selected' : '') + '>' + esc(x.name) + ' · ' + (tot[x.id] || 0) + ' quarts</option>').join('') + '</select>'
     + '<div class="bar">' + eqSpanBtns(span, list.length, false) + '</div>'
-    + '<div class="eqsum"><span>Quarts<b>' + (tot[S.balPerson] || 0) + '</b></span><span>Postes faits<b>' + done + '/' + rows.length + '</b></span></div>'
+    + '<div class="eqsum"><span>Quarts<b>' + (tot[S.balPerson] || 0) + '</b></span><span>Postes faits<b>' + done + '/' + rows.length + '</b></span>' + (isNew ? '<span>Couverture ajustée<b>' + pctAdj + '%</b></span>' : '') + '</div>'
+    + (isNew ? '<p class="note">🆕 Arrivé(e) le ' + esc(fmt(joined)) + ' — présent(e) ' + tenureD + ' des ' + span + ' derniers jours. La « couverture ajustée » compare ses postes faits à ce qui est attendu sur sa durée réelle dans l’équipe, pas sur toute la période.</p>' : '')
     + '<div class="mlist bal">';
   rows.forEach(p => {
     const v = count[S.balPerson + '|' + p.id] || 0;
@@ -1386,10 +1415,13 @@ function shPersonForm(s){
   if (s.id && !per) return null;
   s.form = true;
   if (s.name == null) { s.name = per ? per.name : ''; s.role = per ? roleOf(per) : 'TM'; }
+  if (s.joined == null) s.joined = per ? (joinedOf(per) || '') : today();
   const left = !!(per && per.active === false);
   let body = '<label class="field" for="fName"><span>Nom</span><input type="text" id="fName" data-inp="name" value="' + esc(s.name) + '" autocomplete="off" autocapitalize="words" enterkeyhint="next" maxlength="60" placeholder="Prénom Nom"></label>'
     + '<label class="field" for="fRole"><span>Désignation / fonction</span><input type="text" id="fRole" data-inp="role" list="roleList" value="' + esc(s.role) + '" autocomplete="off" enterkeyhint="done" maxlength="30" placeholder="TM, TL, GLP, ASP…"></label>' + roleDatalist()
-    + '<p class="note">Saisie libre. « TL » = team leader : il n’est placé que sur les quarts cochés dans Effectifs. Les autres désignations sont traitées comme des membres.</p>';
+    + '<p class="note">Saisie libre. « TL » = team leader : il n’est placé que sur les quarts cochés dans Effectifs. Les autres désignations sont traitées comme des membres.</p>'
+    + '<label class="field" for="fJoined"><span>Date d’arrivée dans l’équipe</span><input type="date" id="fJoined" data-inp="joined" value="' + esc(s.joined || '') + '"></label>'
+    + '<p class="note">Sert uniquement au tableau Équilibre (onglet admin) : évite qu’un nouvel arrivant paraisse en retard sur la rotation alors qu’il vient juste d’arriver. Laisser vide si inconnue.</p>';
   if (s.err) body += '<p class="note" style="color:var(--red)">' + esc(s.err) + '</p>';
   if (left) body += '<p class="note">Cette personne a été retirée de l’équipe active (démission). Son historique des nuits déjà planifiées est conservé.</p>';
   let foot;
@@ -1529,9 +1561,15 @@ function shConfirm(s){
   return {title:'Confirmation', body,
     foot:'<button type="button" class="btn" data-act="confirmNo">Annuler</button><button type="button" class="btn btn-red" data-act="confirmYes">' + esc(s.okLabel) + '</button>'};
 }
+/* popup « Quoi de neuf », affichée une seule fois par appareil (voir maybeShowWhatsNew) */
+function shWhatsNew(s){
+  const body = '<p class="note" style="font-size:15px;color:var(--ink)">Dernières améliorations de l’appli :</p>'
+    + '<ul style="margin:0 0 4px;padding-left:20px;line-height:1.6">' + CHANGELOG.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
+  return {title:'🆕 Quoi de neuf', body, foot:'<button type="button" class="btn btn-red" data-act="close">Compris</button>'};
+}
 function renderSheet(){
   const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
-  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm})[s.type](s);
+  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm, whatsnew:shWhatsNew})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev && prev.dataset.t === s.type ? prev.scrollTop : 0;
   $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb" data-t="' + esc(s.type) + '">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
@@ -2062,12 +2100,16 @@ const A = {
     if (!name) { s.err = 'Indique un nom.'; renderSheet(); const i = $('#fName'); if (i) i.focus(); return; }
     const dup = people().some(p => p.id !== s.id && p.active !== false && p.name.toLowerCase() === name.toLowerCase());
     if (dup && s.dupOk !== name) { s.err = 'Une personne s’appelle déjà « ' + name + ' ». Touche encore le bouton pour confirmer.'; s.dupOk = name; renderSheet(); return; }
+    const joined = String(s.joined || '').trim();
     if (s.id) {
       const per = clone(S.people[s.id]); per.name = name; per.role = role;
+      per.marks = per.marks || {};
+      if (joined) per.marks._joined = joined; else delete per.marks._joined;
       close(); savePerson(per); toast('Modifications enregistrées.');
     } else {
       const id = newId('pe'); const order = Math.max(0, ...people().map(p => p.order || 0)) + 1;
-      close(); savePerson({id, name, role, order, marks:{}, active:true});
+      const marks = {}; if (joined) marks._joined = joined;
+      close(); savePerson({id, name, role, order, marks, active:true});
       toast(name + ' ajouté(e)' + (role === 'TL' ? ' (TL)' : '') + '. Indique ses postes dans Polyvalence.');
     }
   },
@@ -2356,6 +2398,14 @@ async function loadBusinessData(){
   subscribeTable(bizChannels, 'config', 'key', r => { if (r.key === 'main') S.cfg = Object.assign({}, DEFAULT_CFG, r.value || {}); later(); }, () => {});
   await loadFeedback();
   render();
+  maybeShowWhatsNew();
+}
+/* affiche la popup « Quoi de neuf » une seule fois par appareil/compte quand APP_VERSION change */
+function maybeShowWhatsNew(){
+  if (!profile() || S.sheet) return;
+  if (LS.get('whatsnew_seen', '') === APP_VERSION) return;
+  LS.set('whatsnew_seen', APP_VERSION);
+  open({type:'whatsnew'});
 }
 /* suggestions des TL/GL : chargées et suivies en temps réel uniquement pour l'Admin */
 async function loadFeedback(){
