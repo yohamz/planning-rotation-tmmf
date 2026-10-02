@@ -855,7 +855,7 @@ function rowToPerson(r){ return {id:r.id, name:r.name, role:r.role || 'TM', temp
 function postToRow(p){ return {id:p.id, code:p.code, name:p.name, zone:p.zone || '', diff:p.diff || '', order_num:p.order || 0}; }
 function rowToPost(r){ return {id:r.id, code:r.code, name:r.name, zone:r.zone || '', diff:r.diff || '', order:r.order_num || 0}; }
 const queues = {};
-function queued(key, fn){ const run = () => fn().catch(e => toast('Enregistrement impossible, réessaie.')); queues[key] = (queues[key] || Promise.resolve()).then(run, run); }
+function queued(key, fn){ const run = () => Promise.resolve(fn()).catch(e => toast('Enregistrement impossible, réessaie.')); queues[key] = (queues[key] || Promise.resolve()).then(run, run); }
 function saveNight(n){ n.updatedAt = new Date().toISOString(); if (nightState(n) === 'validated') n.tl._snap = snapshot(n); S.nights[n.date] = n; render(); queued('night:' + n.date, () => sb.from('nights').upsert(nightToRow(n))); }
 function savePerson(per){ S.people[per.id] = per; render(); queued('person:' + per.id, () => sb.from('people').upsert(personToRow(per))); }
 function savePost(p){ S.posts[p.id] = p; render(); queued('post:' + p.id, () => sb.from('posts').upsert(postToRow(p))); }
