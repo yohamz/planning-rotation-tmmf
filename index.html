@@ -439,7 +439,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 const S = { ready:false, people:{}, posts:{}, nights:{}, cfg:Object.assign({}, DEFAULT_CFG), profiles:{},
   tab: LS.get('tab', 'plan'), date: today(), sheet:null, qk:0, person:null, balPerson:null,
   authUser:null, authReady:false,
-  loginPick:null, loginPass:'', loginErr:'', loginBusy:false,
+  loginPick:null, loginPass:'', loginErr:'', loginBusy:false, adminEmail:'',
   newPass:'', newPass2:'', newPassErr:'', newPassBusy:false,
   accountsErr:'', newTLName:'', eqSpan:7, feedback:{} };
 const mq = window.matchMedia ? window.matchMedia('(max-width: 700px)') : null;
@@ -1778,14 +1778,13 @@ function loginGroups(rows){
 }
 function viewLogin(){
   const rows = Object.values(S.profiles).filter(a => a.active !== false && a.role !== 'admin').sort((x, y) => x.name.localeCompare(y.name, 'fr'));
-  const adminRows = Object.values(S.profiles).filter(a => a.active !== false && a.role === 'admin');
   if (!S.loginPick) {
     return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="PLANNING CH2-2 — touche pour voir l’animation"><div class="road" aria-hidden="true">' + roadHtml() + '</div><div class="brand"><i aria-hidden="true"></i>PLANNING <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button><button type="button" class="gearbtn" data-act="toggleAdminMenu" aria-label="Réglages">⚙</button></div>'
       + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
       + '<p class="note">Touche ton nom pour te connecter.</p><div class="namegrid">'
       + (rows.length ? loginGroups(rows) : '<p class="note">Chargement des comptes…</p>')
       + '</div>'
-      + (S.showAdminMenu ? '<p class="note" style="margin-top:14px">Accès administrateur</p><div class="namegrid">' + adminRows.map(a => '<button type="button" class="namebtn admin" data-act="pickAccount" data-id="' + esc(a.id) + '">Admin</button>').join('') + '</div>' : '')
+      + (S.showAdminMenu ? '<div class="authcard" style="margin-top:14px;padding:14px"><p class="note" style="margin:0 0 8px">Accès administrateur</p><label class="field" for="loAdminEmail"><span>Email</span><input type="email" id="loAdminEmail" data-chg="adminEmail" autocomplete="off" value="' + esc(S.adminEmail || '') + '"></label><label class="field" for="loAdminPass"><span>Mot de passe</span><input type="text" id="loAdminPass" data-chg="loginPass" autocomplete="off" value="' + esc(S.loginPass || '') + '"></label><button type="button" class="btn btn-red" data-act="doAdminLogin"' + (S.loginBusy ? ' disabled' : '') + '>' + (S.loginBusy ? 'Connexion…' : 'Se connecter') + '</button></div>' : '')
       + '</div></div>';
   }
   const acc = S.profiles[S.loginPick];
@@ -2159,10 +2158,10 @@ const A = {
     close();
     toast('Absence enregistrée du ' + fmt(from) + ' au ' + fmt(to) + '.' + (skipped ? ' (' + skipped + ' nuit(s) archivée(s) non modifiée(s))' : ''));
   },
-  logout(){ sb.auth.signOut(); S.loginPick = null; S.loginPass = ''; S.loginErr = ''; close(); },
+  logout(){ sb.auth.signOut(); S.loginPick = null; S.loginPass = ''; S.loginErr = ''; S.adminEmail = ''; S.showAdminMenu = false; close(); },
   pickAccount(d){ S.loginPick = d.id; S.loginPass = ''; S.loginErr = ''; render(); setTimeout(() => A.playRoad(), 350); },
   loginBack(){ S.loginPick = null; render(); },
-  toggleAdminMenu(){ S.showAdminMenu = !S.showAdminMenu; render(); },
+  toggleAdminMenu(){ S.showAdminMenu = !S.showAdminMenu; if (!S.showAdminMenu) { S.adminEmail = ''; S.loginPass = ''; S.loginErr = ''; } render(); },
   clearProvisional(){ if (!isAdmin()) return; askConfirm('Marquer les données (postes, personnes, polyvalence) comme validées ? Le bandeau d’avertissement disparaîtra.', 'clearProvisionalReal', null); },
   clearProvisionalReal(){ S.cfg.provisionalRoster = false; saveCfg(); },
   async doLogin(){
@@ -2173,6 +2172,15 @@ const A = {
     S.loginBusy = false;
     if (error) { S.loginErr = 'Mot de passe incorrect.'; S.loginPass = ''; render(); return; }
     S.loginPick = null; S.loginPass = ''; S.loginErr = '';
+    render();
+  },
+  async doAdminLogin(){
+    const email = (S.adminEmail || '').trim(); if (!email) return;
+    S.loginBusy = true; S.loginErr = ''; render();
+    const {error} = await sb.auth.signInWithPassword({email, password:S.loginPass || ''});
+    S.loginBusy = false;
+    if (error) { S.loginErr = 'Identifiants incorrects.'; S.loginPass = ''; render(); return; }
+    S.adminEmail = ''; S.loginPass = ''; S.loginErr = ''; S.showAdminMenu = false;
     render();
   },
   async doChangePass(){
@@ -2259,6 +2267,7 @@ const C = {
   poName(el){ const v = el.value.trim(); if (!v) return; const p = clone(S.posts[S.sheet.id]); p.name = v; savePost(p); },
   poZone(el){ const p = clone(S.posts[S.sheet.id]); p.zone = el.value.trim(); savePost(p); },
   loginPass(el){ S.loginPass = el.value; },
+  adminEmail(el){ S.adminEmail = el.value; },
   newPass(el){ S.newPass = el.value; },
   newPass2(el){ S.newPass2 = el.value; },
   newTLName(el){ S.newTLName = el.value; },
