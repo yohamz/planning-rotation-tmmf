@@ -218,8 +218,6 @@ table{border-collapse:separate;border-spacing:0}
 .mrow.static{cursor:default}
 .bal .mrow .cntv{margin-left:8px;min-width:28px;text-align:right;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:10px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
-#updbar{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 8px 8px 16px;border-radius:99px;font-weight:600;font-size:14px;z-index:65;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);box-shadow:0 8px 28px rgba(0,0,0,.22);animation:gfIn .16s ease-out}
-#updbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .muted{color:var(--muted)}
 .note{margin:0;font-size:14px;color:var(--muted)}
 @media (max-width:700px){.top{position:static}.top-in{gap:6px 10px;padding:6px 12px}.tabs{width:100%;order:3;margin-left:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(max-content,1fr);gap:2px}.tabs button{padding:8px 6px;min-height:44px;font-size:14px}.tabs button .l{display:none}.tabs button .s{display:inline}.acct{margin-left:auto}.acct .who{display:none}}
@@ -361,7 +359,6 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 <main id="main"><p class="muted">Chargement…</p></main>
 <div id="sheet"></div>
 <div id="toast" role="status" aria-live="polite" hidden></div>
-<div id="updbar" role="status" aria-live="polite" hidden><span>Nouvelle version disponible</span><button type="button" class="btn btn-sm btn-red" data-act="reloadApp">Recharger</button></div>
 <div id="genfx" role="status" aria-live="polite" hidden><i class="gf-dot" aria-hidden="true"></i><span>Calcul…</span></div>
 
 <script>
@@ -1546,6 +1543,8 @@ function open(s){ S.sheet = s; renderSheet(); }
 function close(){
   const s = S.sheet;
   S.sheet = null; $('#sheet').innerHTML = '';
+  /* fermer le « Quoi de neuf » d'une mise à jour en attente l'applique (voir checkForUpdate) */
+  if (s && s.type === 'whatsnew' && s.pending) { LS.set('whatsnew_seen', S._pendingVersion || APP_VERSION); location.reload(); return; }
   /* fiche de remplacement fermée sans choisir : une personne en formation ne reste pas seule */
   if (s && s.type === 'replace' && s.mode !== 'replace' && !s.done) {
     const n = nightOf(), t = n && n.train && n.train[s.k];
@@ -1569,11 +1568,15 @@ function shConfirm(s){
   return {title:'Confirmation', body,
     foot:'<button type="button" class="btn" data-act="confirmNo">Annuler</button><button type="button" class="btn btn-red" data-act="confirmYes">' + esc(s.okLabel) + '</button>'};
 }
-/* popup « Quoi de neuf », affichée une seule fois par appareil (voir maybeShowWhatsNew) */
+/* popup « Quoi de neuf », affichée une seule fois par appareil (voir maybeShowWhatsNew).
+   Si s.pending est vrai, c'est checkForUpdate qui l'a ouverte pendant que l'appli tournait déjà
+   (version plus récente détectée côté serveur) : fermer la fiche (× ou le bouton) recharge alors
+   l'appli pour appliquer la mise à jour — un seul geste pour lire les nouveautés et les appliquer. */
 function shWhatsNew(s){
-  const body = '<p class="note" style="font-size:15px;color:var(--ink)">Dernières améliorations de l’appli :</p>'
-    + '<ul style="margin:0 0 4px;padding-left:20px;line-height:1.6">' + CHANGELOG.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
-  return {title:'🆕 Quoi de neuf', body, foot:'<button type="button" class="btn btn-red" data-act="close">Compris</button>'};
+  const liste = s.pending ? (S._pendingChangelog || CHANGELOG) : CHANGELOG;
+  const body = (s.pending ? '<p class="note" style="font-size:15px;color:var(--ink)">Une mise à jour est prête. Fermer cette fiche l’applique.</p>' : '<p class="note" style="font-size:15px;color:var(--ink)">Dernières améliorations de l’appli :</p>')
+    + '<ul style="margin:0 0 4px;padding-left:20px;line-height:1.6">' + liste.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
+  return {title:'🆕 Quoi de neuf', body, foot:'<button type="button" class="btn btn-red" data-act="close">' + (s.pending ? 'Mettre à jour' : 'Compris') + '</button>'};
 }
 function renderSheet(){
   const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
@@ -1825,7 +1828,6 @@ function shPost(s){
 
 /* ---------- actions ---------- */
 const A = {
-  reloadApp(){ location.reload(); },
   qk(d){ S.qk = Number(d.k); render(); },
   /* changement de polyvalence : enregistré tout de suite, sans confirmation (ce n'est pas une absence) */
   setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient plus le poste'; toast(src.name + ' — ' + (post ? post.code : d.post) + ' : ' + lbl + '.'); },
@@ -2304,7 +2306,7 @@ const C = {
    long Android, clic droit sur PC) déclenche aussi l'action, et le clic à ignorer expire.
    Chaque action a de toute façon une alternative visible (⚙️, boutons des fiches). */
 /* seules actions permises à un spectateur (TM) : naviguer, consulter, télécharger */
-const VIEWER_ACTS = new Set(['tab', 'day', 'qk', 'openNight', 'pdfDownload', 'pdfShare', 'logout', 'close', 'confirmNo', 'playRoad', 'reloadApp']);
+const VIEWER_ACTS = new Set(['tab', 'day', 'qk', 'openNight', 'pdfDownload', 'pdfShare', 'logout', 'close', 'confirmNo', 'playRoad']);
 const VIEWER_CHG = new Set(['date']);
 const LONG_MS = 450, LONG_TOL = 10;
 let press = null, suppressClick = false, suppressTimer = null, longUntil = 0;
@@ -2426,21 +2428,28 @@ function maybeShowWhatsNew(){
   LS.set('whatsnew_seen', APP_VERSION);
   open({type:'whatsnew'});
 }
-/* bandeau « Nouvelle version disponible » : détecte qu'une mise à jour a été publiée pendant que
-   l'appli reste ouverte (téléphone qu'on ne ferme jamais), sans attendre une réinstallation.
-   On recharge en direct la page publiée (jamais mise en cache, voir sw.js) et on compare son
-   APP_VERSION à celle déjà chargée en mémoire ici. */
-let updCheckBusy = false, updFound = false;
+/* détecte qu'une mise à jour a été publiée pendant que l'appli reste ouverte (téléphone qu'on ne
+   ferme jamais), sans attendre une réinstallation. On recharge en direct la page publiée (jamais
+   mise en cache, voir sw.js), on compare son APP_VERSION à celle déjà chargée en mémoire ici, et
+   si elle diffère on ouvre directement le « Quoi de neuf » de la nouvelle version : fermer cette
+   fiche (× ou le bouton) applique la mise à jour (voir close() et shWhatsNew). Un seul geste pour
+   lire les nouveautés et les appliquer. */
+let updCheckBusy = false;
 async function checkForUpdate(){
-  if (updFound || updCheckBusy || document.visibilityState === 'hidden') return;
+  if (updCheckBusy || document.visibilityState === 'hidden') return;
+  /* mise à jour déjà repérée lors d'un appel précédent : on retente juste d'ouvrir la fiche
+     (par ex. une autre fiche occupait l'écran la dernière fois), sans refaire de requête réseau */
+  if (S._pendingVersion) { if (!profile() || S.sheet) return; open({type:'whatsnew', pending:true}); return; }
   updCheckBusy = true;
   try {
     const rep = await fetch('./', {cache: 'no-store'});
     const texte = await rep.text();
-    const m = texte.match(/APP_VERSION\s*=\s*'([^']+)'/);
-    if (m && m[1] && m[1] !== APP_VERSION) {
-      updFound = true;
-      $('#updbar').hidden = false;
+    const mVer = texte.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    if (mVer && mVer[1] && mVer[1] !== APP_VERSION) {
+      S._pendingVersion = mVer[1];
+      const mLog = texte.match(/const CHANGELOG\s*=\s*(\[[\s\S]*?\]);/);
+      try { S._pendingChangelog = mLog ? new Function('return ' + mLog[1])() : null; } catch (e) { S._pendingChangelog = null; }
+      if (profile() && !S.sheet) open({type:'whatsnew', pending:true});
     }
   } catch (e) { /* hors-ligne : on retentera au prochain déclenchement */ }
   updCheckBusy = false;
