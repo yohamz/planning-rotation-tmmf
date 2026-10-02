@@ -1545,10 +1545,11 @@ function shPick(s){
   const pres = activePeople().filter(per => !absent.has(per.id));
   const onQuart = per => !isTemp(per) || (n && n.tl && n.tl[per.id] && n.tl[per.id][s.k]);
   /* un échange n'est proposé que si le titulaire actuel connaît aussi l'autre poste : les 2 doivent savoir faire les 2 process */
-  const swappable = per => { const w = where[per.id]; if (!w || w === p.id || !cur) return true; return !!(curPer && canHold(curPer, w)); };
+  /* sécurité : on ne propose comme titulaire seul que des personnes habilitées seules (G), jamais quelqu'un encore en formation (H) */
+  const swappable = per => { const w = where[per.id]; if (!w || w === p.id || !cur) return true; return !!(curPer && canHoldAlone(curPer, w)); };
   const othersAll = pres.filter(per => !isTL(per) && onQuart(per));
-  const tls = pres.filter(per => isTL(per) && canHold(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per));
-  const others = othersAll.filter(per => canHold(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per));
+  const tls = pres.filter(per => isTL(per) && canHoldAlone(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per));
+  const others = othersAll.filter(per => canHoldAlone(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per));
   const locked = !!(n && n.lock && n.lock[s.k] && n.lock[s.k][p.id]);
   if (s.force == null) s.force = locked;
   const Q = n ? nq(n) : 4;
