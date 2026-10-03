@@ -427,6 +427,8 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .opt .rec{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--vert);margin-left:6px}
 .opt .steps{display:grid;gap:2px;font-weight:600}
 .opt .steps small{margin:0;color:var(--muted);font-weight:500}
+.genflow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1px solid var(--orange);background:rgba(255,166,48,.1);border-radius:12px;padding:10px 12px;margin:0 0 10px}
+.genflow b{display:block}.genflow small{color:var(--muted)}
 .pg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
 .pg-stats div{border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center}
 .pg-stats b{display:block;font-size:22px}
@@ -518,7 +520,8 @@ const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
    (corrections de bugs invisibles, sécurité, refonte visuelle du logo, etc.). */
 const APP_VERSION = '2026-10-03-3';
 const CHANGELOG = [
-  'Générer : l’appli propose d’abord qui former ce soir (⭐ recommandé), tu acceptes tout ou tu choisis, puis le planning est calculé autour des formations.',
+  'Générer : l’appli ouvre d’abord Effectifs pour vérifier les présents, puis propose qui former ce soir (⭐ recommandé) avant de calculer le planning.',
+  'Planning allégé : les boutons Effectifs et Mettre en formation ne sont plus sur l’écran Planning (Effectifs reste dans les onglets).',
   'Planning allégé : Proposer, Télécharger, Partager et Aide sont dans le menu ⋯ en haut.',
   'Téléphone : les onglets (Planning, Effectifs, Polyvalence, Archives) sont maintenant en bas de l’écran, sous le pouce.',
   'Menu « Bonjour … ▾ » en haut à droite : il regroupe « Proposer une amélioration » et « Se déconnecter ».',
@@ -1132,11 +1135,6 @@ function tabIcon(k){
   return '<svg class="tic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
 }
 function postHead(p){ return '<button type="button" class="post linkbtn" data-act="trainees" data-id="' + esc(p.id) + '"><span class="dot ' + esc(p.diff || '') + '" aria-hidden="true"></span><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button>'; }
-function crewInfoOf(n, shortForm){
-  const absent = n ? (n.absent || []).length : 0;
-  const tlOn = n ? tlIds(n).map(k => n.tl[k]).filter(a => a && a.some(Boolean)).length : 0;
-  return [absent ? absent + (shortForm ? ' abs.' : ' absent' + (absent > 1 ? 's' : '')) : '', tlOn ? tlOn + ' TL' : ''].filter(Boolean).join(' · ');
-}
 /* un quart est « généré » dès qu'il a au moins une affectation : un quart encore vide
    (nuit générée quart par quart) n'est pas compté comme « non couvert » */
 const quartDone = (n, k) => !!(n && n.q && n.q[k] && Object.keys(n.q[k]).length);
@@ -1196,15 +1194,13 @@ function nutBtn(n, cls){
 const shareBtns = () => '<button type="button" class="btn" data-act="pdfDownload">⬇️ Télécharger</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button>';
 function viewPlan(){
   const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived' || isViewer(), ps = planPosts(n);
-  const crewInfo = crewInfoOf(n, false);
   let html = '<div class="bar"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button>'
     + '<span class="night">' + esc(fmt(S.date)) + '</span>'
     + '<button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button>'
     + '<input type="date" id="date" data-chg="date" value="' + S.date + '" aria-label="Choisir la date">'
     + '<span class="grow"></span>';
   if (!ro) {
-    html += '<button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? ' · ' + crewInfo : '') + '</button>'
-      + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’overtime</button>')
+    html += (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’overtime</button>')
       + (st !== 'validated' ? '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>' : '');
   }
   html += nutBtn(n);
@@ -1242,13 +1238,11 @@ function viewPlanPhone(){
   const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived' || isViewer(), ps = planPosts(n);
   if (S.qk >= Q) S.qk = 0;
   const k = S.qk;
-  const crewInfo = crewInfoOf(n, true);
   const a = S.date.split('-').map(Number);
   const short = new Date(a[0], a[1] - 1, a[2]).toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
   let html = '<div class="m-head"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button><span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span><button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button></div>';
   if (!ro) {
-    html += '<div class="m-acts"><button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? '<br><small class="muted">' + crewInfo + '</small>' : '') + '</button>'
-      + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’OT</button>') + '</div>'
+    html += '<div class="m-acts">' + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’OT</button>') + '</div>'
       + (st !== 'validated' ? '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>' : '');
   }
   if (!gen && isViewer()) return html + '<p class="note">Le planning de cette nuit n’est pas encore validé. Il apparaîtra ici dès que le TL l’aura validé.</p>';
@@ -1928,6 +1922,8 @@ function viewEffectifs(){
     + '<span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span>'
     + '<button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button>'
     + '<span class="grow"></span><button type="button" class="btn btn-red btn-sm" data-act="addPerson">+ Ajouter une personne</button></div>';
+  const flow = S.genFlow === S.date ? '<div class="genflow"><div><b>Avant de générer : vérifie l’effectif</b><small>Absents, TL et renforts de cette nuit. Ensuite, l’appli propose les formations.</small></div><span class="grow"></span><button type="button" class="btn btn-sm" data-act="genCancel">Annuler</button><button type="button" class="btn btn-sm btn-red" data-act="genContinue">Continuer ›</button></div>' : '';
+  html += flow;
   html += '<p class="note">Touche un nom pour le marquer présent/absent cette nuit. ⚙️ (ou appui long sur le nom) : absence sur certains quarts, absence de plusieurs jours, restriction, modifier ou retirer.</p>';
   html += '<div class="lbl">TL · touche les quarts où il tient un poste, ou « Absent »</div><div class="mlist">';
   pp.filter(isTL).sort(byAbsentFirst).forEach(per => {
@@ -1961,6 +1957,7 @@ function viewEffectifs(){
     return '<div class="eff-line"><button type="button" class="eff-row' + (off ? ' off' : '') + '" data-act="abs" data-id="' + esc(per.id) + '" data-long="openPersonMenu"><span class="pname">' + esc(per.name) + '</span>' + (role !== 'TM' ? '<span class="tag" style="background:var(--surface-2);color:var(--ink-2)">' + esc(role) + '</span>' : '') + (badge ? '<span class="absbadge">' + esc(badge) + '</span>' : '') + '</button>'
       + '<button type="button" class="gear" data-act="openPersonMenu" data-id="' + esc(per.id) + '" aria-label="Options pour ' + esc(per.name) + '" title="Options">⚙️</button></div>';
   }).join('') + '</div>';
+  if (flow) html += '<button type="button" class="btn btn-red m-gen" style="margin-top:12px;width:100%" data-act="genContinue">Continuer vers la génération ›</button>';
   return html;
 }
 function shPersonMenu(s){
@@ -2114,15 +2111,22 @@ const A = {
   qk(d){ S.qk = Number(d.k); render(); },
   /* changement de polyvalence : enregistré tout de suite, sans confirmation (ce n'est pas une absence) */
   setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient plus le poste'; toast(src.name + ' — ' + (post ? post.code : d.post) + ' : ' + lbl + '.'); },
-  tab(d){ S.tab = d.tab; LS.set('tab', d.tab); close(); render(); window.scrollTo(0, 0); },
+  tab(d){ S.genFlow = null; S.tab = d.tab; LS.set('tab', d.tab); close(); render(); window.scrollTo(0, 0); },
   day(d){ S.date = addDays(S.date, Number(d.d)); render(); },
   close(){ close(); },
   gen(){
     if (!canEdit()) return;
     const cur = nightOf();
     if (nightState(cur) === 'validated') { toast('Planning validé : repasse-le en préparation pour tout régénérer, ou génère un seul quart (appui long sur Q1, Q2…).'); return; }
+    /* étape 1 : vérifier l'effectif de la nuit (onglet Effectifs), puis « Continuer » ouvre les formations */
+    S.genFlow = S.date; S.tab = 'effectifs'; close(); render(); window.scrollTo(0, 0);
+  },
+  genContinue(){
+    S.genFlow = null; S.tab = 'plan'; render(); window.scrollTo(0, 0);
+    if (!canEdit()) return;
     open({type:'preGen', step:1, plan:trainingPlan(editable()), on:[]});
   },
+  genCancel(){ S.genFlow = null; S.tab = 'plan'; render(); },
   preGenStep(d){
     const s = S.sheet; if (!s) return;
     if (d.back) s.step = 1; else { s.step = 2; s.on = s.plan.sugg.map(() => d.all === '1'); }
