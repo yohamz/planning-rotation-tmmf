@@ -280,6 +280,8 @@ table{border-collapse:separate;border-spacing:0}
 .mrow.static{cursor:default}
 .bal .mrow .cntv{margin-left:8px;min-width:28px;text-align:right;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
 #toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:10px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+#savebar{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--red);color:var(--red-ink);padding:8px 8px 8px 16px;border-radius:99px;font-weight:700;font-size:14px;z-index:66;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);box-shadow:0 8px 28px rgba(0,0,0,.3)}
+#savebar .btn{color:var(--ink);min-height:36px}
 #updbar{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 8px 8px 16px;border-radius:99px;font-weight:600;font-size:14px;z-index:65;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);box-shadow:0 8px 28px rgba(0,0,0,.22);animation:gfIn .16s ease-out}
 #updbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .muted{color:var(--muted)}
@@ -477,6 +479,7 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 <main id="main"><p class="muted">Chargement…</p></main>
 <div id="sheet"></div>
 <div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="savebar" role="alert" hidden><span></span><button type="button" class="btn btn-sm" data-act="retrySave">Réessayer</button></div>
 <div id="updbar" role="status" aria-live="polite" hidden><span>Nouvelle version disponible</span><button type="button" class="btn btn-sm btn-red" data-act="reloadApp">Recharger</button></div>
 <div id="genfx" role="status" aria-live="polite" hidden><i class="gf-dot" aria-hidden="true"></i><span>Calcul…</span></div>
 
@@ -978,7 +981,23 @@ function rowToPerson(r){ return {id:r.id, name:r.name, role:r.role || 'TM', temp
 function postToRow(p){ return {id:p.id, code:p.code, name:p.name, zone:p.zone || '', diff:p.diff || '', order_num:p.order || 0}; }
 function rowToPost(r){ return {id:r.id, code:r.code, name:r.name, zone:r.zone || '', diff:r.diff || '', order:r.order_num || 0}; }
 const queues = {};
-function queued(key, fn){ const run = () => Promise.resolve(fn()).catch(e => toast('Enregistrement impossible, réessaie.')); queues[key] = (queues[key] || Promise.resolve()).then(run, run); }
+/* supabase-js ne rejette pas en cas d'échec (réseau coupé, refus de la base) : il renvoie {error}.
+   Un échec est donc détecté sur r.error, gardé dans « failed » et signalé par un bandeau qui reste
+   affiché ; nouvel essai au retour du réseau, toutes les 30 s, ou avec le bouton « Réessayer ». */
+const failed = {};
+function queued(key, fn){
+  const run = () => Promise.resolve().then(fn).then(r => { if (r && r.error) throw r.error; delete failed[key]; saveBar(); })
+    .catch(e => { console.error('enregistrement', key, e); failed[key] = fn; saveBar(); });
+  queues[key] = (queues[key] || Promise.resolve()).then(run, run);
+}
+function saveBar(){
+  const b = document.getElementById('savebar'); if (!b) return;
+  const n = Object.keys(failed).length; b.hidden = !n;
+  if (n) b.querySelector('span').textContent = '⚠️ ' + n + ' modification' + (n > 1 ? 's' : '') + ' non enregistrée' + (n > 1 ? 's' : '') + ' — vérifie la connexion';
+}
+function retryFailed(){ Object.keys(failed).forEach(k => queued(k, failed[k])); }
+window.addEventListener('online', retryFailed);
+setInterval(() => { if (Object.keys(failed).length && navigator.onLine !== false) retryFailed(); }, 30000);
 function saveNight(n){ n.updatedAt = new Date().toISOString(); if (nightState(n) === 'validated') n.tl._snap = snapshot(n); S.nights[n.date] = n; render(); queued('night:' + n.date, () => sb.from('nights').upsert(nightToRow(n))); }
 function savePerson(per){ S.people[per.id] = per; render(); queued('person:' + per.id, () => sb.from('people').upsert(personToRow(per))); }
 function savePost(p){ S.posts[p.id] = p; render(); queued('post:' + p.id, () => sb.from('posts').upsert(postToRow(p))); }
@@ -1950,21 +1969,21 @@ function viewLogin(){
       + '<p class="note">Touche ton nom pour te connecter.</p><div class="namegrid">'
       + (rows.length ? loginGroups(rows) : '<p class="note">Chargement des comptes…</p>')
       + '</div>'
-      + (S.showAdminMenu ? '<div class="authcard" style="margin-top:14px;padding:14px"><p class="note" style="margin:0 0 8px">Accès administrateur</p><label class="field" for="loAdminEmail"><span>Email</span><input type="email" id="loAdminEmail" data-chg="adminEmail" autocomplete="off" value="' + esc(S.adminEmail || '') + '"></label><label class="field" for="loAdminPass"><span>Mot de passe</span><input type="text" id="loAdminPass" data-chg="loginPass" autocomplete="off" value="' + esc(S.loginPass || '') + '"></label><button type="button" class="btn btn-red" data-act="doAdminLogin"' + (S.loginBusy ? ' disabled' : '') + '>' + (S.loginBusy ? 'Connexion…' : 'Se connecter') + '</button></div>' : '')
+      + (S.showAdminMenu ? '<div class="authcard" style="margin-top:14px;padding:14px"><p class="note" style="margin:0 0 8px">Accès administrateur</p><label class="field" for="loAdminEmail"><span>Email</span><input type="email" id="loAdminEmail" data-chg="adminEmail" autocomplete="off" value="' + esc(S.adminEmail || '') + '"></label><label class="field" for="loAdminPass"><span>Mot de passe</span><input type="password" id="loAdminPass" data-chg="loginPass" autocomplete="current-password" value="' + esc(S.loginPass || '') + '"></label><button type="button" class="btn btn-red" data-act="doAdminLogin"' + (S.loginBusy ? ' disabled' : '') + '>' + (S.loginBusy ? 'Connexion…' : 'Se connecter') + '</button></div>' : '')
       + '</div></div>';
   }
   const acc = S.profiles[S.loginPick];
   const pickTitle = acc && acc.role === 'admin' ? 'Admin' : (acc ? acc.name : '');
   return '<div class="authwrap"><div class="authcard"><div class="authhead"><button type="button" class="brandbtn" data-act="playRoad" aria-label="ROTATEAM — touche pour voir l’animation"><div class="road" aria-hidden="true">' + roadHtml() + '</div><div class="brand"><img class="brandicon" src="icones/icon-256.png?v=2" alt="">ROTA<span class="wmteam">TEAM</span> <span>' + esc(S.cfg.team || 'CH2-2') + '</span><span class="verbadge">V0.1 test</span></div></button></div><h1>' + esc(pickTitle) + '</h1>'
-    + '<label class="field" for="loPass"><span>Mot de passe</span><input type="text" id="loPass" data-chg="loginPass" autocomplete="off" value="' + esc(S.loginPass || '') + '"></label>'
+    + '<label class="field" for="loPass"><span>Mot de passe</span><input type="password" id="loPass" data-chg="loginPass" autocomplete="current-password" value="' + esc(S.loginPass || '') + '"></label>'
     + (S.loginErr ? '<p class="note" style="color:var(--red)">' + esc(S.loginErr) + '</p>' : '')
     + '<div class="bar">' + (S.loginBusy ? '<span class="muted">Connexion…</span>' : '<button type="button" class="btn" data-act="loginBack">‹ Retour</button><button type="button" class="btn btn-red grow" data-act="doLogin">Se connecter</button>') + '</div></div></div>';
 }
 function viewChangePass(){
   const p = profile();
   return '<div class="authwrap"><div class="authcard"><h1>Choisis ton mot de passe</h1><p class="note">' + esc(p ? p.name : '') + ', c’est ta première connexion (ou ton mot de passe vient d’être réinitialisé). Choisis un mot de passe personnel, 6 caractères minimum.</p>'
-    + '<label class="field" for="npPass"><span>Nouveau mot de passe</span><input type="text" id="npPass" data-chg="newPass" value="' + esc(S.newPass) + '" autocomplete="off"></label>'
-    + '<label class="field" for="npPass2"><span>Confirmer</span><input type="text" id="npPass2" data-chg="newPass2" value="' + esc(S.newPass2) + '" autocomplete="off"></label>'
+    + '<label class="field" for="npPass"><span>Nouveau mot de passe</span><input type="password" id="npPass" data-chg="newPass" value="' + esc(S.newPass) + '" autocomplete="off"></label>'
+    + '<label class="field" for="npPass2"><span>Confirmer</span><input type="password" id="npPass2" data-chg="newPass2" value="' + esc(S.newPass2) + '" autocomplete="off"></label>'
     + (S.newPassErr ? '<p class="note" style="color:var(--red)">' + esc(S.newPassErr) + '</p>' : '')
     + '<button type="button" class="btn btn-red" data-act="doChangePass"' + (S.newPassBusy ? ' disabled' : '') + '>' + (S.newPassBusy ? 'Enregistrement…' : 'Valider') + '</button></div></div>';
 }
@@ -1987,6 +2006,7 @@ function shPost(s){
 /* ---------- actions ---------- */
 const A = {
   reloadApp(){ location.reload(); },
+  retrySave(){ retryFailed(); },
   qk(d){ S.qk = Number(d.k); render(); },
   /* changement de polyvalence : enregistré tout de suite, sans confirmation (ce n'est pas une absence) */
   setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient plus le poste'; toast(src.name + ' — ' + (post ? post.code : d.post) + ' : ' + lbl + '.'); },
@@ -2606,7 +2626,7 @@ function subscribeTable(list, table, pk, onUpsert, onDelete){
   return ch;
 }
 async function loadProfiles(){
-  const {data, error} = await sb.from('profiles').select('*');
+  const {data, error} = await sb.from('profiles').select(S.authUser ? '*' : 'id,name,role,active,login_email');
   if (!error) { const o = {}; (data || []).forEach(r => { o[r.id] = r; }); S.profiles = o; }
   if (!profileChannel) profileChannel = subscribeTable([], 'profiles', 'id', r => { S.profiles[r.id] = r; later(); }, id => { delete S.profiles[id]; later(); });
   later();
