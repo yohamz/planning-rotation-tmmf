@@ -2909,7 +2909,7 @@ function showSecret(){
   endSecret();
   if ($('#secretLogo')) return;
   const ov = document.createElement('div'); ov.id = 'secretLogo';
-  ov.innerHTML = '<img src="icones/logo-ben.png" alt="">';
+  ov.innerHTML = '<img src="icones/logo-ben.jpg?v=2" alt="">';
   const shown = Date.now();
   ov.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (Date.now() - shown > 350) ov.remove(); });
   document.body.appendChild(ov);
