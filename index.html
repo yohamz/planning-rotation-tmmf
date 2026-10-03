@@ -427,6 +427,17 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .opt .rec{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--vert);margin-left:6px}
 .opt .steps{display:grid;gap:2px;font-weight:600}
 .opt .steps small{margin:0;color:var(--muted);font-weight:500}
+.pg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.pg-stats div{border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center}
+.pg-stats b{display:block;font-size:22px}
+.pg-stats small{color:var(--muted);font-size:12px}
+.pg-stats .hot b{color:var(--orange)}
+.pg-q{display:flex;gap:6px;margin-bottom:6px}
+.pg-q span{flex:1;text-align:center;border:1px solid var(--line);border-radius:8px;padding:4px;font-size:13px;font-weight:600}
+.pg-q b{color:var(--orange)}
+.opt .pg-k{margin-left:auto;font-size:13px;color:var(--orange);font-weight:700;white-space:nowrap}
+.opt.off{opacity:.55}
+.opt.off .pg-k{color:var(--muted)}
 .okmsg{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0}
 .arch-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
 .arch-row:first-child{border-top:0}
@@ -505,8 +516,10 @@ const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
    Important : ne lister ici QUE ce qui concerne le travail des TL/GL (fonctionnalités,
    changements visibles, aide à l'utilisation) — pas les changements internes/techniques
    (corrections de bugs invisibles, sécurité, refonte visuelle du logo, etc.). */
-const APP_VERSION = '2026-10-03-2';
+const APP_VERSION = '2026-10-03-3';
 const CHANGELOG = [
+  'Générer : l’appli propose d’abord qui former ce soir (⭐ recommandé), tu acceptes tout ou tu choisis, puis le planning est calculé autour des formations.',
+  'Planning allégé : Proposer, Télécharger, Partager et Aide sont dans le menu ⋯ en haut.',
   'Téléphone : les onglets (Planning, Effectifs, Polyvalence, Archives) sont maintenant en bas de l’écran, sous le pouce.',
   'Menu « Bonjour … ▾ » en haut à droite : il regroupe « Proposer une amélioration » et « Se déconnecter ».',
   'Connexion plus rapide après la saisie du mot de passe.',
@@ -821,7 +834,9 @@ function buildQuart(k, night, hist){
   const lk = (night.lock && night.lock[k]) || {};
   Object.keys(lk).forEach(pid => { const who = lk[pid]; if (S.posts[pid] && S.people[who] && !absent.has(who) && !fixedPeople.has(who)) { fixed[pid] = who; fixedPeople.add(who); } });
   const ps = posts().filter(p => !fixed[p.id]);
-  const cands = activePeople().filter(per => !fixedPeople.has(per.id) && onQuart(night, k, per));
+  /* personnes en formation sur ce quart : elles accompagnent un titulaire, on ne leur donne pas de poste */
+  const trainK = (night.train && night.train[k]) || {}, trainees = new Set(Object.values(trainK));
+  const cands = activePeople().filter(per => !fixedPeople.has(per.id) && !trainees.has(per.id) && onQuart(night, k, per));
   /* Couvrir les postes passe AVANT l'équité : un poste vide coûte plus cher que n'importe
      quelle affectation possible. Avant, EMPTY valait 5000 alors que les pénalités d'équité
      cumulées (historique + même poste aux autres quarts + postes rouges) pouvaient dépasser
@@ -845,7 +860,7 @@ function buildQuart(k, night, hist){
       if (i < P && j < N) {
         const p = ps[i], per = cands[j];
         if (!fitFor(per, p.id, night)) c = BAN;
-        else c = pairCost(per, p, k, hist, others) + Math.random() * 12;
+        else c = pairCost(per, p, k, hist, others) + Math.random() * 12 - (trainK[p.id] && isFormateur(per) ? 200 : 0); /* un formateur de préférence sur un poste avec stagiaire */
       } else if (i < P) c = (j - N === i) ? EMPTY : BAN;
       else if (j < N) {
         const per = cands[j];
@@ -1422,6 +1437,86 @@ function shNightLog(s){
   const rows = ((n.tl && n.tl._log) || []).slice().sort((a, b) => (b.ts || '').localeCompare(a.ts || '')).map(logRow).filter(Boolean);
   return {title:'Journal · ' + esc(fmt(s.date)), body:rows.length ? '<div class="mlist">' + rows.join('') + '</div>' : '<p class="note">Aucune modification enregistrée pour cette nuit.</p>', foot:'<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
 }
+/* ---------- formations proposées avant de générer ----------
+   Places de formation d'un quart = personnes présentes en plus des postes (elles resteraient
+   sans poste de toute façon). On propose d'abord les personnes qui tiennent le moins de
+   postes, sur leur poste « en formation » le plus fragile (le moins de titulaires),
+   TRAIN_MAX_Q quarts au plus chacune ; la rotation est ensuite calculée autour. Les
+   formations déjà posées sur la nuit (régénération) sont reprises en premier. */
+const TRAIN_MAX_Q = 2;
+function trainingPlan(n){
+  const Q = nq(n), allPosts = posts(), P = allPosts.length, absent = new Set(n.absent || []);
+  const held = per => allPosts.filter(p => mark(per, p.id) === 'G').length;
+  const present = [], places = [];
+  for (let k = 0; k < Q; k++) { const c = activePeople().filter(per => onQuart(n, k, per)).length; present.push(c); places.push(Math.max(0, c - P)); }
+  const left = places.slice(), used = Array.from({length:Q}, () => ({}));
+  const holdersOn = (pid, k, ex) => activePeople().some(h => h.id !== ex && onQuart(n, k, h) && fitFor(h, pid, n));
+  const sugg = [], seen = new Set();
+  for (let k = 0; k < Q; k++) Object.keys(n.train[k] || {}).forEach(pid => {
+    const id = n.train[k][pid]; if (!S.people[id] || !S.posts[pid] || !onQuart(n, k, S.people[id])) return;
+    let s = sugg.find(x => x.id === id && x.post === pid);
+    if (!s) { s = {id, post:pid, ks:[], held:held(S.people[id]), keep:true}; sugg.push(s); }
+    s.ks.push(k); used[k][pid] = id; left[k] = Math.max(0, left[k] - 1); seen.add(id);
+  });
+  activePeople().filter(per => !seen.has(per.id) && !isTL(per) && !isTemp(per) && !absent.has(per.id))
+    .sort((a, b) => held(a) - held(b) || a.name.localeCompare(b.name, 'fr'))
+    .forEach(per => {
+      const o = allPosts.filter(p => mark(per, p.id) === 'H' && !isRestricted(per, p.id, n.date)).map(p => {
+        const hs = activePeople().filter(h => h.id !== per.id && !absent.has(h.id) && fitFor(h, p.id, n));
+        return {p, nb:hs.length, tr:hs.some(isFormateur)};
+      }).filter(x => x.nb).sort((a, b) => a.nb - b.nb || b.tr - a.tr)[0];
+      if (o) sugg.push({id:per.id, post:o.p.id, nb:o.nb, ks:[], held:held(per)});
+    });
+  for (let r = 0; r < TRAIN_MAX_Q; r++) sugg.forEach(s => {
+    if (s.keep) return;
+    let best = null;
+    for (let k = 0; k < Q; k++) {
+      if (!left[k] || s.ks.includes(k) || used[k][s.post] || !onQuart(n, k, S.people[s.id]) || !holdersOn(s.post, k, s.id)) continue;
+      const sc = left[k] + (s.ks.some(j => Math.abs(j - k) === 1) ? 100 : 0); /* quarts qui se suivent, puis le plus de places */
+      if (!best || sc > best.sc) best = {k, sc};
+    }
+    if (best) { s.ks.push(best.k); left[best.k]--; used[best.k][s.post] = s.id; }
+  });
+  sugg.forEach(s => s.ks.sort((a, b) => a - b));
+  /* effectif juste : ce qu'il faudrait préparer (postes peu tenus, personnes peu polyvalentes) */
+  const fragile = allPosts.map(p => ({p, nb:activePeople().filter(h => !absent.has(h.id) && fitFor(h, p.id, n)).length})).filter(x => x.nb <= 2).sort((a, b) => a.nb - b.nb).slice(0, 4);
+  const weak = activePeople().filter(per => !isTL(per) && !isTemp(per) && !absent.has(per.id) && held(per) <= 2).sort((a, b) => held(a) - held(b)).slice(0, 4).map(per => ({per, nb:held(per)}));
+  return {present, places, total:places.reduce((a, b) => a + b, 0), P, sugg:sugg.filter(s => s.ks.length), fragile, weak};
+}
+const qList = ks => ks.map(k => 'Q' + (k + 1)).join(' ');
+function shPreGen(s){
+  const pl = s.plan, Q = pl.places.length, gen = generated(nightOf());
+  const row = (x, i) => {
+    const per = S.people[x.id], p = S.posts[x.post]; if (!per || !p) return '';
+    const on = s.step === 1 || s.on[i];
+    return '<button type="button" class="opt' + (on ? '' : ' off') + '"' + (s.step === 2 ? ' data-act="preGenToggle" data-i="' + i + '" aria-pressed="' + on + '"' : ' tabindex="-1"') + '><span class="steps"><span>' + (s.step === 2 ? (on ? '✓ ' : '') : '') + esc(per.name) + (i === 0 && !x.keep ? ' <span class="rec" style="color:var(--orange)">⭐ Recommandé</span>' : '') + '</span>'
+      + '<small>' + (x.keep ? 'déjà prévu' : x.held + ' poste' + (x.held > 1 ? 's' : '')) + ' · formation sur ' + esc(p.code) + (x.nb ? ' (' + x.nb + ' titulaire' + (x.nb > 1 ? 's' : '') + ')' : '') + '</small></span>'
+      + '<span class="pg-k">' + (on ? qList(x.ks) : 'pas ce soir') + '</span></button>';
+  };
+  let body = gen ? '<p class="note">Le planning sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>' : '';
+  if (s.step === 1) {
+    body += '<div class="pg-stats"><div><b>' + Math.max(...pl.present) + '</b><small>présents</small></div><div><b>' + pl.P + '</b><small>postes</small></div><div class="hot"><b>' + pl.total + '</b><small>places formation</small></div></div>'
+      + '<div class="pg-q">' + pl.places.map((v, k) => '<span>Q' + (k + 1) + ' <b>' + v + '</b></span>').join('') + '</div>';
+    if (pl.sugg.length) body += '<div class="lbl">Je te conseille de former</div>' + pl.sugg.map(row).join('');
+    else {
+      body += '<div class="provisional"><b>⚠️ ' + (pl.total ? 'Aucune formation possible ce soir' : 'Effectif juste : pas de place pour former ce soir') + '</b>'
+        + (pl.fragile.length ? '<p class="note" style="margin:6px 0 2px">Postes fragiles, à former en priorité dès qu’il y aura du monde :</p>' + pl.fragile.map(x => '<div>• <b>' + esc(x.p.code) + '</b> ' + esc(x.p.name) + ' : ' + x.nb + ' titulaire' + (x.nb > 1 ? 's' : '') + '</div>').join('') : '')
+        + (pl.weak.length ? '<p class="note" style="margin:6px 0 2px">Personnes peu polyvalentes :</p>' + pl.weak.map(x => '<div>• ' + esc(x.per.name) + ' : ' + x.nb + ' poste' + (x.nb > 1 ? 's' : '') + '</div>').join('') : '')
+        + '</div>';
+      if (!pl.total) body += '<p class="note">Ces conseils restent visibles : dès qu’il y aura du monde en plus, l’appli proposera qui former.</p>';
+      else body += '<p class="note">Pas de personne marquée « en formation » (hachuré) avec un titulaire présent. Marque les postes à apprendre dans Polyvalence.</p>';
+    }
+    const foot = pl.sugg.length
+      ? '<button type="button" class="btn" data-act="preGenGo" data-none="1">Sans formation</button><button type="button" class="btn" data-act="preGenStep" data-all="0">Choisir</button><button type="button" class="btn btn-formation" data-act="preGenStep" data-all="1">✓ Accepter tout</button>'
+      : '<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="preGenGo">⚡ ' + (gen ? 'Régénérer' : 'Générer le planning') + '</button>';
+    return {title:'🎓 Avant de générer', body, foot};
+  }
+  const usedN = pl.sugg.reduce((a, x, i) => a + (s.on[i] ? x.ks.length : 0), 0);
+  body += '<p class="note" style="color:var(--orange);font-weight:700;text-align:center">Places utilisées : ' + usedN + ' sur ' + pl.total + '</p>'
+    + pl.sugg.map(row).join('')
+    + '<p class="note">Touche une ligne pour l’ajouter ou la retirer. Les places restantes sont réparties normalement : la rotation reste équitable.</p>';
+  return {title:'🎓 Formations de la nuit', body, foot:'<button type="button" class="btn" data-act="preGenStep" data-back="1">‹ Retour</button><button type="button" class="btn btn-red" data-act="preGenGo">⚡ ' + (gen ? 'Régénérer' : 'Générer le planning') + '</button>'};
+}
 /* ---------- fiche « mettre en formation » ---------- */
 function shFormation(s){
   const n = editable(); const Q = nq(n);
@@ -1768,7 +1863,7 @@ function shWhatsNew(s){
 }
 function renderSheet(){
   const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
-  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, confirm:shConfirm, whatsnew:shWhatsNew})[s.type](s);
+  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, preGen:shPreGen, confirm:shConfirm, whatsnew:shWhatsNew})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev && prev.dataset.t === s.type ? prev.scrollTop : 0;
   $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb" data-t="' + esc(s.type) + '">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
@@ -2028,8 +2123,33 @@ const A = {
     if (!canEdit()) return;
     const cur = nightOf();
     if (nightState(cur) === 'validated') { toast('Planning validé : repasse-le en préparation pour tout régénérer, ou génère un seul quart (appui long sur Q1, Q2…).'); return; }
-    if (generated(cur)) { open({type:'regen'}); return; }
-    runWithAnim('Calcul de la rotation…', () => { const n = editable(); const before = clone(n.q); generateAll(n); markFresh(n, before); saveNight(n); toast('Rotation générée'); }, allQuarts(editable()));
+    open({type:'preGen', step:1, plan:trainingPlan(editable()), on:[]});
+  },
+  preGenStep(d){
+    const s = S.sheet; if (!s) return;
+    if (d.back) s.step = 1; else { s.step = 2; s.on = s.plan.sugg.map(() => d.all === '1'); }
+    renderSheet();
+  },
+  preGenToggle(d){ const s = S.sheet; s.on[Number(d.i)] = !s.on[Number(d.i)]; renderSheet(); },
+  /* génère la nuit autour des formations choisies (elles remplacent celles déjà posées) */
+  preGenGo(d){
+    const s = S.sheet; close(); if (!s || !canEdit()) return;
+    const pick = d.none ? [] : s.plan.sugg.filter((x, i) => s.step === 2 && s.on[i]);
+    const wasGen = generated(nightOf());
+    runWithAnim('Calcul de la rotation…', () => {
+      const n = editable(); const before = clone(n.q);
+      n.train = [{}, {}, {}, {}, {}];
+      pick.forEach(x => x.ks.forEach(k => { n.train[k][x.post] = x.id; }));
+      generateAll(n);
+      let kept = 0, lost = 0;
+      pick.forEach(x => x.ks.forEach(k => {
+        if (n.train[k][x.post] !== x.id) { lost++; return; }
+        kept++; const p = S.posts[x.post], tr = S.people[n.q[k][x.post]];
+        pushLog(n, 'train', {date:n.date, k, postCode:p ? p.code : x.post, postName:p ? p.name : '', trainee:(S.people[x.id] || {}).name || '', trainer:tr ? tr.name : ''});
+      }));
+      markFresh(n, before); saveNight(n);
+      toast((wasGen ? 'Rotation recalculée' : 'Rotation générée') + (kept ? ' · ' + kept + ' quart' + (kept > 1 ? 's' : '') + ' de formation' : '') + (lost ? ' · ' + lost + ' retiré' + (lost > 1 ? 's' : '') + ' (pas de titulaire)' : ''));
+    }, allQuarts(editable()));
   },
   genGo(){
     close(); if (!canEdit()) return;
