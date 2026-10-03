@@ -354,6 +354,7 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .gf-car svg{width:100%;height:100%;display:block}
 @keyframes gfIn{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
 .loadfx{display:flex;flex-direction:column;align-items:center;gap:10px;padding:80px 16px;color:var(--muted);font-weight:600}
+  .loadlogo{width:96px;height:96px;border-radius:22%;display:block}
 .warnq{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:99px;background:var(--orange);color:#fff;font-size:13px;font-weight:800;flex:none}
 /* ---- cinématique « le tirage » ---- */
 .gf-dot{width:10px;height:10px;border-radius:99px;background:var(--red);animation:gfPulse .8s ease-in-out infinite}
@@ -913,7 +914,7 @@ function later(){ if (rq) return; rq = true; requestAnimationFrame(() => { rq = 
    (pas redessiné s'il est déjà affiché, pour que l'animation ne redémarre pas) */
 function showLoading(main){
   if (main.querySelector('.loadfx')) return;
-  main.innerHTML = '<div class="loadfx" role="status"><div class="gf-road" aria-hidden="true"><div class="gf-car">' + car206() + '</div></div><span>Chargement…</span></div>';
+    main.innerHTML = '<div class="loadfx" role="status"><img class="loadlogo" src="icones/icon-256.png" alt=""><span>Chargement…</span></div>';
 }
 function render(){
   const header = $('header.top'), main = $('#main');
