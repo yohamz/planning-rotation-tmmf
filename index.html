@@ -1957,6 +1957,13 @@ function askConfirm(message, fn, data, opts){
   const safeData = data ? Object.assign({}, data) : data;
   open({type:'confirm', message, fn, data:safeData, back, danger:!!(opts && opts.danger), okLabel:(opts && opts.okLabel) || 'Confirmer'});
 }
+function shValidated(){
+  const n = nightOf(); if (!n) return null;
+  const cov = coverage(n), todo = allQuarts(n).filter(k => !quartDone(n, k));
+  const warn = (cov.missing ? cov.missing + ' case' + (cov.missing > 1 ? 's' : '') + ' non couverte' + (cov.missing > 1 ? 's' : '') + '. ' : '') + (todo.length ? todo.map(k => 'Q' + (k + 1)).join(', ') + ' pas encore généré' + (todo.length > 1 ? 's' : '') + '. ' : '');
+  const body = '<p class="note" style="font-size:15px;color:var(--ink)">Le planning de la nuit du ' + esc(fmt(n.date)) + ' est validé : c’est le planning officiel.</p>' + (warn ? '<div class="provisional"><span>⚠️ ' + esc(warn) + '</span></div>' : '');
+  return {title:'✓ Planning validé', body, foot:'<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button><button type="button" class="btn btn-red" data-act="pdfDownload">⬇️ Télécharger</button>'};
+}
 function shConfirm(s){
   const body = s.danger
     ? '<div class="provisional"><span>⚠️ ' + esc(s.message) + '</span></div>'
@@ -1972,7 +1979,7 @@ function shWhatsNew(s){
 }
 function renderSheet(){
   const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
-  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, preGen:shPreGen, wheelTrain:shWheelTrain, confirm:shConfirm, whatsnew:shWhatsNew})[s.type](s);
+  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, preGen:shPreGen, wheelTrain:shWheelTrain, validated:shValidated, confirm:shConfirm, whatsnew:shWhatsNew})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev && prev.dataset.t === s.type ? prev.scrollTop : 0;
   $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb" data-t="' + esc(s.type) + '">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
@@ -2378,8 +2385,9 @@ const A = {
   validate(){
     if (!canEdit()) return;
     const n = nightOf(); if (!generated(n)) return;
-    const cov = coverage(n), todo = allQuarts(n).filter(k => !quartDone(n, k));
-    askConfirm('Valider le planning de la nuit du ' + fmt(n.date) + ' ? ' + (nightEnded(n.date) ? 'Cette nuit est terminée : il passera directement dans les Archives, en lecture seule.' : 'Il devient le planning officiel et passera dans les Archives à la fin de la nuit.') + (cov.missing ? ' Attention : ' + cov.missing + ' case(s) non couverte(s).' : '') + (todo.length ? ' Attention : ' + todo.map(k => 'Q' + (k + 1)).join(', ') + ' pas encore généré(s).' : ''), 'validateReal', null, {okLabel:'✓ Valider'});
+    /* pas de confirmation : on valide, puis la fiche propose de télécharger ou partager le PDF */
+    A.validateReal();
+    open({type:'validated'});
   },
   validateReal(){
     if (!canEdit()) return;
