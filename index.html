@@ -499,11 +499,12 @@ const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
    Important : ne lister ici QUE ce qui concerne le travail des TL/GL (fonctionnalités,
    changements visibles, aide à l'utilisation) — pas les changements internes/techniques
    (corrections de bugs invisibles, sécurité, refonte visuelle du logo, etc.). */
-const APP_VERSION = '2026-10-03-1';
+const APP_VERSION = '2026-10-03-2';
 const CHANGELOG = [
   'Téléphone : les onglets (Planning, Effectifs, Polyvalence, Archives) sont maintenant en bas de l’écran, sous le pouce.',
   'Menu « Bonjour … ▾ » en haut à droite : il regroupe « Proposer une amélioration » et « Se déconnecter ».',
   'Connexion plus rapide après la saisie du mot de passe.',
+  'Polyvalence : touche (ou appui long sur) le nom d’un poste pour le renommer ou le supprimer, aussi sur téléphone.',
   'Polyvalence : « + Ajouter un poste » ne crée plus de poste en double quand on appuie deux fois.',
   'Améliorations de l’interface.'
 ];
@@ -1245,11 +1246,11 @@ function viewPolyPhone(){
     ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
       const m = mark(per, p.id);
       const b = (v, inner, lbl) => '<button type="button" data-act="setMark" data-per="' + esc(per.id) + '" data-post="' + esc(p.id) + '" data-m="' + v + '" aria-pressed="' + (m === v) + '" aria-label="' + lbl + '">' + inner + '</button>';
-      html += '<div class="mrow static"><button type="button" class="dotbtn" data-act="diff" data-id="' + esc(p.id) + '" aria-label="Difficulté du poste ' + esc(p.code) + '"><span class="dot ' + esc(p.diff || '') + '"></span></button><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span>'
+      html += '<div class="mrow static"><button type="button" class="dotbtn" data-act="diff" data-id="' + esc(p.id) + '" aria-label="Difficulté du poste ' + esc(p.code) + '"><span class="dot ' + esc(p.diff || '') + '"></span></button><button type="button" class="linkbtn" data-act="editPost" data-long="editPost" data-id="' + esc(p.id) + '" aria-label="' + esc('Renommer ou supprimer le poste ' + p.code) + '"><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button>'
         + '<span class="st3">' + b('', '—', 'Ne tient pas') + b('G', '<span class="sw"><span class="sym G"></span></span>', 'Tient le poste') + b('H', '<span class="sw"><span class="sym H"></span></span>', 'En formation') + '</span></div>';
     });
   });
-  return html + '</div><p class="note">Touche la pastille ronde pour la difficulté du poste.</p>';
+  return html + '</div><p class="note">Touche la pastille ronde pour la difficulté du poste. Touche (ou appui long sur) le nom d’un poste pour le renommer ou le supprimer.</p>';
 }
 function viewPoly(){
   const ps = posts(), pp = activePeople().filter(p => !isTemp(p));
@@ -1272,7 +1273,7 @@ function viewPoly(){
     body += '<tr class="grp"><th scope="rowgroup">' + esc(z) + '</th><td colspan="' + pp.length + '"></td></tr>';
     ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
       const tot = pp.filter(per => !isTL(per) && mark(per, p.id) === 'G').length;
-      body += '<tr><th class="ph" scope="row"><div class="post"><button type="button" class="dotbtn" data-act="diff" data-id="' + esc(p.id) + '" aria-label="Difficulté du poste ' + esc(p.code) + '"><span class="dot ' + esc(p.diff || '') + '"></span></button><button type="button" class="linkbtn" data-act="editPost" data-id="' + esc(p.id) + '"><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button><span class="cnt" title="Personnes qui tiennent le poste">' + tot + '</span></div></th>';
+      body += '<tr><th class="ph" scope="row"><div class="post"><button type="button" class="dotbtn" data-act="diff" data-id="' + esc(p.id) + '" aria-label="Difficulté du poste ' + esc(p.code) + '"><span class="dot ' + esc(p.diff || '') + '"></span></button><button type="button" class="linkbtn" data-act="editPost" data-long="editPost" data-id="' + esc(p.id) + '"><span class="code">' + esc(p.code) + '</span><span class="pname">' + esc(p.name) + '</span></button><span class="cnt" title="Personnes qui tiennent le poste">' + tot + '</span></div></th>';
       pp.forEach(per => {
         const m = mark(per, p.id);
         body += '<td class="' + (isTL(per) ? 'tlc' : '') + '"><button type="button" class="m" data-act="cycle" data-per="' + esc(per.id) + '" data-post="' + esc(p.id) + '" aria-label="' + esc(per.name + ', poste ' + p.code) + '">' + (m ? '<span class="sym ' + m + '"></span>' : '') + '</button></td>';
@@ -1977,7 +1978,7 @@ function shPost(s){
     + '<label class="field" for="fPName"><span>Nom</span><input type="text" id="fPName" data-chg="poName" value="' + esc(p.name) + '"></label>'
     + '<label class="field" for="fZone"><span>Team</span><input type="text" id="fZone" data-chg="poZone" value="' + esc(p.zone || '') + '"></label>';
   const foot = s.del ? '<button type="button" class="btn" data-act="delNo">Annuler</button><button type="button" class="btn btn-red" data-act="delPost">Confirmer la suppression</button>' : '<button type="button" class="btn" data-act="delAsk" style="margin-right:auto">Supprimer</button><button type="button" class="btn btn-red" data-act="close">Terminé</button>';
-  return {title:'Poste', body, foot};
+  return {title:'Poste · ' + esc(p.code) + (p.name ? ' · ' + esc(p.name) : ''), body, foot};
 }
 
 /* ---------- actions ---------- */
@@ -2280,7 +2281,7 @@ const A = {
   },
   /* un seul « Nouveau poste » à la fois : un deuxième appui (écran qui semblait ne pas réagir)
      rouvre le poste vide déjà créé au lieu d'en créer un autre */
-  addPost(){ const pending = posts().find(p => p.code === '?' && p.name === 'Nouveau poste'); if (pending) { open({type:'post', id:pending.id}); return; } const id = newId('po'); const ps = posts(); const order = Math.max(0, ...ps.map(p => p.order || 0)) + 1; savePost({id, code:'?', name:'Nouveau poste', zone:ps.length ? ps[ps.length - 1].zone : 'Team', diff:'', order}); open({type:'post', id}); setTimeout(() => { const i = $('#fCode'); if (i) { i.focus(); i.select(); } }, 30); },
+  addPost(){ const pending = posts().find(p => p.code === '?' && p.name === 'Nouveau poste'); if (pending) { open({type:'post', id:pending.id}); toast('Un nouveau poste est déjà en cours : donne-lui un code et un nom (ou supprime-le).'); return; } const id = newId('po'); const ps = posts(); const order = Math.max(0, ...ps.map(p => p.order || 0)) + 1; savePost({id, code:'?', name:'Nouveau poste', zone:ps.length ? ps[ps.length - 1].zone : 'Team', diff:'', order}); open({type:'post', id}); setTimeout(() => { const i = $('#fCode'); if (i) { i.focus(); i.select(); } }, 30); },
   delAsk(){ S.sheet.del = true; renderSheet(); },
   delNo(){ S.sheet.del = false; renderSheet(); },
   delPerson(){ const id = S.sheet.id; const per = clone(S.people[id]); per.active = false; close(); savePerson(per); },
