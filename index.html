@@ -105,7 +105,7 @@ h1,h2{font-family:var(--f-cond);font-weight:700;margin:0;letter-spacing:.01em}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-top:4px solid var(--red);border-bottom:1px solid var(--line)}
 .top-in{max-width:1280px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:10px;font-family:var(--f-cond);font-weight:700;font-size:22px;white-space:nowrap}
-.brand .brandicon{width:.85em;height:.85em;border-radius:22%;display:block;flex:0 0 auto;object-fit:cover}
+.brand .brandicon{width:1.05em;height:1.05em;border-radius:22%;display:block;flex:0 0 auto;object-fit:cover}
 .brand span{color:var(--muted);font-weight:600}
 .brand .wmteam{color:var(--red)}
 .tabs{display:flex;gap:4px;margin-left:auto;min-width:0;max-width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -287,9 +287,9 @@ table{border-collapse:separate;border-spacing:0}
 /* ---- logo animé ---- */
 .brandbtn{position:relative;border:0;background:none;padding:4px 6px;border-radius:8px;overflow:hidden}
 .brand{position:relative;z-index:1;display:flex;align-items:center;gap:12px;font-family:var(--f-cond);font-weight:700;font-size:28px;white-space:nowrap;letter-spacing:.01em}
-.brand .brandicon{width:.85em;height:.85em;border-radius:22%;display:block;flex:0 0 auto;object-fit:cover}
+.brand .brandicon{width:1.05em;height:1.05em;border-radius:22%;display:block;flex:0 0 auto;object-fit:cover}
 .brand span{color:var(--muted);font-weight:600}
-  .authhead .brand .brandicon{width:56px;height:56px}
+  .authhead .brand .brandicon{width:64px;height:64px}
 .brand .wmteam{color:var(--red)}
 .brandbtn{padding-bottom:37px}
 .road{position:absolute;left:0;right:0;bottom:0;height:41px;pointer-events:none;overflow:hidden}
@@ -499,16 +499,13 @@ const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
    Important : ne lister ici QUE ce qui concerne le travail des TL/GL (fonctionnalités,
    changements visibles, aide à l'utilisation) — pas les changements internes/techniques
    (corrections de bugs invisibles, sécurité, refonte visuelle du logo, etc.). */
-const APP_VERSION = '2026-10-02-2';
+const APP_VERSION = '2026-10-03-1';
 const CHANGELOG = [
-  'Bouton « 🆕 Quoi de neuf » en haut à droite : retrouve à tout moment les dernières nouveautés de l’appli, même après avoir fermé ce message.',
-  'Overtime : un bouton dédié « Générer l’overtime », qui tient compte des 4 quarts précédents pour rester équitable.',
-  'Rotation plus équitable sur une même nuit : on évite de faire reposer le travail sur toujours les mêmes personnes.',
-  'Formation : priorité donnée à ceux qui ont le moins de postes validés.',
-  'Horaires d’accès 21h-7h30 : ne concernent plus que les TM (TL et GL ont désormais accès à tout moment).',
-  'Polyvalence : le changement s’applique directement, sans écran de confirmation.',
-  'Bouton retour (téléphone/Android) : ferme une fiche ouverte au lieu de quitter l’appli.',
-  'Sécurité : une personne encore en formation ne peut plus être choisie comme seule titulaire d’un poste.'
+  'Téléphone : les onglets (Planning, Effectifs, Polyvalence, Archives) sont maintenant en bas de l’écran, sous le pouce.',
+  'Menu « Bonjour … ▾ » en haut à droite : il regroupe « Proposer une amélioration » et « Se déconnecter ».',
+  'Connexion plus rapide après la saisie du mot de passe.',
+  'Polyvalence : « + Ajouter un poste » ne crée plus de poste en double quand on appuie deux fois.',
+  'Améliorations de l’interface.'
 ];
 const ROLE_LABEL = {admin:'Admin', tl:'TL', gl:'GL', tm:'TM'};
 /* rôles qu'un Admin attribue : TL et GL gèrent le planning (mêmes droits), TM est spectateur */
@@ -1018,7 +1015,9 @@ function finOuverture(){
 }
 setTimeout(finOuverture, 10000);
 function render(){
-  renderEcran();
+  /* une erreur d'affichage ne doit pas figer l'appli en silence (la suite de l'action — ouvrir
+     une fiche, enregistrer — doit continuer) */
+  try { renderEcran(); } catch (e) { console.error(e); toast('Erreur d’affichage — si l’écran ne bouge plus, recharge l’appli.'); }
   if (!$('#main .loadfx')) finOuverture();
 }
 function renderEcran(){
@@ -2279,7 +2278,9 @@ const A = {
       toast(name + ' ajouté(e)' + (role === 'TL' ? ' (TL)' : '') + '. Indique ses postes dans Polyvalence.');
     }
   },
-  addPost(){ const id = newId('po'); const ps = posts(); const order = Math.max(0, ...ps.map(p => p.order || 0)) + 1; savePost({id, code:'?', name:'Nouveau poste', zone:ps.length ? ps[ps.length - 1].zone : 'Team', diff:'', order}); open({type:'post', id}); setTimeout(() => { const i = $('#fCode'); if (i) { i.focus(); i.select(); } }, 30); },
+  /* un seul « Nouveau poste » à la fois : un deuxième appui (écran qui semblait ne pas réagir)
+     rouvre le poste vide déjà créé au lieu d'en créer un autre */
+  addPost(){ const pending = posts().find(p => p.code === '?' && p.name === 'Nouveau poste'); if (pending) { open({type:'post', id:pending.id}); return; } const id = newId('po'); const ps = posts(); const order = Math.max(0, ...ps.map(p => p.order || 0)) + 1; savePost({id, code:'?', name:'Nouveau poste', zone:ps.length ? ps[ps.length - 1].zone : 'Team', diff:'', order}); open({type:'post', id}); setTimeout(() => { const i = $('#fCode'); if (i) { i.focus(); i.select(); } }, 30); },
   delAsk(){ S.sheet.del = true; renderSheet(); },
   delNo(){ S.sheet.del = false; renderSheet(); },
   delPerson(){ const id = S.sheet.id; const per = clone(S.people[id]); per.active = false; close(); savePerson(per); },
@@ -2660,11 +2661,16 @@ async function boot(){
   S.authReady = true;
   if (S.authUser) { await Promise.all([loadProfiles(), loadBusinessData()]); maybeShowWhatsNew(); }
   else { await loadProfiles(); render(); }
-  sb.auth.onAuthStateChange(async (event, session) => {
+  /* pas d'appel Supabase attendu (await) DANS ce rappel : supabase-js garde son verrou de
+     session pendant le rappel, et les requêtes lancées dedans attendaient ce verrou → long
+     « Chargement… » après la saisie du mot de passe. On les lance juste après (setTimeout).
+     Les profils sont rechargés aussi : connecté, on voit des lignes (la sienne pour l'Admin)
+     que la liste lue avant connexion ne contenait pas. */
+  sb.auth.onAuthStateChange((event, session) => {
     const newUser = session ? session.user : null;
     const changed = (newUser && newUser.id) !== (S.authUser && S.authUser.id);
     S.authUser = newUser; S.authReady = true;
-    if (newUser) { S._forcedOut = false; if (changed) await loadBusinessData(); else render(); }
+    if (newUser) { S._forcedOut = false; if (changed) setTimeout(() => { loadProfiles(); loadBusinessData(); }, 0); else render(); }
     else { teardownBiz(); S.people = {}; S.posts = {}; S.nights = {}; S.feedback = {}; updateTitle(); S.ready = false; S._forcedOut = false; render(); }
   });
   /* tient à jour l'écran « fermé hors horaires » et le bonjour/bonsoir sans recharger */
