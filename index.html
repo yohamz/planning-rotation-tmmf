@@ -1959,8 +1959,10 @@ function askConfirm(message, fn, data, opts){
 }
 function shValidated(){
   const n = nightOf(); if (!n) return null;
-  const cov = coverage(n), todo = allQuarts(n).filter(k => !quartDone(n, k));
-  const warn = (cov.missing ? cov.missing + ' case' + (cov.missing > 1 ? 's' : '') + ' non couverte' + (cov.missing > 1 ? 's' : '') + '. ' : '') + (todo.length ? todo.map(k => 'Q' + (k + 1)).join(', ') + ' pas encore généré' + (todo.length > 1 ? 's' : '') + '. ' : '');
+  /* avertissement seulement s'il reste des cases non couvertes, en les nommant */
+  const holes = [];
+  for (let k = 0; k < nq(n); k++) if (quartDone(n, k)) planPosts(n).forEach(p => { if (!(n.q[k] || {})[p.id]) holes.push(p.code + ' · Q' + (k + 1)); });
+  const warn = holes.length ? holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ') : '';
   const body = '<p class="note" style="font-size:15px;color:var(--ink)">Le planning de la nuit du ' + esc(fmt(n.date)) + ' est validé : c’est le planning officiel.</p>' + (warn ? '<div class="provisional"><span>⚠️ ' + esc(warn) + '</span></div>' : '');
   return {title:'✓ Planning validé', body, foot:'<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button><button type="button" class="btn btn-red" data-act="pdfDownload">⬇️ Télécharger</button>'};
 }
