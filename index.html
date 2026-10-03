@@ -2036,7 +2036,7 @@ function shAccounts(){
 function shRenfortPosts(s){
   const per = S.people[s.id]; if (!per) return null;
   const ps = posts();
-  let body = '<p class="note">Coche les postes que ' + esc(per.name) + ' sait tenir pour ce renfort. Tant qu’aucun poste n’est coché, il ne pourra être placé nulle part à la génération — la répartition reste ensuite équitable, comme pour le reste de l’équipe.</p>';
+  let body = '';
   zones(ps).forEach(z => {
     body += '<div class="lbl">' + esc(z) + '</div>';
     ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
