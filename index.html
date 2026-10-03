@@ -1957,13 +1957,15 @@ function askConfirm(message, fn, data, opts){
   const safeData = data ? Object.assign({}, data) : data;
   open({type:'confirm', message, fn, data:safeData, back, danger:!!(opts && opts.danger), okLabel:(opts && opts.okLabel) || 'Confirmer'});
 }
+/* cases non couvertes des quarts générés, nommées « P07 · Q2 » */
+function uncoveredList(n){
+  const out = [];
+  for (let k = 0; k < nq(n); k++) if (quartDone(n, k)) planPosts(n).forEach(p => { if (!(n.q[k] || {})[p.id]) out.push(p.code + ' · Q' + (k + 1)); });
+  return out;
+}
 function shValidated(){
   const n = nightOf(); if (!n) return null;
-  /* avertissement seulement s'il reste des cases non couvertes, en les nommant */
-  const holes = [];
-  for (let k = 0; k < nq(n); k++) if (quartDone(n, k)) planPosts(n).forEach(p => { if (!(n.q[k] || {})[p.id]) holes.push(p.code + ' · Q' + (k + 1)); });
-  const warn = holes.length ? holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ') : '';
-  const body = '<p class="note" style="font-size:15px;color:var(--ink)">Le planning de la nuit du ' + esc(fmt(n.date)) + ' est validé : c’est le planning officiel.</p>' + (warn ? '<div class="provisional"><span>⚠️ ' + esc(warn) + '</span></div>' : '');
+  const body = '<p class="note" style="font-size:15px;color:var(--ink)">Le planning de la nuit du ' + esc(fmt(n.date)) + ' est validé : c’est le planning officiel.</p>';
   return {title:'✓ Planning validé', body, foot:'<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button><button type="button" class="btn btn-red" data-act="pdfDownload">⬇️ Télécharger</button>'};
 }
 function shConfirm(s){
@@ -2387,7 +2389,13 @@ const A = {
   validate(){
     if (!canEdit()) return;
     const n = nightOf(); if (!generated(n)) return;
-    /* pas de confirmation : on valide, puis la fiche propose de télécharger ou partager le PDF */
+    /* confirmation seulement s'il reste des cases non couvertes ; ensuite la fiche propose le PDF */
+    const holes = uncoveredList(n);
+    if (holes.length) { askConfirm(holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ') + '. Valider quand même ?', 'validateGo', null, {okLabel:'Valider'}); return; }
+    A.validateGo();
+  },
+  validateGo(){
+    if (!canEdit()) return;
     A.validateReal();
     open({type:'validated'});
   },
