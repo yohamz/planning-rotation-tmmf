@@ -96,7 +96,6 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 #sheet.hold{pointer-events:none}
-[data-long].longarmed{box-shadow:inset 0 0 0 2px var(--red);background:var(--red-soft)}
 html{overflow-x:hidden}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.35;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 button,input,select{font:inherit;color:inherit}
@@ -2493,8 +2492,8 @@ document.addEventListener('selectstart', e => {
   if (press || Date.now() < longUntil) e.preventDefault();
 });
 function cancelPress(){ if (press) { clearTimeout(press.timer); press.el.classList.remove('longarmed'); } press = null; }
-/* L'action d'un appui long part au moment où le doigt se RELÈVE (une vibration et un cadre rouge
-   signalent dès 450 ms que l'appui long est reconnu). Avant, la fiche s'ouvrait sous le doigt
+/* L'action d'un appui long part au moment où le doigt se RELÈVE (une vibration signale dès 450 ms
+   que l'appui long est reconnu). Avant, la fiche s'ouvrait sous le doigt
    encore posé : le champ qui se trouvait dessous recevait l'appui long d'Android (clavier,
    « Coller / Tout sélectionner »). Juste après l'ouverture, la fiche ignore encore les touchers
    un court instant, le temps que passent les évènements souris que le navigateur génère après
