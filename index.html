@@ -1928,17 +1928,6 @@ function viewEffectifs(){
     + '<div class="bar" style="justify-content:center;margin:8px 0"><button type="button" class="btn btn-red btn-sm" data-act="addRenfort">💪🏼 + Renfort</button><button type="button" class="btn btn-sm" data-act="addPerson">+ Ajouter une personne</button></div>';
   const flow = S.genFlow === S.date ? '<div class="genflow"><div><b>Avant de générer : vérifie l’effectif</b></div><span class="grow"></span><button type="button" class="btn btn-sm" data-act="genCancel">Annuler</button><button type="button" class="btn btn-sm btn-red" data-act="genContinue">Continuer ›</button></div>' : '';
   html += flow;
-  html += '<div class="lbl">TL · touche les quarts où il tient un poste, ou « Absent »</div><div class="mlist">';
-  pp.filter(isTL).sort(byAbsentFirst).forEach(per => {
-    const at = (n.tl && n.tl[per.id]) || [];
-    const off = absent.has(per.id);
-    html += '<div class="tlrow" data-long="openPersonMenu" data-id="' + esc(per.id) + '"><b>' + esc(per.name) + '</b>';
-    if (!off) for (let k = 0; k < Q; k++) html += '<button type="button" class="qb" data-act="tlq" data-id="' + esc(per.id) + '" data-k="' + k + '" aria-pressed="' + !!at[k] + '">Q' + (k + 1) + '</button>';
-    html += '<button type="button" class="qb" data-act="abs" data-id="' + esc(per.id) + '" aria-pressed="' + off + '" style="margin-left:auto' + (off ? ';background:var(--red-soft);border-color:var(--red)' : '') + '">Absent</button>';
-    html += '<button type="button" class="gear" data-act="openPersonMenu" data-id="' + esc(per.id) + '" aria-label="Options pour ' + esc(per.name) + '" title="Options">⚙️</button>';
-    html += '</div>';
-  });
-  html += '</div>';
   const temps = pp.filter(isTemp);
   html += '<div class="lbl">Renfort d’une autre équipe · touche le(s) quart(s) où il est là, puis « Postes » pour dire ce qu’il sait tenir</div><div class="mlist">';
   html += temps.map(per => {
@@ -1950,6 +1939,17 @@ function viewEffectifs(){
     row += '<button type="button" class="qb" data-act="delRenfort" data-id="' + esc(per.id) + '" style="margin-left:auto">Retirer</button></div>';
     return row;
   }).join('') + '</div>';
+  html += '<div class="lbl">TL · touche les quarts où il tient un poste, ou « Absent »</div><div class="mlist">';
+  pp.filter(isTL).sort(byAbsentFirst).forEach(per => {
+    const at = (n.tl && n.tl[per.id]) || [];
+    const off = absent.has(per.id);
+    html += '<div class="tlrow" data-long="openPersonMenu" data-id="' + esc(per.id) + '"><b>' + esc(per.name) + '</b>';
+    if (!off) for (let k = 0; k < Q; k++) html += '<button type="button" class="qb" data-act="tlq" data-id="' + esc(per.id) + '" data-k="' + k + '" aria-pressed="' + !!at[k] + '">Q' + (k + 1) + '</button>';
+    html += '<button type="button" class="qb" data-act="abs" data-id="' + esc(per.id) + '" aria-pressed="' + off + '" style="margin-left:auto' + (off ? ';background:var(--red-soft);border-color:var(--red)' : '') + '">Absent</button>';
+    html += '<button type="button" class="gear" data-act="openPersonMenu" data-id="' + esc(per.id) + '" aria-label="Options pour ' + esc(per.name) + '" title="Options">⚙️</button>';
+    html += '</div>';
+  });
+  html += '</div>';
   html += '<div class="lbl">Membres</div><div class="mlist">' + pp.filter(p => !isTL(p) && !isTemp(p)).sort(byAbsentFirst).map(per => {
     const off = absent.has(per.id);
     const qa = [0, 1, 2, 3, 4].filter(k => k < Q && ((n.qAbsent[k] || {})[per.id]));
@@ -2174,9 +2174,7 @@ const A = {
     const id = newId('re');
     savePerson({id, name:'Renfort ' + cnt, role:'TM', temp:true, order:9000 + cnt, marks:{}});
     renderSheet();
-    /* la section Renfort est sous les TL, souvent hors de l'écran : on y descend pour voir l'ajout */
-    const row = document.querySelector('[data-renfort="' + id + '"]');
-    if (row) { row.scrollIntoView({block:'center', behavior:'smooth'}); row.classList.add('fresh'); }
+    const row = document.querySelector('[data-renfort="' + id + '"]'); if (row) row.classList.add('fresh');
     toast('💪🏼 Renfort ' + cnt + ' ajouté : coche ses quarts, puis « Postes ».');
   },
   delRenfort(d){
