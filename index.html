@@ -2190,6 +2190,7 @@ const A = {
     const n = editable(); const off = (n.absent || []).includes(d.id);
     if (off) { A.absReal(d); return; } /* remettre présent : correction immédiate, sans confirmation */
     const per = S.people[d.id];
+    if (isTL(per) && nightState(n) !== 'validated') { A.absReal(d); return; } /* TL : pas de confirmation (sauf planning validé) */
     const extra = nightState(n) === 'validated' ? ' Le planning validé sera corrigé localement (remplaçant automatique).' : '';
     askConfirm((per ? per.name : '') + ' — marquer absent(e) cette nuit ?' + extra, 'absReal', d);
   },
