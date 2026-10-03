@@ -428,6 +428,7 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .opt .rec{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--vert);margin-left:6px}
 .opt .steps{display:grid;gap:2px;font-weight:600}
 .opt .steps small{margin:0;color:var(--muted);font-weight:500}
+.lbl-big{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:.06em;margin-top:14px}
 .genflow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1px solid var(--orange);background:rgba(255,166,48,.1);border-radius:12px;padding:10px 12px;margin:0 0 10px}
 .genflow b{display:block}.genflow small{color:var(--muted)}
 .pg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
@@ -1939,7 +1940,7 @@ function viewEffectifs(){
     row += '<button type="button" class="qb" data-act="delRenfort" data-id="' + esc(per.id) + '" style="margin-left:auto">Retirer</button></div>';
     return row;
   }).join('') + '</div>';
-  html += '<div class="lbl">TL · touche les quarts où il tient un poste, ou « Absent »</div><div class="mlist">';
+  html += '<div class="lbl lbl-big">TL</div><div class="mlist">';
   pp.filter(isTL).sort(byAbsentFirst).forEach(per => {
     const at = (n.tl && n.tl[per.id]) || [];
     const off = absent.has(per.id);
@@ -1950,7 +1951,7 @@ function viewEffectifs(){
     html += '</div>';
   });
   html += '</div>';
-  html += '<div class="lbl">Membres</div><div class="mlist">' + pp.filter(p => !isTL(p) && !isTemp(p)).sort(byAbsentFirst).map(per => {
+  html += '<div class="lbl lbl-big">TM</div><div class="mlist">' + pp.filter(p => !isTL(p) && !isTemp(p)).sort(byAbsentFirst).map(per => {
     const off = absent.has(per.id);
     const qa = [0, 1, 2, 3, 4].filter(k => k < Q && ((n.qAbsent[k] || {})[per.id]));
     const restricted = ((per.marks && per.marks._restrict) || []).some(r => r.from <= S.date && S.date <= r.to);
