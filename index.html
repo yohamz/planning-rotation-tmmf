@@ -2178,8 +2178,7 @@ const A = {
     toast('💪🏼 Renfort ' + cnt + ' ajouté : coche ses quarts, puis « Postes ».');
   },
   delRenfort(d){
-    const per = S.people[d.id];
-    askConfirm('Retirer ' + (per ? per.name : 'ce renfort') + ' de la liste de renfort ?', 'delRenfortReal', d);
+    A.delRenfortReal(d); /* sans confirmation */
   },
   delRenfortReal(d){
     deletePersonRow(d.id);
