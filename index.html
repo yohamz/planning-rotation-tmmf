@@ -1930,7 +1930,7 @@ function viewEffectifs(){
   const flow = S.genFlow === S.date ? '<div class="genflow"><div><b>Avant de générer : vérifie l’effectif</b></div><span class="grow"></span><button type="button" class="btn btn-sm" data-act="genCancel">Annuler</button><button type="button" class="btn btn-sm btn-red" data-act="genContinue">Continuer ›</button></div>' : '';
   html += flow;
   const temps = pp.filter(isTemp);
-  html += '<div class="lbl">Renfort d’une autre équipe · touche le(s) quart(s) où il est là, puis « Postes » pour dire ce qu’il sait tenir</div><div class="mlist">';
+  html += '<div class="mlist"' + (temps.length ? '' : ' hidden') + '>';
   html += temps.map(per => {
     const at = (n.tl && n.tl[per.id]) || [];
     const nbPostes = posts().filter(p => canHold(per, p.id)).length;
