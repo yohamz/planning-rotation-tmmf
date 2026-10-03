@@ -473,7 +473,7 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
   </button>
   <nav class="tabs" id="tabsNav" aria-label="Pages"></nav>
   <button type="button" class="icon helpbtn" data-act="whatsnew" aria-label="Quoi de neuf">🆕</button>
-  <button type="button" class="icon helpbtn" data-act="help" aria-label="Aide">?</button>
+  <div id="moreBar" class="acct"></div>
   <div id="acctBar"></div>
 </div></header>
 <main id="main"><p class="muted">Chargement…</p></main>
@@ -1066,6 +1066,7 @@ function renderEcran(){
   if (S._welcome) { S._welcome = false; toast(greeting() + ' ' + p.name + ' — ' + (ROLE_LABEL[p.role] || p.role)); }
   $('#teamName').textContent = S.cfg.team || '';
   renderAcct();
+  renderMore();
   renderTabs();
   document.querySelectorAll('.tabs button').forEach(b => { if (b.dataset.tab === S.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   const keep = {}; main.querySelectorAll('[data-scroll]').forEach(el => { keep[el.dataset.scroll] = [el.scrollLeft, el.scrollTop]; });
@@ -1086,6 +1087,18 @@ function renderAcct(){
     + (p.role === 'admin' && unread ? '<span class="badge">' + unread + '</span>' : '') + '</button>'
     + (open ? '<div class="acctpanel" role="menu"><div class="acctinfo"><span>' + esc(hello) + '</span><span class="role' + (p.role === 'admin' ? ' admin' : '') + '">' + esc(ROLE_LABEL[p.role] || p.role) + '</span></div>' + items + '</div>' : '')
     + '</div>';
+}
+/* menu « ⋯ » de l'en-tête : actions secondaires (Proposer, Télécharger, Partager, Aide),
+   sorties de l'écran Planning pour l'alléger */
+function renderMore(){
+  const bar = $('#moreBar'); if (!bar) return;
+  const open = !!S.moreOpen, canSuggest = !isAdmin() && !isViewer() && !!profile();
+  const pdf = S.tab === 'plan' && S.ready && generated(nightOf());
+  const items = (canSuggest ? '<button type="button" class="acctitem" role="menuitem" data-act="suggest"><span>💡 Proposer une amélioration</span></button>' : '')
+    + (pdf ? '<button type="button" class="acctitem" role="menuitem" data-act="pdfDownload"><span>⬇️ Télécharger</span></button><button type="button" class="acctitem" role="menuitem" data-act="pdfShare"><span>📤 Partager</span></button>' : '')
+    + '<button type="button" class="acctitem" role="menuitem" data-act="help"><span>❓ Aide</span></button>';
+  bar.innerHTML = '<button type="button" class="icon helpbtn" data-act="moreMenu" aria-haspopup="menu" aria-expanded="' + open + '" aria-label="Plus d’actions">⋯</button>'
+    + (open ? '<div class="acctpanel" role="menu">' + items + '</div>' : '');
 }
 function renderTabs(){
   const nav = $('#tabsNav'); if (!nav) return;
@@ -1226,8 +1239,6 @@ function viewPlanPhone(){
       + (gen ? '<button type="button" class="btn btn-formation m-gen" data-act="formation">🎓 Mettre en formation</button>' : '');
   }
   if (!gen && isViewer()) return html + '<p class="note">Le planning de cette nuit n’est pas encore validé. Il apparaîtra ici dès que le TL l’aura validé.</p>';
-  const macts = nutBtn(n) + (gen ? shareBtns() : '');
-  if (macts) html += '<div class="m-acts m-acts3">' + macts + '</div>';
   html += statusBar(n);
   html += '<div class="qtabs" role="group" aria-label="Quart">';
   for (let j = 0; j < Q; j++) html += '<button type="button" data-act="qk" data-k="' + j + '"' + (!ro ? ' data-long="quartLong"' : '') + ' aria-pressed="' + (j === k) + '">Q' + (j + 1) + (j === 4 ? '<small>OT</small>' : '') + '</button>';
@@ -2311,6 +2322,7 @@ const A = {
   reactivatePerson(){ const per = clone(S.people[S.sheet.id]); per.active = true; savePerson(per); renderSheet(); },
   delPost(){ deletePostRow(S.sheet.id); close(); },
   acctMenu(){ S.acctOpen = !S.acctOpen; renderAcct(); },
+  moreMenu(){ S.moreOpen = !S.moreOpen; renderMore(); },
   playRoad(){
     const all = document.querySelectorAll('.brandbtn');
     const btn = Array.prototype.find.call(all, b => b.offsetParent !== null) || all[0];
@@ -2503,7 +2515,7 @@ const C = {
    long Android, clic droit sur PC) déclenche aussi l'action, et le clic à ignorer expire.
    Chaque action a de toute façon une alternative visible (⚙️, boutons des fiches). */
 /* seules actions permises à un spectateur (TM) : naviguer, consulter, télécharger */
-const VIEWER_ACTS = new Set(['tab', 'day', 'qk', 'openNight', 'pdfDownload', 'pdfShare', 'logout', 'acctMenu', 'close', 'confirmNo', 'playRoad', 'whatsnew', 'reloadApp']);
+const VIEWER_ACTS = new Set(['tab', 'day', 'qk', 'openNight', 'pdfDownload', 'pdfShare', 'logout', 'acctMenu', 'moreMenu', 'help', 'close', 'confirmNo', 'playRoad', 'whatsnew', 'reloadApp']);
 const VIEWER_CHG = new Set(['date']);
 const LONG_MS = 450, LONG_TOL = 10, LONG_TOL_ARMED = 24;
 let press = null, suppressClick = false, suppressTimer = null, longUntil = 0;
@@ -2575,6 +2587,7 @@ document.addEventListener('click', e => {
   if (e.target.classList && e.target.classList.contains('back')) { close(); return; }
   const el = e.target.closest('[data-act]');
   if (S.acctOpen && !(el && el.dataset.act === 'acctMenu')) { S.acctOpen = false; renderAcct(); }
+  if (S.moreOpen && !(el && el.dataset.act === 'moreMenu')) { S.moreOpen = false; renderMore(); }
   if (!el) return;
   if (isViewer() && !VIEWER_ACTS.has(el.dataset.act)) return;
   const f = A[el.dataset.act]; if (f) f(el.dataset);
