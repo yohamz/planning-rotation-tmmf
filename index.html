@@ -1268,8 +1268,7 @@ function viewPlanPhone(){
   const short = new Date(a[0], a[1] - 1, a[2]).toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
   let html = '<div class="m-head"><button type="button" class="icon" data-act="day" data-d="-1" aria-label="Nuit précédente">‹</button><span class="night">' + esc(short.charAt(0).toUpperCase() + short.slice(1)) + '</span><button type="button" class="icon" data-act="day" data-d="1" aria-label="Nuit suivante">›</button></div>';
   if (!ro) {
-    html += '<div class="m-acts">' + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’OT</button>') + '</div>'
-      + (st !== 'validated' ? '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>' : '');
+    html += (st !== 'validated' ? '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>' : '');
   }
   if (!gen && isViewer()) return html + '<p class="note">Le planning de cette nuit n’est pas encore validé. Il apparaîtra ici dès que le TL l’aura validé.</p>';
   html += statusBar(n);
@@ -1277,7 +1276,9 @@ function viewPlanPhone(){
   for (let j = 0; j < Q; j++) html += '<button type="button" data-act="qk" data-k="' + j + '"' + (!ro ? ' data-long="quartLong"' : '') + ' aria-pressed="' + (j === k) + '">Q' + (j + 1) + (j === 4 ? '<small>OT</small>' : '') + '</button>';
   html += '</div>';
   if (!gen && !ro) html += '<p class="note">Appui long sur Q1, Q2… pour générer uniquement ce quart.</p>';
-  if (gen) { const c = quartCoverage(n, k); html += '<div class="qbar"><span class="muted">Quart ' + (k + 1) + ' · ' + c.held + '/' + c.total + ' postes couverts</span></div>'; }
+  /* OT : sous les quarts, à droite */
+  const otBtn = ro ? '' : (n && n.ot ? '<button type="button" class="btn btn-sm" style="margin-left:auto" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn btn-sm" style="margin-left:auto" data-act="otOn">⚡ Générer l’OT</button>');
+  if (gen || otBtn) { const c = gen ? quartCoverage(n, k) : null; html += '<div class="qbar" style="display:flex;align-items:center;gap:8px">' + (c ? '<span class="muted">Quart ' + (k + 1) + ' · ' + c.held + '/' + c.total + ' postes couverts</span>' : '') + otBtn + '</div>'; }
   html += '<div class="mlist">';
   zones(ps).forEach(z => {
     html += '<div class="g">' + esc(z) + '</div>';
