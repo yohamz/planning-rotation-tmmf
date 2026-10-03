@@ -298,6 +298,12 @@ table{border-collapse:separate;border-spacing:0}
 .brandbtn img{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none}
 #secretLogo{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;padding:16px}
 #secretLogo img{width:min(92vw,92vh);height:auto;border-radius:18%;-webkit-touch-callout:none;user-select:none}
+#installPop{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+#installPop .ip{background:var(--surface);color:var(--ink);border-radius:16px;padding:22px 18px 16px;max-width:360px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+#installPop .ip img{width:72px;height:72px;border-radius:22%}
+#installPop h2{margin:10px 0 6px;font-size:20px}
+#installPop p{margin:0 0 14px;color:var(--ink-2);font-size:15px;line-height:1.4}
+#installPop .ipb{display:flex;flex-direction:column;gap:8px}
 .brand .wmteam{color:var(--red)}
 .brandbtn{padding-bottom:37px}
 .road{position:absolute;left:0;right:0;bottom:0;height:41px;pointer-events:none;overflow:hidden}
@@ -2896,7 +2902,7 @@ document.addEventListener('click', e => {
 });
 /* logo caché : appui de 3 s sur le logo de l'en-tête, réservé aux admins et au TL Ben.
    Plein écran, un toucher n'importe où le referme. */
-const secretOk = () => { const p = profile(); return isAdmin() || !!(p && p.active && p.role === 'tl' && /^ben\b/i.test(String(p.name || '').trim())); };
+const secretOk = () => { const p = profile(); return isAdmin() || !!(p && p.active && p.role === 'tl' && /^ben/i.test(String(p.name || '').trim())); };
 let secret = null;
 function endSecret(){ if (secret) clearTimeout(secret.t); secret = null; }
 function showSecret(){
@@ -2920,6 +2926,39 @@ document.addEventListener('pointerup', e => { if (secret && e.pointerId === secr
 /* Android peut annuler le pointeur pendant l'appui : on attend alors la vraie fin du toucher */
 document.addEventListener('touchend', () => { if (secret) endSecret(); });
 document.addEventListener('contextmenu', e => { if (secret || e.target.closest('header.top .brandbtn')) e.preventDefault(); });
+/* message « installer l'appli » au milieu de l'écran, à chaque ouverture dans le navigateur
+   d'un téléphone (jamais dans l'appli installée). Android : bouton qui installe directement ;
+   iPhone : pas d'installation automatique possible, on montre le geste à faire. */
+let installEvt = null, installNo = false;
+const isStandalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const isPhone = () => isIOS() || /android/i.test(navigator.userAgent);
+function showInstall(){
+  if (installNo || isStandalone() || !isPhone() || $('#installPop')) return;
+  const how = isIOS()
+    ? 'Touche le bouton <b>Partager</b> <span aria-hidden="true">⬆️</span> en bas de Safari, puis <b>« Sur l’écran d’accueil »</b>.'
+    : (installEvt ? 'Ajoute ROTATEAM sur ton écran d’accueil pour l’ouvrir en un toucher.'
+                  : 'Touche le menu <b>⋮</b> du navigateur, puis <b>« Installer l’application »</b> ou <b>« Ajouter à l’écran d’accueil »</b>.');
+  const pop = document.createElement('div'); pop.id = 'installPop';
+  pop.innerHTML = '<div class="ip" role="dialog" aria-modal="true" aria-labelledby="ipT"><img src="icones/icon-256.png?v=4" alt=""><h2 id="ipT">Installer l’appli</h2><p>' + how + '</p><div class="ipb">'
+    + (installEvt && !isIOS() ? '<button type="button" class="btn btn-red" data-ip="go">Installer</button>' : '')
+    + '<button type="button" class="btn" data-ip="no">Plus tard</button></div></div>';
+  pop.addEventListener('click', async e => {
+    e.stopPropagation();
+    const b = e.target.closest('[data-ip]');
+    if (b && b.dataset.ip === 'go' && installEvt) { const ev = installEvt; installEvt = null; pop.remove(); try { await ev.prompt(); } catch (e2) {} return; }
+    if (b || e.target === pop) { installNo = true; pop.remove(); }
+  });
+  document.body.appendChild(pop);
+}
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installEvt = e;
+  const pop = $('#installPop'); if (pop) pop.remove(); /* Chrome est prêt : on remontre avec le bouton Installer */
+  showInstall();
+});
+window.addEventListener('appinstalled', () => { const pop = $('#installPop'); if (pop) pop.remove(); });
+/* Chrome envoie beforeinstallprompt peu après le chargement : on lui laisse le temps avant la version « menu ⋮ » */
+setTimeout(showInstall, 2500);
 document.addEventListener('change', e => { const el = e.target.closest('[data-chg]'); if (!el || (isViewer() && !VIEWER_CHG.has(el.dataset.chg))) return; if (C[el.dataset.chg]) C[el.dataset.chg](el); });
 /* champs de formulaire en brouillon : on retient la saisie sans redessiner (pas de perte de focus) */
 document.addEventListener('input', e => { const el = e.target.closest('[data-inp]'); if (el && S.sheet) { S.sheet[el.dataset.inp] = el.value; if (S.sheet.err) { S.sheet.err = ''; } } });
