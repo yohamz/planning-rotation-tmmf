@@ -1944,7 +1944,7 @@ function viewEffectifs(){
   html += temps.map(per => {
     const at = (n.tl && n.tl[per.id]) || [];
     const nbPostes = posts().filter(p => canHold(per, p.id)).length;
-    let row = '<div class="tlrow"><b>' + esc(per.name) + '</b>';
+    let row = '<div class="tlrow" data-renfort="' + esc(per.id) + '"><b>' + esc(per.name) + '</b>';
     for (let k = 0; k < Q; k++) row += '<button type="button" class="qb" data-act="tlq" data-id="' + esc(per.id) + '" data-k="' + k + '" aria-pressed="' + !!at[k] + '">Q' + (k + 1) + '</button>';
     row += '<button type="button" class="btn btn-sm" data-act="renfortPosts" data-id="' + esc(per.id) + '">Postes' + (nbPostes ? ' (' + nbPostes + ')' : ' ⚠️') + '</button>';
     row += '<button type="button" class="qb" data-act="delRenfort" data-id="' + esc(per.id) + '" style="margin-left:auto">Retirer</button></div>';
@@ -2174,6 +2174,10 @@ const A = {
     const id = newId('re');
     savePerson({id, name:'Renfort ' + cnt, role:'TM', temp:true, order:9000 + cnt, marks:{}});
     renderSheet();
+    /* la section Renfort est sous les TL, souvent hors de l'écran : on y descend pour voir l'ajout */
+    const row = document.querySelector('[data-renfort="' + id + '"]');
+    if (row) { row.scrollIntoView({block:'center', behavior:'smooth'}); row.classList.add('fresh'); }
+    toast('💪🏼 Renfort ' + cnt + ' ajouté : coche ses quarts, puis « Postes ».');
   },
   delRenfort(d){
     const per = S.people[d.id];
