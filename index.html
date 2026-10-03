@@ -1934,7 +1934,7 @@ function viewEffectifs(){
   html += temps.map(per => {
     const at = (n.tl && n.tl[per.id]) || [];
     const nbPostes = posts().filter(p => canHold(per, p.id)).length;
-    let row = '<div class="tlrow" data-renfort="' + esc(per.id) + '"><b>' + esc(per.name) + '</b>';
+    let row = '<div class="tlrow" data-renfort="' + esc(per.id) + '"><button type="button" class="linkbtn" data-act="renfortPosts" data-id="' + esc(per.id) + '" style="font-weight:700">' + esc(per.name) + '</button>';
     for (let k = 0; k < Q; k++) row += '<button type="button" class="qb" data-act="tlq" data-id="' + esc(per.id) + '" data-k="' + k + '" aria-pressed="' + !!at[k] + '">Q' + (k + 1) + '</button>';
     row += '<button type="button" class="btn btn-sm" data-act="renfortPosts" data-id="' + esc(per.id) + '">Postes' + (nbPostes ? ' (' + nbPostes + ')' : ' ⚠️') + '</button>';
     row += '<button type="button" class="qb" data-act="delRenfort" data-id="' + esc(per.id) + '" style="margin-left:auto">Retirer</button></div>';
@@ -2174,9 +2174,8 @@ const A = {
     const cnt = Object.values(S.people).filter(p => isTemp(p) && p.active !== false).length + 1;
     const id = newId('re');
     savePerson({id, name:'Renfort ' + cnt, role:'TM', temp:true, order:9000 + cnt, marks:{}});
-    renderSheet();
     const row = document.querySelector('[data-renfort="' + id + '"]'); if (row) row.classList.add('fresh');
-    toast('💪🏼 Renfort ' + cnt + ' ajouté : coche ses quarts, puis « Postes ».');
+    open({type:'renfortPosts', id}); /* directement : choisir les process qu'il sait tenir */
   },
   delRenfort(d){
     A.delRenfortReal(d); /* sans confirmation */
