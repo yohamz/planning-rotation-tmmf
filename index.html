@@ -1606,8 +1606,20 @@ function startSwap(k, pid){
 function endSwap(){ S.swap = null; const b = $('#swapBar'); if (b) b.remove(); }
 function doSwap(k, pb){
   const pa = S.swap.post; endSwap();
+  swapPosts(k, pa, pb, false);
+}
+/* si quelqu'un se retrouverait sur un poste qu'il ne tient pas seul : on prévient AVANT,
+   l'échange ne se fait que sur « Compris » (« Annuler » ne change rien) */
+function swapPosts(k, pa, pb, force){
   if (pa === pb) return;
   const n = editable(), q = n.q[k], a = q[pa] || null, b = q[pb] || null;
+  if (!force) {
+    const pc = pid => S.posts[pid] ? S.posts[pid].code : pid;
+    const warn = [];
+    if (b && !fitFor(S.people[b], pa, n)) warn.push(S.people[b].name + ' ne tient pas seul le poste ' + pc(pa));
+    if (a && !fitFor(S.people[a], pb, n)) warn.push(S.people[a].name + ' ne tient pas seul le poste ' + pc(pb));
+    if (warn.length) { askConfirm(warn.join(' · ') + '. Échanger quand même ?', 'swapForce', {k, pa, pb}, {danger:true, okLabel:'Compris', noLabel:'Annuler'}); return; }
+  }
   const before = clone(n.q);
   if (a) q[pb] = a; else delete q[pb];
   if (b) q[pa] = b; else delete q[pa];
@@ -1617,8 +1629,7 @@ function doSwap(k, pb){
   pushLog(n, 'assign', {date:n.date, k, postCode:code(pb), postName:'', from:nm(b), to:nm(a)});
   dropOrphanTrainees(n, k);
   markFresh(n, before); saveNight(n);
-  const bad = (b && !fitFor(S.people[b], pa, n)) || (a && !fitFor(S.people[a], pb, n));
-  toast(bad ? '⚠️ Échange fait, mais quelqu’un est sur un poste qu’il ne tient pas seul.' : 'Échange fait : ' + code(pa) + ' ↔ ' + code(pb));
+  toast('Échange fait : ' + code(pa) + ' ↔ ' + code(pb));
 }
 /* feuille « Former » de la roulette : 3 personnes libres sur ce quart, en formation (hachuré) sur ce poste */
 function shWheelTrain(s){
@@ -2760,6 +2771,7 @@ const A = {
     catch (e) { S.accountsErr = 'Erreur : ' + e.message; }
     renderSheet();
   },
+  swapForce(d){ swapPosts(+d.k, d.pa, d.pb, true); },
   confirmYes(){
     const s = S.sheet; if (!s || s.type !== 'confirm') return;
     const fn = s.fn, data = s.data;
@@ -2891,7 +2903,7 @@ document.addEventListener('contextmenu', e => {
 });
 document.addEventListener('click', e => {
   if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
-  if (e.target.classList && e.target.classList.contains('back')) { close(); return; }
+  if (e.target.classList && e.target.classList.contains('back')) { if (!(S.sheet && S.sheet.fn === 'swapForce')) close(); return; } /* avertissement d'échange : Compris ou Annuler obligatoire */
   const rw = e.target.closest('#rw [data-rw]'); if (rw) { if (!rw.disabled && RW && !RW.glide) wheelDo(rw.dataset.rw); return; }
   const el = e.target.closest('[data-act]');
   if (S.acctOpen && !(el && el.dataset.act === 'acctMenu')) { S.acctOpen = false; renderAcct(); }
