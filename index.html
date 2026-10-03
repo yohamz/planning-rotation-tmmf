@@ -428,6 +428,28 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .opt .rec{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--vert);margin-left:6px}
 .opt .steps{display:grid;gap:2px;font-weight:600}
 .opt .steps small{margin:0;color:var(--muted);font-weight:500}
+#rw{position:fixed;inset:0;z-index:60;pointer-events:none}
+#rw.on{pointer-events:auto}
+.rw-veil{position:absolute;inset:0;background:rgba(5,6,8,.7);opacity:0;transition:opacity .15s}
+#rw.on .rw-veil{opacity:1}
+.rw{position:absolute;width:250px;height:250px;margin:-125px 0 0 -125px}
+.rw-opt,.rw-hub{position:absolute;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;font-weight:700;font-size:12.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line-2);transform:scale(.3);opacity:0;transition:transform .18s cubic-bezier(.2,.9,.3,1.3),opacity .15s,background .1s}
+#rw.on .rw-opt,#rw.on .rw-hub{transform:scale(1);opacity:1}
+.rw-opt .i{font-size:23px;line-height:1}
+#rw.on .rw-opt[disabled]{opacity:.35}
+.rw-opt.hot{background:var(--orange);border-color:var(--orange);color:#1E2125;transform:scale(1.14)!important}
+.rw-hub{left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;background:var(--surface);border:2px solid var(--orange);font-size:13px;text-align:center;line-height:1.15}
+.rw-hub small{display:block;color:var(--muted);font-weight:600;font-size:11px}
+.rw-hub.hot{background:var(--surface-2)}
+#swapBar{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:55;background:var(--orange);color:#1E2125;font-weight:700;border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:center;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#swapBar button{border:0;border-radius:8px;padding:5px 9px;background:#1E2125;color:#fff;font-weight:700}
+.rw-cands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rw-cand{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font:inherit;color:var(--ink);min-width:0}
+.rw-cand .av{width:38px;height:38px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-weight:700}
+.rw-cand b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rw-cand small{color:var(--muted);font-size:11.5px;text-align:center;line-height:1.25}
+.rw-cand.rec{border-color:var(--orange);background:rgba(255,166,48,.08)}
+.rw-cand .reco{background:var(--orange);color:#1E2125;font-size:10.5px;font-weight:700;border-radius:7px;padding:2px 7px}
 .lbl-big{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:.06em;margin-top:14px;text-align:center}
 .genflow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1px solid var(--orange);background:rgba(255,166,48,.1);border-radius:12px;padding:10px 12px;margin:0 0 10px}
 .genflow b{display:block}.genflow small{color:var(--muted)}
@@ -521,8 +543,9 @@ const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
    Important : ne lister ici QUE ce qui concerne le travail des TL/GL (fonctionnalités,
    changements visibles, aide à l'utilisation) — pas les changements internes/techniques
    (corrections de bugs invisibles, sécurité, refonte visuelle du logo, etc.). */
-const APP_VERSION = '2026-10-03-3';
+const APP_VERSION = '2026-10-03-4';
 const CHANGELOG = [
+  'Planning : appui long sur un poste → roulette. Glisse vers Former, Remplacer, Échanger ou Absent et relâche. Le centre ouvre les autres options.',
   'Générer : l’appli ouvre d’abord Effectifs pour vérifier les présents, puis propose qui former ce soir (⭐ recommandé) avant de calculer le planning.',
   'Planning allégé : les boutons Effectifs et Mettre en formation ne sont plus sur l’écran Planning (Effectifs reste dans les onglets).',
   'Planning allégé : Proposer, Télécharger, Partager et Aide sont dans le menu ⋯ en haut.',
@@ -1235,7 +1258,7 @@ function viewPlan(){
     });
   });
   return html + '<div class="scroll" data-scroll="plan"><table class="plan"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>'
-    + (ro ? '' : '<p class="note">Touche une case pour changer qui tient le poste ; appui long (ou clic droit) sur une case pour retirer ou remplacer la personne sur ce quart ; appui long sur l’en-tête d’un quart pour ne générer que celui-là. Case avec une barre rouge : personne forcée, gardée quand tu régénères.</p>');
+    + (ro ? '' : '<p class="note">Touche une case pour changer qui tient le poste ; appui long (ou clic droit) sur une case : roulette (former, remplacer, échanger, absent), glisse vers l’action et relâche ; appui long sur l’en-tête d’un quart pour ne générer que celui-là. Case avec une barre rouge : personne forcée, gardée quand tu régénères.</p>');
 }
 function viewPlanPhone(){
   const n = nightOf(), gen = generated(n), Q = nq(n), st = nightState(n), ro = st === 'archived' || isViewer(), ps = planPosts(n);
@@ -1269,7 +1292,7 @@ function viewPlanPhone(){
           + '<button type="button" class="pickbtn' + fx.cls + '"' + fx.st + ' data-act="pick"' + (gen ? ' data-long="cellMenu"' : '') + ' data-k="' + k + '" data-post="' + esc(p.id) + '">' + cellInner(n, k, p, true) + '</button></div>';
     });
   });
-  return html + '</div>' + (ro || !gen ? '' : '<p class="note">Touche un nom pour le changer ; appui long pour le retirer de ce quart ou le remplacer.</p>');
+  return html + '</div>' + (ro || !gen ? '' : '<p class="note">Touche un nom pour le changer. Appui long : la roulette s’ouvre, glisse vers l’action (former, remplacer, échanger, absent) et relâche.</p>');
 }
 function viewPolyPhone(){
   const ps = posts(), pp = activePeople().filter(p => !isTemp(p));
@@ -1513,6 +1536,95 @@ function shPreGen(s){
     + pl.sugg.map(row).join('')
     + '<p class="note">Touche une ligne pour l’ajouter ou la retirer. Les places restantes sont réparties normalement : la rotation reste équitable.</p>';
   return {title:'🎓 Formations de la nuit', body, foot:'<button type="button" class="btn" data-act="preGenStep" data-back="1">‹ Retour</button><button type="button" class="btn btn-red" data-act="preGenGo">⚡ ' + (gen ? 'Régénérer' : 'Générer le planning') + '</button>'};
+}
+/* ---------- roulette : appui long sur une case du planning ----------
+   Le doigt reste posé : la roulette s'ouvre dessous, on glisse vers une action et on relâche.
+   Relâché sans action : elle reste ouverte et se commande au toucher (et au clic droit de la
+   souris). Le centre ouvre le menu complet (retirer du quart, choisir à la main…). */
+let RW = null;
+const RW_ACTS = [{a:'former', i:'🎓', l:'Former', x:0, y:-1}, {a:'echanger', i:'🔄', l:'Échanger', x:1, y:0}, {a:'absent', i:'🚫', l:'Absent', x:0, y:1}, {a:'remplacer', i:'👤', l:'Remplacer', x:-1, y:0}];
+function openWheel(el, glide){
+  const k = Number(el.dataset.k), pid = el.dataset.post, n = nightOf(); if (!n || !S.posts[pid]) return false;
+  const who = (n.q[k] || {})[pid] || null, per = who ? S.people[who] : null;
+  const rc = el.getBoundingClientRect(), cy = Math.min(Math.max(rc.top + rc.height / 2, 140), innerHeight - 140), cx = innerWidth / 2, R = 88;
+  let w = $('#rw'); if (!w) { w = document.createElement('div'); w.id = 'rw'; document.body.appendChild(w); }
+  w.innerHTML = '<div class="rw-veil" data-rw="close"></div><div class="rw" role="menu" style="left:' + cx + 'px;top:' + cy + 'px">'
+    + '<button type="button" class="rw-hub" data-rw="more">' + esc(S.posts[pid].code) + '<br>' + (per ? esc(per.name) : '—') + '<small>plus…</small></button>'
+    + RW_ACTS.map(o => '<button type="button" class="rw-opt" role="menuitem" data-rw="' + o.a + '"' + (!per && o.a !== 'remplacer' ? ' disabled' : '') + ' style="left:' + (125 + o.x * R) + 'px;top:' + (125 + o.y * R) + 'px"><span class="i">' + o.i + '</span>' + (o.a === 'remplacer' && !per ? 'Placer' : o.l) + '</button>').join('') + '</div>';
+  RW = {k, pid, who, glide, hot:null};
+  requestAnimationFrame(() => { if (RW) w.classList.add('on'); });
+  return true;
+}
+function closeWheel(){ const w = $('#rw'); if (w) { w.classList.remove('on'); w.innerHTML = ''; } RW = null; }
+function wheelHover(x, y){
+  if (!RW) return;
+  const el = document.elementFromPoint(x, y), o = el && el.closest('#rw .rw-opt:not([disabled]), #rw .rw-hub');
+  if (o !== RW.hot) {
+    if (RW.hot) RW.hot.classList.remove('hot');
+    RW.hot = o || null;
+    if (o) { o.classList.add('hot'); if (navigator.vibrate) try { navigator.vibrate(6); } catch (e) {} }
+  }
+}
+/* doigt relevé : action survolée, sinon la roulette reste ouverte pour un toucher */
+function wheelRelease(){
+  if (!RW || !RW.glide) return;
+  RW.glide = false;
+  suppressClick = true; clearTimeout(suppressTimer); suppressTimer = setTimeout(() => { suppressClick = false; }, 600);
+  if (RW.hot) wheelDo(RW.hot.dataset.rw);
+}
+function wheelDo(a){
+  if (!RW) return;
+  const d = {k:RW.k, post:RW.pid}, who = RW.who; closeWheel();
+  if (a === 'close' || !canEdit()) return;
+  if (a === 'more') open({type:'cellMenu', k:d.k, post:d.post});
+  else if (a === 'remplacer') A.openReplace(who ? {k:d.k, post:d.post, mode:'replace', who} : {k:d.k, post:d.post, mode:'fill'});
+  else if (a === 'former') open({type:'wheelTrain', k:d.k, post:d.post});
+  else if (a === 'absent' && who) {
+    const n = editable(), name = (S.people[who] || {}).name || '';
+    n.absent = [...new Set((n.absent || []).concat(who))];
+    const before = clone(n.q), msgs = releasePerson(n, who, allQuarts(n));
+    markFresh(n, before); saveNight(n);
+    toast(name + ' absent(e) cette nuit' + (msgs.length ? ' · ' + msgs.join(' · ') : ''));
+  } else if (a === 'echanger' && who) startSwap(d.k, d.post);
+}
+/* échanger : la case suivante touchée (même quart) échange ses titulaires avec celle-ci */
+function startSwap(k, pid){
+  S.swap = {k, post:pid};
+  let b = $('#swapBar'); if (!b) { b = document.createElement('div'); b.id = 'swapBar'; document.body.appendChild(b); }
+  b.innerHTML = '<span>🔄 Touche le poste à échanger avec ' + esc(S.posts[pid].code) + ' (Q' + (k + 1) + ')</span><button type="button" data-act="swapCancel">Annuler</button>';
+}
+function endSwap(){ S.swap = null; const b = $('#swapBar'); if (b) b.remove(); }
+function doSwap(k, pb){
+  const pa = S.swap.post; endSwap();
+  if (pa === pb) return;
+  const n = editable(), q = n.q[k], a = q[pa] || null, b = q[pb] || null;
+  const before = clone(n.q);
+  if (a) q[pb] = a; else delete q[pb];
+  if (b) q[pa] = b; else delete q[pa];
+  [pa, pb].forEach(pid => { n.manual[k][pid] = true; delete n.lock[k][pid]; });
+  const nm = id => (id && S.people[id]) ? S.people[id].name : 'vide', code = pid => S.posts[pid] ? S.posts[pid].code : pid;
+  pushLog(n, 'assign', {date:n.date, k, postCode:code(pa), postName:'', from:nm(a), to:nm(b)});
+  pushLog(n, 'assign', {date:n.date, k, postCode:code(pb), postName:'', from:nm(b), to:nm(a)});
+  dropOrphanTrainees(n, k);
+  markFresh(n, before); saveNight(n);
+  const bad = (b && !fitFor(S.people[b], pa, n)) || (a && !fitFor(S.people[a], pb, n));
+  toast(bad ? '⚠️ Échange fait, mais quelqu’un est sur un poste qu’il ne tient pas seul.' : 'Échange fait : ' + code(pa) + ' ↔ ' + code(pb));
+}
+/* feuille « Former » de la roulette : 3 personnes libres sur ce quart, en formation (hachuré) sur ce poste */
+function shWheelTrain(s){
+  const n = nightOf(), p = S.posts[s.post]; if (!n || !p) return null;
+  const q = n.q[s.k] || {}, holder = q[p.id] ? S.people[q[p.id]] : null; if (!holder) return null;
+  const placed = holderMap(q), tk = (n.train && n.train[s.k]) || {}, inTrain = new Set(Object.values(tk));
+  const all = posts(), held = per => all.filter(x => mark(per, x.id) === 'G').length;
+  const nb = activePeople().filter(h => mark(h, p.id) === 'G').length;
+  const list = activePeople().filter(per => mark(per, p.id) === 'H' && onQuart(n, s.k, per) && !placed[per.id] && !inTrain.has(per.id))
+    .sort((a, b) => held(a) - held(b) || a.name.localeCompare(b.name, 'fr')).slice(0, 3);
+  const ini = nm => nm.split(/s+/).map(w => w.charAt(0)).join('').slice(0, 2).toUpperCase();
+  let body = '<p class="note" style="text-align:center">' + esc(p.code) + ' · ' + esc(p.name) + ' · ' + nb + ' pers. à ce process' + (isFormateur(holder) ? ' · ' + esc(holder.name) + ' est formateur 🎓' : '') + '</p>';
+  if (tk[p.id] && S.people[tk[p.id]]) body += '<p class="note" style="text-align:center">Déjà en formation ici : <b>' + esc(S.people[tk[p.id]].name) + '</b> (sera remplacé)</p>';
+  body += list.length ? '<div class="rw-cands">' + list.map((per, i) => '<button type="button" class="rw-cand' + (i === 0 ? ' rec' : '') + '" data-act="wheelTrainGo" data-k="' + s.k + '" data-post="' + esc(p.id) + '" data-id="' + esc(per.id) + '"><span class="av">' + esc(ini(per.name)) + '</span><b>' + esc(per.name) + '</b>' + (i === 0 ? '<span class="reco">⭐ RECO</span>' : '') + '<small>tient ' + held(per) + ' poste' + (held(per) > 1 ? 's' : '') + '</small></button>').join('') + '</div>'
+    : '<p class="note" style="text-align:center">Personne de libre sur ce quart n’est en formation sur ce poste (case hachurée dans Polyvalence).</p>';
+  return {title:'🎓 Qui former avec ' + esc(holder.name) + ' ?', body, foot:'<button type="button" class="btn" data-act="close">Annuler</button>'};
 }
 /* ---------- fiche « mettre en formation » ---------- */
 function shFormation(s){
@@ -1860,7 +1972,7 @@ function shWhatsNew(s){
 }
 function renderSheet(){
   const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
-  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, preGen:shPreGen, confirm:shConfirm, whatsnew:shWhatsNew})[s.type](s);
+  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, preGen:shPreGen, wheelTrain:shWheelTrain, confirm:shConfirm, whatsnew:shWhatsNew})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev && prev.dataset.t === s.type ? prev.scrollTop : 0;
   $('#sheet').innerHTML = '<div class="back"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2><button type="button" class="icon" data-act="close" aria-label="Fermer">×</button></div><div class="sb" data-t="' + esc(s.type) + '">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
@@ -2160,7 +2272,7 @@ const A = {
     close(); if (!canEdit()) return;
     runWithAnim('Calcul de la rotation…', () => { const n = editable(); const before = clone(n.q); generateAll(n); markFresh(n, before); saveNight(n); toast('Rotation recalculée'); }, allQuarts(editable()));
   },
-  pick(d){ if (!canEdit()) return; if (S.sheet && S.sheet.type === 'replace') S.sheet.done = true; open({type:'pick', k:Number(d.k), post:d.post}); },
+  pick(d){ if (!canEdit()) return; if (S.swap) { if (Number(d.k) !== S.swap.k) { toast('Choisis un poste du même quart (Q' + (S.swap.k + 1) + ').'); return; } doSwap(S.swap.k, d.post); return; } if (S.sheet && S.sheet.type === 'replace') S.sheet.done = true; open({type:'pick', k:Number(d.k), post:d.post}); },
   trainees(d){ open({type:'trainees', id:d.id}); },
   toggleFrm(){ S.sheet.showFrm = !S.sheet.showFrm; renderSheet(); },
   choose(d){
@@ -2299,7 +2411,13 @@ const A = {
   fbReadAll(){ if (!isAdmin()) return; Object.values(S.feedback).filter(f => !f.read).forEach(f => A.fbRead({id:f.id})); },
   fbDelete(d){ const f = S.feedback[d.id]; if (!f) return; askConfirm('Supprimer le message de ' + (f.author_name || '?') + ' ?', 'fbDeleteReal', d, {danger:true, okLabel:'Supprimer'}); },
   fbDeleteReal(d){ if (!isAdmin() || !S.feedback[d.id]) return; delete S.feedback[d.id]; render(); queued('fb:' + d.id, () => sb.from('feedback').delete().eq('id', d.id)); },
-  cellMenu(d){ if (!canEdit()) return; open({type:'cellMenu', k:Number(d.k), post:d.post}); },
+  cellMenu(d){
+    if (!canEdit()) return;
+    const el = document.querySelector('[data-long="cellMenu"][data-k="' + d.k + '"][data-post="' + d.post + '"]');
+    if (!el || !openWheel(el, false)) open({type:'cellMenu', k:Number(d.k), post:d.post});
+  },
+  wheelTrainGo(d){ if (!canEdit()) return; A.chooseTrain(d); close(); toast(((S.people[d.id] || {}).name || '') + ' en formation sur ' + (S.posts[d.post] ? S.posts[d.post].code : '') + ' (Q' + (Number(d.k) + 1) + ')'); },
+  swapCancel(){ endSwap(); },
   quartMenu(d){ if (!canEdit()) return; open({type:'quartMenu', k:Number(d.k)}); },
   openReplace(d){ if (!canEdit()) return; open({type:'replace', k:Number(d.k), post:d.post, mode:d.mode || 'fill', who:d.who || null}); },
   removeFromQuart(d){
@@ -2665,6 +2783,7 @@ function holdSheet(ms){ const sh = $('#sheet'); if (!sh) return; sh.classList.ad
 function armLong(){
   if (!press) return;
   press.armed = true; press.el.classList.add('longarmed');
+  if (press.el.dataset.long === 'cellMenu' && !isViewer() && openWheel(press.el, true)) press.wheel = true;
   longUntil = Date.now() + 3000;
   try { const sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges(); } catch (e2) {}
   if (navigator.vibrate) try { navigator.vibrate(12); } catch (e2) {}
@@ -2683,18 +2802,24 @@ document.addEventListener('pointerdown', e => {
   press = {el, x:e.clientX, y:e.clientY, id:e.pointerId, armed:false, timer:setTimeout(armLong, LONG_MS)};
 });
 document.addEventListener('pointermove', e => {
+  if (RW && RW.glide) { wheelHover(e.clientX, e.clientY); return; }
   if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > (press.armed ? LONG_TOL_ARMED : LONG_TOL)) cancelPress();
 });
 document.addEventListener('pointerup', e => {
   if (!press || e.pointerId !== press.id) return;
   const p = press; cancelPress();
+  if (p.wheel) { wheelRelease(); return; }
   if (p.armed) fireLong(p.el);
 });
+/* roulette ouverte, doigt posé : on bloque le défilement (sinon le navigateur annule le pointeur) */
+document.addEventListener('touchmove', e => { if (RW && RW.glide && e.touches[0]) { e.preventDefault(); wheelHover(e.touches[0].clientX, e.touches[0].clientY); } }, {passive:false});
+document.addEventListener('touchend', () => { if (RW && RW.glide) wheelRelease(); });
 /* le navigateur peut annuler le pointeur pendant un appui long (pointercancel) : on attend alors
    la fin réelle du toucher (touchend) pour ouvrir, jamais pendant que le doigt est posé */
 document.addEventListener('pointercancel', e => {
   if (!press || e.pointerId !== press.id) return;
   const p = press; cancelPress();
+  if (p.wheel) return; /* la fin du toucher (touchend) relâche la roulette */
   if (!p.armed) return;
   p.el.classList.add('longarmed'); longUntil = Date.now() + 5000;
   let t = null;
@@ -2713,6 +2838,7 @@ document.addEventListener('contextmenu', e => {
 document.addEventListener('click', e => {
   if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
   if (e.target.classList && e.target.classList.contains('back')) { close(); return; }
+  const rw = e.target.closest('#rw [data-rw]'); if (rw) { if (!rw.disabled && RW && !RW.glide) wheelDo(rw.dataset.rw); return; }
   const el = e.target.closest('[data-act]');
   if (S.acctOpen && !(el && el.dataset.act === 'acctMenu')) { S.acctOpen = false; renderAcct(); }
   if (S.moreOpen && !(el && el.dataset.act === 'moreMenu')) { S.moreOpen = false; renderMore(); }
@@ -2724,6 +2850,8 @@ document.addEventListener('change', e => { const el = e.target.closest('[data-ch
 /* champs de formulaire en brouillon : on retient la saisie sans redessiner (pas de perte de focus) */
 document.addEventListener('input', e => { const el = e.target.closest('[data-inp]'); if (el && S.sheet) { S.sheet[el.dataset.inp] = el.value; if (S.sheet.err) { S.sheet.err = ''; } } });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && RW) { closeWheel(); return; }
+  if (e.key === 'Escape' && S.swap) { endSwap(); return; }
   if (e.key === 'Escape' && S.sheet) { close(); return; }
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.inp && S.sheet && S.sheet.type === 'personForm') {
     e.preventDefault();
