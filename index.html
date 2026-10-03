@@ -1205,8 +1205,7 @@ function viewPlan(){
   if (!ro) {
     html += '<button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? ' · ' + crewInfo : '') + '</button>'
       + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’overtime</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’overtime</button>')
-      + (st !== 'validated' ? '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>' : '')
-      + (gen ? '<button type="button" class="btn btn-formation" data-act="formation">🎓 Formation</button>' : '');
+      + (st !== 'validated' ? '<button type="button" class="btn btn-red" data-act="gen">' + (gen ? 'Régénérer' : 'Générer') + '</button>' : '');
   }
   html += nutBtn(n);
   if (gen) html += shareBtns();
@@ -1250,8 +1249,7 @@ function viewPlanPhone(){
   if (!ro) {
     html += '<div class="m-acts"><button type="button" class="btn" data-act="tab" data-tab="effectifs">Effectifs' + (crewInfo ? '<br><small class="muted">' + crewInfo + '</small>' : '') + '</button>'
       + (n && n.ot ? '<button type="button" class="btn" data-act="otOff">Retirer l’OT</button>' : '<button type="button" class="btn" data-act="otOn">⚡ Générer l’OT</button>') + '</div>'
-      + (st !== 'validated' ? '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>' : '')
-      + (gen ? '<button type="button" class="btn btn-formation m-gen" data-act="formation">🎓 Mettre en formation</button>' : '');
+      + (st !== 'validated' ? '<button type="button" class="btn btn-red m-gen" data-act="gen">' + (gen ? 'Régénérer' : 'Générer la rotation') + '</button>' : '');
   }
   if (!gen && isViewer()) return html + '<p class="note">Le planning de cette nuit n’est pas encore validé. Il apparaîtra ici dès que le TL l’aura validé.</p>';
   html += statusBar(n);
@@ -2055,7 +2053,7 @@ function shHelp(){
     + '<div class="lbl">Générer un seul quart</div><p class="note">Appui long (ou clic droit) sur l’en-tête d’un quart (Q1, Q2…) : il est généré seul, même si la nuit n’a pas encore été générée. Les autres quarts ne bougent pas.</p>'
     + '<div class="lbl">Valider · Archives</div><p class="note">« ✓ Valider » fait du planning le planning officiel : il ne peut plus être régénéré en entier (seulement corrigé case par case ou quart par quart). À la fin de la nuit (le lendemain 7h), il passe dans « Archives », en lecture seule. Un brouillon non validé n’est jamais archivé.</p>'
     + '<div class="lbl">💡 Proposer une amélioration</div><p class="note">Une idée, un problème, quelque chose à changer dans l’appli ? Écris-le ici : l’Admin le reçoit aussitôt dans « 💬 Suggestions ».</p>'
-    + '<div class="lbl">🎓 Formation</div><p class="note">Une fois la rotation générée, ce bouton propose de mettre quelqu’un en formation sur un poste (marqué hachuré dans Polyvalence) : automatiquement (l’appli choisit un quart et un formateur sans rien changer d’autre) ou manuellement (tu choisis le quart, le poste et avec qui).</p>'
+    + '<div class="lbl">🎓 Formation</div><p class="note">Au moment de Générer, l’appli propose qui former ce soir (postes marqués hachurés dans Polyvalence) : tu acceptes tout, tu choisis, ou tu génères sans formation. Après coup, touche une case puis « Ajouter quelqu’un en formation ».</p>'
     + '<div class="lbl">Effectifs</div><p class="note">Toute l’équipe en un coup d’œil. Touche un nom pour le mettre présent/absent cette nuit. Le bouton ⚙️ (ou un appui long sur le nom) donne : absence sur certains quarts seulement, absence sur plusieurs jours, restriction sur un ou plusieurs postes (ex. médicale), modifier ou retirer la personne. Sur un planning validé, une absence est corrigée localement (remplaçant automatique) au lieu de tout recalculer.</p>'
     + '<div class="lbl">Polyvalence</div><p class="note">Qui sait tenir quel poste. Touche une case pour faire tourner : vide → tient le poste → en formation → vide. Le bouton 🎓 à côté du nom marque une personne comme « Formateur » (apte à former, pour tous les postes qu’elle tient) : le mode automatique du bouton Formation la propose alors en priorité.</p>'
     + '<div class="lbl">Télécharger · Partager</div><p class="note">Crée un PDF A4 en noir et blanc, sur une page quand c’est possible, prêt à imprimer ou à envoyer (WhatsApp, mail…).</p>'
