@@ -2041,7 +2041,7 @@ function shRenfortPosts(s){
     body += '<div class="lbl">' + esc(z) + '</div>';
     ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
       const m = mark(per, p.id);
-      body += '<button type="button" class="opt" data-act="renfortMark" data-id="' + esc(per.id) + '" data-post="' + esc(p.id) + '" aria-current="' + (m === 'G') + '"><span class="code">' + esc(p.code) + '</span>&nbsp;' + esc(p.name) + '<small>' + (m === 'H' ? '🎓 en formation' : m === 'G' ? '✓ sait tenir' : 'ne tient pas') + '</small></button>';
+      body += '<button type="button" class="opt" data-act="renfortMark" data-id="' + esc(per.id) + '" data-post="' + esc(p.id) + '" aria-current="' + (m === 'G') + '"><span class="code">' + esc(p.code) + '</span>&nbsp;' + esc(p.name) + '<small>' + (m === 'H' ? '🎓 en formation' : m === 'G' ? '✓ sait tenir' : '') + '</small></button>';
     });
   });
   return {title:'Postes · ' + esc(per.name), body, foot:'<button type="button" class="btn btn-red" data-act="close">Terminé</button>'};
