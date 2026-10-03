@@ -2935,10 +2935,9 @@ const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (/Macintosh
 const isPhone = () => isIOS() || /android/i.test(navigator.userAgent);
 function showInstall(){
   if (installNo || isStandalone() || !isPhone() || $('#installPop')) return;
-  const how = isIOS()
-    ? 'Touche le bouton <b>Partager</b> <span aria-hidden="true">⬆️</span> en bas de Safari, puis <b>« Sur l’écran d’accueil »</b>.'
-    : (installEvt ? 'Ajoute ROTATEAM sur ton écran d’accueil pour l’ouvrir en un toucher.'
-                  : 'Touche le menu <b>⋮</b> du navigateur, puis <b>« Installer l’application »</b> ou <b>« Ajouter à l’écran d’accueil »</b>.');
+  const how = 'Mets l’appli sur ton écran d’accueil en un clic.'
+    + (isIOS() ? '<br><small>Partager <span aria-hidden="true">⬆️</span> puis « Sur l’écran d’accueil »</small>'
+       : installEvt ? '' : '<br><small>Menu ⋮ puis « Installer l’application »</small>');
   const pop = document.createElement('div'); pop.id = 'installPop';
   pop.innerHTML = '<div class="ip" role="dialog" aria-modal="true" aria-labelledby="ipT"><img src="icones/icon-256.png?v=4" alt=""><h2 id="ipT">Installer l’appli</h2><p>' + how + '</p><div class="ipb">'
     + (installEvt && !isIOS() ? '<button type="button" class="btn btn-red" data-ip="go">Installer</button>' : '')
