@@ -439,6 +439,7 @@ input,textarea,select,[contenteditable],.selectable{-webkit-user-select:text;use
 .pg-q b{color:var(--orange)}
 .opt .pg-k{margin-left:auto;font-size:13px;color:var(--orange);font-weight:700;white-space:nowrap}
 .opt.off{opacity:.55}
+.pg-row{flex-shrink:0;height:auto}
 .opt.off .pg-k{color:var(--muted)}
 .okmsg{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0}
 .arch-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
@@ -1478,17 +1479,19 @@ function trainingPlan(n){
 const qList = ks => ks.map(k => 'Q' + (k + 1)).join(' ');
 function shPreGen(s){
   const pl = s.plan, Q = pl.places.length, gen = generated(nightOf());
+  const nbOn = pid => activePeople().filter(h => mark(h, pid) === 'G').length; /* personnes qui tiennent ce process */
   const row = (x, i) => {
     const per = S.people[x.id], p = S.posts[x.post]; if (!per || !p) return '';
     const on = s.step === 1 || s.on[i];
-    return '<button type="button" class="opt' + (on ? '' : ' off') + '"' + (s.step === 2 ? ' data-act="preGenToggle" data-i="' + i + '" aria-pressed="' + on + '"' : ' tabindex="-1"') + '><span class="steps"><span>' + (s.step === 2 ? (on ? '✓ ' : '') : '') + esc(per.name) + (i === 0 && !x.keep ? ' <span class="rec" style="color:var(--orange)">⭐ Recommandé</span>' : '') + '</span>'
-      + '<small>' + (x.keep ? 'déjà prévu' : x.held + ' poste' + (x.held > 1 ? 's' : '')) + ' · formation sur ' + esc(p.code) + (x.nb ? ' (' + x.nb + ' titulaire' + (x.nb > 1 ? 's' : '') + ')' : '') + '</small></span>'
+    return '<button type="button" class="opt pg-row' + (on ? '' : ' off') + '"' + (s.step === 2 ? ' data-act="preGenToggle" data-i="' + i + '" aria-pressed="' + on + '"' : ' tabindex="-1"') + '><span class="steps"><span>' + (s.step === 2 ? (on ? '✓ ' : '') : '') + esc(per.name) + (i === 0 && !x.keep ? ' <span class="rec" style="color:var(--orange)">⭐ Recommandé</span>' : '') + '</span>'
+      + '<small>' + (x.keep ? 'Déjà prévu' : 'Tient ' + x.held + ' poste' + (x.held > 1 ? 's' : '')) + '</small>'
+      + '<small>🎓 <b style="color:var(--ink)">' + esc(p.code) + ' · ' + esc(p.name) + '</b> · ' + nbOn(x.post) + ' pers. à ce process</small></span>'
       + '<span class="pg-k">' + (on ? qList(x.ks) : 'pas ce soir') + '</span></button>';
   };
   let body = gen ? '<p class="note">Le planning sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>' : '';
   if (s.step === 1) {
-    body += '<div class="pg-stats"><div><b>' + Math.max(...pl.present) + '</b><small>présents</small></div><div><b>' + pl.P + '</b><small>postes</small></div><div class="hot"><b>' + pl.total + '</b><small>places formation</small></div></div>'
-      + '<div class="pg-q">' + pl.places.map((v, k) => '<span>Q' + (k + 1) + ' <b>' + v + '</b></span>').join('') + '</div>';
+    body += '<div class="pg-stats"><div><b>' + Math.max(...pl.present) + '</b><small>présents</small></div><div><b>' + pl.P + '</b><small>postes</small></div><div class="hot"><b>+' + Math.max(...pl.places) + '</b><small>en plus</small></div></div>'
+      + '<div class="pg-q">' + pl.places.map((v, k) => '<span>Q' + (k + 1) + ' <b>+' + v + '</b></span>').join('') + '</div>';
     if (pl.sugg.length) body += '<div class="lbl">Je te conseille de former</div>' + pl.sugg.map(row).join('');
     else {
       body += '<div class="provisional"><b>⚠️ ' + (pl.total ? 'Aucune formation possible ce soir' : 'Effectif juste : pas de place pour former ce soir') + '</b>'
