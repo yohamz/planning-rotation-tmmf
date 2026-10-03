@@ -1955,7 +1955,7 @@ function askConfirm(message, fn, data, opts){
   /* copie défensive : data vient souvent directement du dataset d'un bouton qui va
      être remplacé par le rendu de cette sheet de confirmation */
   const safeData = data ? Object.assign({}, data) : data;
-  open({type:'confirm', message, fn, data:safeData, back, danger:!!(opts && opts.danger), okLabel:(opts && opts.okLabel) || 'Confirmer'});
+  open({type:'confirm', message, fn, data:safeData, back, danger:!!(opts && opts.danger), okLabel:(opts && opts.okLabel) || 'Confirmer', noLabel:(opts && opts.noLabel) || 'Annuler'});
 }
 /* cases non couvertes des quarts générés, nommées « P07 · Q2 » */
 function uncoveredList(n){
@@ -1973,7 +1973,7 @@ function shConfirm(s){
     ? '<div class="provisional"><span>⚠️ ' + esc(s.message) + '</span></div>'
     : '<p class="note" style="font-size:15px;color:var(--ink)">' + esc(s.message) + '</p>';
   return {title:'Confirmation', body,
-    foot:'<button type="button" class="btn" data-act="confirmNo">Annuler</button><button type="button" class="btn btn-red" data-act="confirmYes">' + esc(s.okLabel) + '</button>'};
+    foot:'<button type="button" class="btn" data-act="confirmNo">' + esc(s.noLabel || 'Annuler') + '</button><button type="button" class="btn btn-red" data-act="confirmYes">' + esc(s.okLabel) + '</button>'};
 }
 /* popup « Quoi de neuf », affichée une seule fois par appareil (voir maybeShowWhatsNew) */
 function shWhatsNew(s){
@@ -2391,7 +2391,7 @@ const A = {
     const n = nightOf(); if (!generated(n)) return;
     /* confirmation seulement s'il reste des cases non couvertes ; ensuite la fiche propose le PDF */
     const holes = uncoveredList(n);
-    if (holes.length) { askConfirm(holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ') + '. Valider quand même ?', 'validateGo', null, {okLabel:'Valider'}); return; }
+    if (holes.length) { askConfirm(holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ') + '. Valider quand même ?', 'validateGo', null, {okLabel:'Valider quand même', noLabel:'↩ Retour en préparation'}); return; }
     A.validateGo();
   },
   validateGo(){
