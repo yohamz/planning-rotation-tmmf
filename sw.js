@@ -19,6 +19,12 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;
+  /* la page de l'appli : toujours revalidée auprès du serveur (GitHub la déclare valable
+     10 min, une nouvelle version mettait jusqu'à 10 min à arriver sur le téléphone) */
+  if (req.mode === "navigate") {
+    e.respondWith(fetch(req.url, {cache: "no-cache", credentials: "same-origin"}).catch(() => fetch(req)));
+    return;
+  }
   if (req.method !== "GET" || !HOTES.includes(new URL(req.url).hostname)) {
     e.respondWith(fetch(req));
     return;

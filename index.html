@@ -64,7 +64,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" media="print" onload="this.media='all'">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- version FIXÉE (pas « @2 ») : une ancienne copie gardée en cache sur le téléphone utilisait un verrou
+     partagé entre onglets ; un onglet resté ouvert et gelé par Android bloquait la connexion. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --bg:#F1F2F4; --surface:#FFFFFF; --surface-2:#F7F8F9; --line:#DADDE1; --line-2:#BEC3C9;
@@ -2705,7 +2707,7 @@ async function boot(){
     const newUser = session ? session.user : null;
     const changed = (newUser && newUser.id) !== (S.authUser && S.authUser.id);
     S.authUser = newUser; S.authReady = true;
-    if (newUser) { S._forcedOut = false; if (changed) setTimeout(() => { loadProfiles(); loadBusinessData(); }, 0); else render(); }
+    if (newUser) { S._forcedOut = false; if (changed) { setTimeout(() => { loadProfiles(); loadBusinessData(); }, 0); setTimeout(() => { if (S.authUser && !S.ready) toast('Connexion lente… Si rien ne bouge, ferme complètement l’appli et rouvre-la.'); }, 12000); } else render(); }
     else { teardownBiz(); S.people = {}; S.posts = {}; S.nights = {}; S.feedback = {}; updateTitle(); S.ready = false; S._forcedOut = false; render(); }
   });
   /* tient à jour l'écran « fermé hors horaires » et le bonjour/bonsoir sans recharger */
