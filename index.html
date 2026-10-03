@@ -1966,7 +1966,8 @@ function uncoveredList(n){
 function shValidated(){
   const n = nightOf(); if (!n) return null;
   const body = '<p class="note" style="font-size:15px;color:var(--ink)">Le planning de la nuit du ' + esc(fmt(n.date)) + ' est validé : c’est le planning officiel.</p>';
-  return {title:'✓ Planning validé', body, foot:'<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button><button type="button" class="btn btn-red" data-act="pdfDownload">⬇️ Télécharger</button>'};
+  const holes = uncoveredList(n);
+  return {title:'✓ Planning validé', body:body + (holes.length ? '<div class="provisional"><span>⚠️ ' + esc(holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ')) + '</span></div>' : ''), foot:(holes.length ? '<button type="button" class="btn" data-act="backToDraft">↩ Retour en préparation</button>' : '') + '<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button><button type="button" class="btn btn-red" data-act="pdfDownload">⬇️ Télécharger</button>'};
 }
 function shConfirm(s){
   const body = s.danger
@@ -2394,6 +2395,7 @@ const A = {
     if (holes.length) { askConfirm(holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ') + '. Valider quand même ?', 'validateGo', null, {okLabel:'Valider quand même', noLabel:'↩ Retour en préparation'}); return; }
     A.validateGo();
   },
+  backToDraft(){ close(); A.unvalidateReal(); },
   validateGo(){
     if (!canEdit()) return;
     A.validateReal();
