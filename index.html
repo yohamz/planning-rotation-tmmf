@@ -2162,12 +2162,20 @@ function shAccounts(){
 function shRenfortPosts(s){
   const per = S.people[s.id]; if (!per) return null;
   const ps = posts();
-  let body = '';
+  /* étape 2 : les quarts où le renfort est là */
+  if (s.step === 'quarts') {
+    const n = nightOf() || freshNight(S.date), at = (n.tl && n.tl[per.id]) || [];
+    const body = '<p class="note" style="text-align:center">' + (per.marks && per.marks._any ? 'Aucune préférence de poste' : ps.filter(p => mark(per, p.id) === 'G').map(p => esc(p.code)).join(', ') || 'Aucun poste') + '</p>'
+      + '<div class="opt-row">' + Array.from({length:nq(n)}, (z, k) => '<button type="button" class="qb" style="flex:1" data-act="tlq" data-id="' + esc(per.id) + '" data-k="' + k + '" aria-pressed="' + !!at[k] + '">Q' + (k + 1) + '</button>').join('') + '</div>';
+    return {title:'Quarts · ' + esc(per.name), body, foot:'<button type="button" class="btn" data-act="renfortBack">‹ Postes</button><button type="button" class="btn btn-red" data-act="close">Terminé</button>'};
+  }
+  const any = !!(per.marks && per.marks._any);
+  let body = '<button type="button" class="opt" data-act="renfortAny" data-id="' + esc(per.id) + '" aria-current="' + any + '">Aucune préférence<small>' + (any ? '✓ ' : '') + 'tous les postes</small></button>';
   zones(ps).forEach(z => {
     body += '<div class="lbl">' + esc(z) + '</div>';
     ps.filter(p => (p.zone || 'Autres') === z).forEach(p => {
       const m = mark(per, p.id);
-      body += '<button type="button" class="opt" data-act="renfortMark" data-id="' + esc(per.id) + '" data-post="' + esc(p.id) + '" aria-current="' + (m === 'G') + '"><span class="code">' + esc(p.code) + '</span>&nbsp;' + esc(p.name) + '<small>' + (m === 'H' ? '🎓 en formation' : m === 'G' ? '✓ sait tenir' : '') + '</small></button>';
+      body += '<button type="button" class="opt" data-act="renfortPick" data-id="' + esc(per.id) + '" data-post="' + esc(p.id) + '" aria-current="' + (m === 'G' && !any) + '"><span class="code">' + esc(p.code) + '</span>&nbsp;' + esc(p.name) + '<small>' + (m === 'H' ? '🎓 en formation' : m === 'G' && !any ? '✓ sait tenir' : '') + '</small></button>';
     });
   });
   return {title:'Postes · ' + esc(per.name), body, foot:'<button type="button" class="btn btn-red" data-act="close">Terminé</button>'};
@@ -2610,6 +2618,22 @@ const A = {
   accounts(){ if (!isAdmin()) return; S.accountsErr = ''; open({type:'accounts', form:true}); },
   openPersonMenu(d){ open({type:'personMenu', id:d.id}); },
   renfortPosts(d){ open({type:'renfortPosts', id:d.id}); },
+  /* renfort : un poste choisi (ou « aucune préférence ») mène à l'écran des quarts */
+  renfortPick(d){
+    const src = S.people[d.id]; if (!src) return;
+    const per = clone(src); per.marks = per.marks || {};
+    if (per.marks._any) { Object.keys(per.marks).forEach(k => { if (!isMetaKey(k) && per.marks[k] === 'G') delete per.marks[k]; }); delete per.marks._any; }
+    if (per.marks[d.post] === 'G') { delete per.marks[d.post]; savePerson(per); renderSheet(); return; }
+    per.marks[d.post] = 'G'; savePerson(per);
+    S.sheet.step = 'quarts'; renderSheet();
+  },
+  renfortAny(d){
+    const src = S.people[d.id]; if (!src) return;
+    const per = clone(src); per.marks = per.marks || {};
+    posts().forEach(p => { per.marks[p.id] = 'G'; }); per.marks._any = true;
+    savePerson(per); S.sheet.step = 'quarts'; renderSheet();
+  },
+  renfortBack(){ if (S.sheet) { S.sheet.step = null; renderSheet(); } },
   renfortMark(d){ const src = S.people[d.id]; const post = S.posts[d.post]; const m = (src.marks && src.marks[d.post]) || ''; const nx = MARKS[(MARKS.indexOf(m) + 1) % MARKS.length]; const per = clone(src); per.marks = per.marks || {}; if (nx) per.marks[d.post] = nx; else delete per.marks[d.post]; savePerson(per); renderSheet(); },
   toggleQAbs(){ S.sheet.showQ = !S.sheet.showQ; renderSheet(); },
   qAbsToggle(d){
