@@ -1000,12 +1000,19 @@ function showLoading(main){
    chargement, profil) et s'efface en fondu dès que le premier vrai écran est dessiné. Filet : 10 s maxi. */
 function finOuverture(){
   const v = document.getElementById('ouverture');
-  if (!v || v.classList.contains('sortie')) return;
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  if (!v || v.dataset.part) return;
+  v.dataset.part = '1';
+  /* deux images plus tard (le premier écran est peint) ; filet setTimeout si le navigateur
+     suspend requestAnimationFrame (onglet en arrière-plan, certaines surcouches Android) */
+  let fait = false;
+  const sortir = () => {
+    if (fait) return; fait = true;
     v.classList.add('sortie');
     v.addEventListener('transitionend', () => v.remove(), {once:true});
     setTimeout(() => v.remove(), 400);
-  }));
+  };
+  requestAnimationFrame(() => requestAnimationFrame(sortir));
+  setTimeout(sortir, 150);
 }
 setTimeout(finOuverture, 10000);
 function render(){
