@@ -769,15 +769,17 @@ function hungarian(cost){
 }
 /* what each person did on the previous nights: used to share posts fairly */
 function history(date){
-  const count = {}, red = {};
+  const count = {}, red = {}, pair = {}, mm = mirrorMap();
   const past = Object.values(S.nights).filter(n => n.date < date && generated(n)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, HIST_NIGHTS);
   past.forEach(n => (n.q || []).forEach((q, k) => Object.keys(q || {}).forEach(pid => {
     const who = q[pid]; if (!who) return;
     const w = (n.manual && n.manual[k] && n.manual[k][pid]) ? 0.4 : 1; /* une affectation faite à la main compense moins pour l’équilibre futur */
     count[who + '|' + pid] = (count[who + '|' + pid] || 0) + w;
     if (S.posts[pid] && S.posts[pid].diff === 'rouge') red[who] = (red[who] || 0) + w;
+    /* qui a tenu la paire miroir avec qui (pour varier les binômes gauche/droite) */
+    const p2 = mm[pid]; if (p2 && pid < p2 && q[p2]) { const key = pairKey(who, q[p2]); pair[key] = (pair[key] || 0) + 1; }
   })));
-  return {count, red};
+  return {count, red, pair};
 }
 function holderMap(q){ const m = {}; Object.keys(q || {}).forEach(pid => { if (q[pid]) m[q[pid]] = pid; }); return m; }
 /* ---------- journal des modifications manuelles d'une nuit (consultable par l'admin
@@ -855,12 +857,84 @@ function otherQuarts(night, k){
 /* coût « équité » d'une affectation : historique des 30 dernières nuits, même poste sur
    un autre quart de la nuit, enchaînement de postes rouges. Partagé par la génération
    et par les propositions de remplacement, pour qu'elles suivent les mêmes règles. */
+/* ---------- process miroirs (gauche / droite) ----------
+   Repérés par leur nom : « Levier Gauche / Levier Droit », « Support Moteur G / D »,
+   « Moquette Gauche / Droite »… plus Prépa 2 ↔ 3 et Prépa 4 ↔ 5.
+   Règles : une même personne évite de passer d'un côté à l'autre sur deux quarts qui se
+   suivent, et les binômes qui tiennent une paire changent (pas toujours les deux mêmes). */
+let mirrorCache = null, mirrorSig = '';
+function mirrorMap(){
+  const ps = posts(), sig = ps.map(p => p.id + ':' + p.name).join('|');
+  if (mirrorCache && sig === mirrorSig) return mirrorCache;
+  const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const side = name => {
+    const w = norm(name).split(' '), last = w.pop(), base = w.join(' ');
+    if (!base) return null;
+    if (['gauche', 'g', 'gche'].includes(last)) return ['G', base];
+    if (['droite', 'droit', 'd', 'dte', 'dt'].includes(last)) return ['D', base];
+    return null;
+  };
+  const m = {}, byBase = {}, prepa = {};
+  ps.forEach(p => {
+    const sd = side(p.name); if (sd) (byBase[sd[1]] = byBase[sd[1]] || {})[sd[0]] = p.id;
+    const x = norm(p.name).match(/^prep[a-z]*(?: fem)? ?(\d+)$/); if (x) prepa[x[1]] = p.id;
+  });
+  Object.values(byBase).forEach(b => { if (b.G && b.D) { m[b.G] = b.D; m[b.D] = b.G; } });
+  [['2', '3'], ['4', '5']].forEach(([a, b]) => { if (prepa[a] && prepa[b]) { m[prepa[a]] = prepa[b]; m[prepa[b]] = prepa[a]; } });
+  mirrorSig = sig; mirrorCache = m;
+  return m;
+}
+const pairKey = (a, b) => a < b ? a + '|' + b : b + '|' + a;
+/* combien de fois ces deux personnes ont déjà tenu une paire miroir ensemble
+   (autres quarts de la nuit : fort ; nuits précédentes : léger) */
+function pairSeen(a, b, k, night, hist){
+  const mm = mirrorMap(), key = pairKey(a, b);
+  let c = 2 * ((hist.pair && hist.pair[key]) || 0);
+  for (let j = 0; j < nq(night); j++) {
+    if (j === k) continue;
+    const q = night.q[j] || {};
+    Object.keys(mm).forEach(p1 => { const p2 = mm[p1]; if (p1 < p2 && q[p1] && q[p2] && pairKey(q[p1], q[p2]) === key) c += 10; });
+  }
+  return c;
+}
+/* après le calcul d'un quart : si une paire miroir est tenue par un binôme déjà vu, on
+   essaie de remplacer l'un des deux par quelqu'un d'autre (échange de postes), tant que
+   ça ne dégrade pas trop l'équité */
+function rotateMirrorPartners(out, k, night, hist, cands, fixed){
+  const mm = mirrorMap(), others = otherQuarts(night, k);
+  Object.keys(mm).forEach(p1 => {
+    const p2 = mm[p1]; if (p1 > p2) return;
+    const a = out[p1], b = out[p2]; if (!a || !b) return;
+    const seen = pairSeen(a, b, k, night, hist); if (!seen) return;
+    const where = holderMap(out);
+    let best = null;
+    [[p1, a, b], [p2, b, a]].forEach(([pp, cur, partner]) => {
+      if (fixed[pp]) return;
+      const P = S.posts[pp], curPer = S.people[cur];
+      cands.forEach(C => {
+        if (C.id === cur || C.id === partner || isTL(C) || !fitFor(C, pp, night)) return;
+        const cp = where[C.id];
+        if (cp && (fixed[cp] || mm[cp] === pp || !fitFor(curPer, cp, night))) return;
+        const newSeen = pairSeen(C.id, partner, k, night, hist);
+        if (newSeen >= seen) return;
+        let delta = pairCost(C, P, k, hist, others) - pairCost(curPer, P, k, hist, others);
+        if (cp) { const CP = S.posts[cp]; delta += pairCost(curPer, CP, k, hist, others) - pairCost(C, CP, k, hist, others); }
+        const score = delta + 40 * (newSeen - seen);
+        if (score < 80 && (!best || score < best.score)) best = {score, pp, cur, C:C.id, cp};
+      });
+    });
+    if (best) { out[best.pp] = best.C; if (best.cp) out[best.cp] = best.cur; }
+  });
+}
 function pairCost(per, p, k, hist, others){
   let c = 15 * (hist.count[per.id + '|' + p.id] || 0);
   /* fait tourner un maximum de personnes sur la nuit (et l'overtime en particulier) plutôt
      que de réutiliser toujours les mêmes : pénalité pour qui tient déjà un autre quart ce soir */
   c += 30 * others.filter(o => o.m[per.id]).length;
   others.forEach(o => { if (o.m[per.id] === p.id) c += 600; });
+  /* process miroir juste avant ou juste après (gauche puis droite) : à éviter */
+  const mir = mirrorMap()[p.id];
+  if (mir) others.forEach(o => { if (Math.abs(o.j - k) === 1 && o.m[per.id] === mir) c += 400; });
   if (p.diff === 'rouge') {
     c += 6 * (hist.red[per.id] || 0);
     others.forEach(o => { if (Math.abs(o.j - k) === 1 && S.posts[o.m[per.id]] && S.posts[o.m[per.id]].diff === 'rouge') c += 150; });
@@ -914,6 +988,7 @@ function buildQuart(k, night, hist){
   }
   const a = hungarian(M), out = Object.assign({}, fixed);
   for (let i = 0; i < P; i++) { const j = a[i]; if (j >= 0 && j < N && M[i][j] < BAN) out[ps[i].id] = cands[j].id; }
+  rotateMirrorPartners(out, k, night, hist, cands, fixed);
   return out;
 }
 function freshNight(date){ return {date, ot:0, generated:false, q:[{}, {}, {}, {}, {}], lock:[{}, {}, {}, {}, {}], train:[{}, {}, {}, {}, {}], manual:[{}, {}, {}, {}, {}], qAbsent:[{}, {}, {}, {}, {}], absent:[], tl:{}}; }
