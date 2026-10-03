@@ -2170,7 +2170,7 @@ const A = {
     close(); saveNight(n);
   },
   addRenfort(){
-    const cnt = Object.values(S.people).filter(isTemp).length + 1;
+    const cnt = Object.values(S.people).filter(p => isTemp(p) && p.active !== false).length + 1;
     const id = newId('re');
     savePerson({id, name:'Renfort ' + cnt, role:'TM', temp:true, order:9000 + cnt, marks:{}});
     renderSheet();
@@ -2181,7 +2181,9 @@ const A = {
     A.delRenfortReal(d); /* sans confirmation */
   },
   delRenfortReal(d){
-    deletePersonRow(d.id);
+    /* désactivé plutôt que supprimé : un TL a le droit d'enregistrer une personne mais pas d'en supprimer une */
+    const per = S.people[d.id]; if (!per) return;
+    savePerson(Object.assign(clone(per), {active:false}));
     renderSheet();
   },
   force(){ S.sheet.force = !S.sheet.force; renderSheet(); },
