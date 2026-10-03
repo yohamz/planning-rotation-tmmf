@@ -1927,7 +1927,6 @@ function viewEffectifs(){
     + '<span class="grow"></span><button type="button" class="btn btn-red btn-sm" data-act="addPerson">+ Ajouter une personne</button></div>';
   const flow = S.genFlow === S.date ? '<div class="genflow"><div><b>Avant de générer : vérifie l’effectif</b><small>Absents, TL et renforts de cette nuit. Ensuite, l’appli propose les formations.</small></div><span class="grow"></span><button type="button" class="btn btn-sm" data-act="genCancel">Annuler</button><button type="button" class="btn btn-sm btn-red" data-act="genContinue">Continuer ›</button></div>' : '';
   html += flow;
-  html += '<p class="note">Touche un nom pour le marquer présent/absent cette nuit. ⚙️ (ou appui long sur le nom) : absence sur certains quarts, absence de plusieurs jours, restriction, modifier ou retirer.</p>';
   html += '<div class="lbl">TL · touche les quarts où il tient un poste, ou « Absent »</div><div class="mlist">';
   pp.filter(isTL).sort(byAbsentFirst).forEach(per => {
     const at = (n.tl && n.tl[per.id]) || [];
