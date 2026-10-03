@@ -96,6 +96,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 #sheet.hold{pointer-events:none}
+[data-long].longarmed{box-shadow:inset 0 0 0 2px var(--red);background:var(--red-soft)}
 html{overflow-x:hidden}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.35;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 button,input,select{font:inherit;color:inherit}
@@ -2483,7 +2484,7 @@ const C = {
 /* seules actions permises à un spectateur (TM) : naviguer, consulter, télécharger */
 const VIEWER_ACTS = new Set(['tab', 'day', 'qk', 'openNight', 'pdfDownload', 'pdfShare', 'logout', 'acctMenu', 'close', 'confirmNo', 'playRoad', 'whatsnew', 'reloadApp']);
 const VIEWER_CHG = new Set(['date']);
-const LONG_MS = 450, LONG_TOL = 10;
+const LONG_MS = 450, LONG_TOL = 10, LONG_TOL_ARMED = 24;
 let press = null, suppressClick = false, suppressTimer = null, longUntil = 0;
 /* bloque le début d'une sélection de texte pendant un appui (sauf dans les champs) */
 document.addEventListener('selectstart', e => {
@@ -2491,37 +2492,62 @@ document.addEventListener('selectstart', e => {
   if (t && t.closest && t.closest('input,textarea,[contenteditable],.selectable')) return;
   if (press || Date.now() < longUntil) e.preventDefault();
 });
-function cancelPress(){ if (press) clearTimeout(press.timer); press = null; }
-/* la fiche ouverte par un appui long apparaît sous le doigt encore posé : sans précaution, le
-   champ qui se trouve dessous recevait l’appui long d’Android (clavier + « Coller / Tout
-   sélectionner »). La fiche ignore donc les touchers jusqu’à ce que le doigt soit relevé. */
+function cancelPress(){ if (press) { clearTimeout(press.timer); press.el.classList.remove('longarmed'); } press = null; }
+/* L'action d'un appui long part au moment où le doigt se RELÈVE (une vibration et un cadre rouge
+   signalent dès 450 ms que l'appui long est reconnu). Avant, la fiche s'ouvrait sous le doigt
+   encore posé : le champ qui se trouvait dessous recevait l'appui long d'Android (clavier,
+   « Coller / Tout sélectionner »). Juste après l'ouverture, la fiche ignore encore les touchers
+   un court instant, le temps que passent les évènements souris que le navigateur génère après
+   le relâchement (sinon ils tombaient sur un champ de la fiche et ouvraient le clavier). */
 let holdTimer = null;
-function holdSheet(){ const sh = $("#sheet"); if (!sh) return; sh.classList.add("hold"); clearTimeout(holdTimer); holdTimer = setTimeout(() => releaseHold(0), 2500); }
-function releaseHold(delay){ clearTimeout(holdTimer); holdTimer = setTimeout(() => { holdTimer = null; const sh = $("#sheet"); if (sh) sh.classList.remove("hold"); }, delay || 80); }
+function holdSheet(ms){ const sh = $('#sheet'); if (!sh) return; sh.classList.add('hold'); clearTimeout(holdTimer); holdTimer = setTimeout(() => { holdTimer = null; sh.classList.remove('hold'); }, ms); }
+function armLong(){
+  if (!press) return;
+  press.armed = true; press.el.classList.add('longarmed');
+  longUntil = Date.now() + 3000;
+  try { const sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges(); } catch (e2) {}
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch (e2) {}
+}
 function fireLong(el){
   cancelPress();
-  longUntil = Date.now() + 1500;
-  try { const sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges(); } catch (e2) {}
+  longUntil = Date.now() + 900;
   suppressClick = true; clearTimeout(suppressTimer); suppressTimer = setTimeout(() => { suppressClick = false; }, 900);
   const f = isViewer() ? null : A[el.dataset.long]; if (f) f(Object.assign({}, el.dataset));
-  holdSheet();
-  if (navigator.vibrate) try { navigator.vibrate(12); } catch (e2) {}
+  holdSheet(450);
 }
 document.addEventListener('pointerdown', e => {
   suppressClick = false;
   if (e.button > 0) return;
   const el = e.target.closest('[data-long]'); cancelPress(); if (!el) return;
-  press = {el, x:e.clientX, y:e.clientY, id:e.pointerId, timer:setTimeout(() => fireLong(el), LONG_MS)};
+  press = {el, x:e.clientX, y:e.clientY, id:e.pointerId, armed:false, timer:setTimeout(armLong, LONG_MS)};
 });
 document.addEventListener('pointermove', e => {
-  if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > LONG_TOL) cancelPress();
+  if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > (press.armed ? LONG_TOL_ARMED : LONG_TOL)) cancelPress();
 });
-['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, e => { if (press && e.pointerId === press.id) cancelPress(); if (holdTimer) releaseHold(ev === 'pointerup' ? 80 : 700); }));
+document.addEventListener('pointerup', e => {
+  if (!press || e.pointerId !== press.id) return;
+  const p = press; cancelPress();
+  if (p.armed) fireLong(p.el);
+});
+/* le navigateur peut annuler le pointeur pendant un appui long (pointercancel) : on attend alors
+   la fin réelle du toucher (touchend) pour ouvrir, jamais pendant que le doigt est posé */
+document.addEventListener('pointercancel', e => {
+  if (!press || e.pointerId !== press.id) return;
+  const p = press; cancelPress();
+  if (!p.armed) return;
+  p.el.classList.add('longarmed'); longUntil = Date.now() + 5000;
+  let t = null;
+  const fin = ev => { document.removeEventListener('touchend', fin, true); document.removeEventListener('touchcancel', fin, true); clearTimeout(t); p.el.classList.remove('longarmed'); if (ev && ev.type === 'touchend') fireLong(p.el); };
+  document.addEventListener('touchend', fin, true); document.addEventListener('touchcancel', fin, true);
+  t = setTimeout(fin, 5000);
+});
 document.addEventListener('contextmenu', e => {
-  if (holdTimer) { e.preventDefault(); return; } /* doigt encore posé après un appui long */
+  /* appui long au doigt : Android envoie aussi contextmenu pendant que le doigt est posé → on
+     bloque seulement son menu, l'action partira au relâchement */
+  if (press || holdTimer || Date.now() < longUntil) { e.preventDefault(); if (press && !press.armed) armLong(); return; }
   const el = e.target.closest('[data-long]'); if (!el) return;
   e.preventDefault();
-  if (!suppressClick) fireLong(el); /* pas deux fois si le minuteur a déjà déclenché */
+  fireLong(el); /* clic droit à la souris : tout de suite */
 });
 document.addEventListener('click', e => {
   if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
