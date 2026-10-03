@@ -95,6 +95,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+#sheet.hold{pointer-events:none}
 html{overflow-x:hidden}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:16px;line-height:1.35;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 button,input,select{font:inherit;color:inherit}
@@ -2491,12 +2492,19 @@ document.addEventListener('selectstart', e => {
   if (press || Date.now() < longUntil) e.preventDefault();
 });
 function cancelPress(){ if (press) clearTimeout(press.timer); press = null; }
+/* la fiche ouverte par un appui long apparaît sous le doigt encore posé : sans précaution, le
+   champ qui se trouve dessous recevait l’appui long d’Android (clavier + « Coller / Tout
+   sélectionner »). La fiche ignore donc les touchers jusqu’à ce que le doigt soit relevé. */
+let holdTimer = null;
+function holdSheet(){ const sh = $("#sheet"); if (!sh) return; sh.classList.add("hold"); clearTimeout(holdTimer); holdTimer = setTimeout(() => releaseHold(0), 2500); }
+function releaseHold(delay){ clearTimeout(holdTimer); holdTimer = setTimeout(() => { holdTimer = null; const sh = $("#sheet"); if (sh) sh.classList.remove("hold"); }, delay || 80); }
 function fireLong(el){
   cancelPress();
   longUntil = Date.now() + 1500;
   try { const sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges(); } catch (e2) {}
   suppressClick = true; clearTimeout(suppressTimer); suppressTimer = setTimeout(() => { suppressClick = false; }, 900);
   const f = isViewer() ? null : A[el.dataset.long]; if (f) f(Object.assign({}, el.dataset));
+  holdSheet();
   if (navigator.vibrate) try { navigator.vibrate(12); } catch (e2) {}
 }
 document.addEventListener('pointerdown', e => {
@@ -2508,8 +2516,9 @@ document.addEventListener('pointerdown', e => {
 document.addEventListener('pointermove', e => {
   if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > LONG_TOL) cancelPress();
 });
-['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, e => { if (press && e.pointerId === press.id) cancelPress(); }));
+['pointerup', 'pointercancel'].forEach(ev => document.addEventListener(ev, e => { if (press && e.pointerId === press.id) cancelPress(); if (holdTimer) releaseHold(ev === 'pointerup' ? 80 : 700); }));
 document.addEventListener('contextmenu', e => {
+  if (holdTimer) { e.preventDefault(); return; } /* doigt encore posé après un appui long */
   const el = e.target.closest('[data-long]'); if (!el) return;
   e.preventDefault();
   if (!suppressClick) fireLong(el); /* pas deux fois si le minuteur a déjà déclenché */
