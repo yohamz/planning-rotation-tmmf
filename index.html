@@ -684,7 +684,6 @@ const fmt = s => { const a = s.split('-').map(Number); const t = new Date(a[0], 
 const LS = { get(k, d){ try { const v = localStorage.getItem('rot2.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v){ try { localStorage.setItem('rot2.' + k, JSON.stringify(v)); } catch (e) {} } };
 const MARKS = ['', 'G', 'H'];
 const DIFF = ['', 'vert', 'orange', 'rouge'];
-const HIST_NIGHTS = 30;
 const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
 /* popup « Quoi de neuf » : affichée une seule fois par appareil quand APP_VERSION change
    (comparée à une valeur enregistrée dans localStorage). Mettre à jour la date et la liste
@@ -695,8 +694,8 @@ const DEFAULT_CFG = {countH:true, countX:true, team:'CH2-2'};
    RÈGLE : ne rien ajouter ici sans avoir demandé à Hamza (ou à son collègue) ce qu'il faut mettre ou non.
    UNIQUEMENT ce qui sert aux TL/GL dans leur travail de planning. JAMAIS ce qui concerne l'admin
    (Équilibre, comptes, réglages admin…), ni les menus de compte, la connexion ou les corrections de bugs. */
-const APP_VERSION = '2026-10-06-4';
-const WHATSNEW_ID = '2026-10-06-2';
+const APP_VERSION = '2026-10-09-1';
+const WHATSNEW_ID = '2026-10-09-1';
 /* logo embarqué : s'affiche même si le fichier est ouvert seul (sans le dossier icones) ou hors connexion */
 const LOGO_SRC = 'data:image/webp;base64,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';
 document.querySelectorAll('img[data-logo]').forEach(i => { i.src = LOGO_SRC; });
@@ -709,9 +708,14 @@ function applyTheme(){
 }
 applyTheme();
 const CHANGELOG = [
+  'Préparation de la nuit : l’appli propose une répartition et te demande, pour chaque personne en plus, 🎓 formation ou hors ligne. Rien n’est décidé à ta place.',
+  'Poste vide : l’appli propose un TL habilité sur ce poste, sinon un échange (le TL prend un poste qu’il tient, le titulaire passe sur le poste vide). Un TL n’est jamais placé sur un poste où il n’est pas habilité.',
+  '📋 Bilan de la nuit : postes non couverts avec la cause, personnes sans poste, répétitions expliquées — avant de valider.',
+  '⚖️ Rééquilibrer la suite : après une correction, réduit les répétitions ; tu vois les changements avant d’appliquer.',
+  'Protéger 🔒 une case : la personne reste à ce poste sur ce quart, même si tu régénères. L’appli te prévient si ce n’est plus possible (absence, restriction…).',
+  'Rotation plus juste : l’appli tient compte des 7 derniers jours, dimanche soir compris.',
   'Formation : une personne en formation sur un quart (ex. Q2) est automatiquement sur ligne aux autres quarts, aussi quand tu la mets en formation à la main (un message te montre ce qui a changé).',
   'Après minuit, l’appli s’ouvre sur la nuit en cours.',
-  'Formations : choisis combien de personnes former, puis pour chacune Sur ligne / Q1, Q2… / Hors ligne.',
   'Polyvalence : ↑ / ↓ pour changer l’ordre des postes dans le planning.',
   'Effectifs : une barre de recherche pour retrouver une personne.',
   'Générer : une seule fenêtre « Que veux-tu générer ? » — Q1 seulement (la veille), toute la nuit, ou le reste. L’appli vérifie les présents avant de calculer.',
@@ -1076,19 +1080,31 @@ function hungarian(cost){
   for (let j = 1; j <= n; j++) if (p[j]) res[p[j] - 1] = j - 1;
   return res;
 }
-/* what each person did on the previous nights: used to share posts fairly */
+/* fenêtre d'équité : les 7 derniers jours (glissante, dimanche soir compris), comme le tableau d'équilibre */
+const EQ_DAYS = 7;
+const eqStart = d => { const f = addDays(d, -EQ_DAYS); return (S.cfg && S.cfg.eqFrom && S.cfg.eqFrom > f) ? S.cfg.eqFrom : f; };
+/* un quart compte comme « fait » s'il est validé 🔒, si la nuit est validée/archivée, ou si la nuit est terminée
+   (un brouillon jamais validé reste ce qui s'est passé sur la ligne) */
+const workedQ = (n, k) => { const st = nightState(n); return st === 'validated' || st === 'archived' || !!qvOf(n, k) || nightEnded(n.date); };
+/* ce que chacun a fait sur les 7 derniers jours : toutes les affectations comptent à 100 %, à la main comme
+   automatiques ; ni nuit de test, ni la nuit en cours (donc un recalcul ne double jamais les compteurs).
+   last = dernier poste connu de chacun (même plus ancien), repère contre la répétition immédiate. */
 function history(date){
-  const count = {}, red = {}, pair = {}, mm = mirrorMap();
-  const past = Object.values(S.nights).filter(n => n.date < date && generated(n)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, HIST_NIGHTS);
-  past.forEach(n => (n.q || []).forEach((q, k) => Object.keys(q || {}).forEach(pid => {
-    const who = q[pid]; if (!who) return;
-    const w = (n.manual && n.manual[k] && n.manual[k][pid]) ? 0.4 : 1; /* une affectation faite à la main compense moins pour l’équilibre futur */
-    count[who + '|' + pid] = (count[who + '|' + pid] || 0) + w;
-    if (S.posts[pid] && S.posts[pid].diff === 'rouge') red[who] = (red[who] || 0) + w;
-    /* qui a tenu la paire miroir avec qui (pour varier les binômes gauche/droite) */
-    const p2 = mm[pid]; if (p2 && pid < p2 && q[p2]) { const key = pairKey(who, q[p2]); pair[key] = (pair[key] || 0) + 1; }
-  })));
-  return {count, red, pair};
+  const count = {}, red = {}, pair = {}, tot = {}, last = {}, mm = mirrorMap(), ws = eqStart(date);
+  const real = Object.values(S.nights).filter(n => n.date < date && generated(n) && !isTestNight(n)).sort((a, b) => b.date.localeCompare(a.date));
+  real.forEach(n => { if (n.date < ws) return; (n.q || []).forEach((q, k) => {
+    if (!workedQ(n, k)) return;
+    Object.keys(q || {}).forEach(pid => {
+      const who = q[pid]; if (!who) return;
+      count[who + '|' + pid] = (count[who + '|' + pid] || 0) + 1;
+      tot[who] = (tot[who] || 0) + 1;
+      if (S.posts[pid] && S.posts[pid].diff === 'rouge') red[who] = (red[who] || 0) + 1;
+      /* qui a tenu la paire miroir avec qui (pour varier les binômes gauche/droite) */
+      const p2 = mm[pid]; if (p2 && pid < p2 && q[p2]) { const key = pairKey(who, q[p2]); pair[key] = (pair[key] || 0) + 1; }
+    });
+  }); });
+  real.forEach(n => { for (let k = (n.q || []).length - 1; k >= 0; k--) { if (!workedQ(n, k)) continue; const q = n.q[k] || {}; Object.keys(q).forEach(pid => { const who = q[pid]; if (who && last[who] === undefined) last[who] = pid; }); } });
+  return {count, red, pair, tot, last, date, mast:{}};
 }
 function holderMap(q){ const m = {}; Object.keys(q || {}).forEach(pid => { if (q[pid]) m[q[pid]] = pid; }); return m; }
 /* ---------- journal des modifications manuelles d'une nuit (consultable par l'admin
@@ -1166,7 +1182,7 @@ function otherQuarts(night, k){
   const pre = preOf(night); if (Object.keys(pre).length) others.push({j:-1, m:Object.assign({}, pre), pre:true});
   return others;
 }
-/* coût « équité » d'une affectation : historique des 30 dernières nuits, même poste sur
+/* coût « équité » d'une affectation : historique des 7 derniers jours (EQ_DAYS), même poste sur
    un autre quart de la nuit, enchaînement de postes rouges. Partagé par la génération
    et par les propositions de remplacement, pour qu'elles suivent les mêmes règles. */
 /* ---------- process miroirs (gauche / droite) ----------
@@ -1238,8 +1254,13 @@ function rotateMirrorPartners(out, k, night, hist, cands, fixed){
     if (best) { out[best.pp] = best.C; if (best.cp) out[best.cp] = best.cur; }
   });
 }
+/* nombre de postes que la personne tient réellement seule (habilitations G, hors restriction) : sert à ne pas
+   « punir » ceux dont la rotation est limitée par leurs habilitations (répéter est alors inévitable) */
+const masteredN = (per, hist) => { const m = hist.mast || (hist.mast = {}); if (m[per.id] === undefined) m[per.id] = posts().filter(p => fitFor(per, p.id, {date:hist.date})).length; return m[per.id]; };
 function pairCost(per, p, k, hist, others){
-  let c = 15 * (hist.count[per.id + '|' + p.id] || 0);
+  const M = masteredN(per, hist), rf = M <= 2 ? 0.25 : M <= 4 ? 0.6 : 1;
+  let c = 15 * rf * (hist.count[per.id + '|' + p.id] || 0);
+  if (k === 0 && M > 2 && hist.last && hist.last[per.id] === p.id) c += 500; /* pas deux fois de suite le même poste d'une nuit à l'autre (sauf rotation limitée : 1-2 postes) */
   /* fait tourner un maximum de personnes sur la nuit (et l'overtime en particulier) plutôt
      que de réutiliser toujours les mêmes : pénalité pour qui tient déjà un autre quart ce soir */
   c += 30 * others.filter(o => o.m[per.id]).length;
@@ -1254,12 +1275,14 @@ function pairCost(per, p, k, hist, others){
   return c;
 }
 /* one quart = best assignment of people to posts, given the other quarts of the night */
-function buildQuart(k, night, hist){
+function buildQuart(k, night, hist, stay){
   const absent = new Set(night.absent || []);
   Object.keys((night.qAbsent && night.qAbsent[k]) || {}).forEach(id => absent.add(id));
   const fixed = {}, fixedPeople = new Set();
   const lk = (night.lock && night.lock[k]) || {};
-  Object.keys(lk).forEach(pid => { const who = lk[pid]; if (S.posts[pid] && S.people[who] && !absent.has(who) && !fixedPeople.has(who)) { fixed[pid] = who; fixedPeople.add(who); } });
+  /* affectation protégée (🔒) : tenue sur CE quart seulement ; impossible si la personne est absente, hors ligne ou
+     sous restriction sur ce poste (le conflit est signalé par lockConflicts) */
+  Object.keys(lk).forEach(pid => { const who = lk[pid], wp = S.people[who]; if (S.posts[pid] && wp && !absent.has(who) && !isOffQ(night, who, k) && (isTL(wp) ? fitFor(wp, pid, night) : !isRestricted(wp, pid, night.date)) && !fixedPeople.has(who)) { fixed[pid] = who; fixedPeople.add(who); } });
   const ps = posts().filter(p => !fixed[p.id]);
   /* personnes en formation sur ce quart : elles accompagnent un titulaire et ne prennent un poste
      qu'en dernier recours, si ce poste resterait vide sans elles (couvrir passe avant former) ;
@@ -1290,7 +1313,7 @@ function buildQuart(k, night, hist){
       if (i < P && j < N) {
         const p = ps[i], per = cands[j];
         if (!fitFor(per, p.id, night)) c = BAN;
-        else c = pairCost(per, p, k, hist, others) + Math.random() * 12 - (trainK[p.id] && isFormateur(per) ? 200 : 0) + (trainees.has(per.id) ? PULL : 0); /* un formateur de préférence sur un poste avec stagiaire */
+        else c = pairCost(per, p, k, hist, others) + Math.random() * 12 - (trainK[p.id] && isFormateur(per) ? 200 : 0) - (stay && stay[p.id] === per.id ? 260 : 0) + (trainees.has(per.id) ? PULL : 0); /* un formateur de préférence sur un poste avec stagiaire */
       } else if (i < P) c = (j - N === i) ? EMPTY : BAN;
       else if (j < N) {
         const per = cands[j];
@@ -1309,21 +1332,65 @@ function buildQuart(k, night, hist){
 }
 function freshNight(date){ return {date, ot:0, generated:false, q:[{}, {}, {}, {}, {}], lock:[{}, {}, {}, {}, {}], train:[{}, {}, {}, {}, {}], manual:[{}, {}, {}, {}, {}], qAbsent:[{}, {}, {}, {}, {}], absent:[], tl:{}}; }
 function editable(date){ const n = nightOf(date); const c = n ? clone(n) : freshNight(date || S.date); c.q = [0, 1, 2, 3, 4].map(k => (c.q && c.q[k]) || {}); c.lock = [0, 1, 2, 3, 4].map(k => (c.lock && c.lock[k]) || {}); c.train = [0, 1, 2, 3, 4].map(k => (c.train && c.train[k]) || {}); c.manual = [0, 1, 2, 3, 4].map(k => (c.manual && c.manual[k]) || {}); c.qAbsent = [0, 1, 2, 3, 4].map(k => (c.qAbsent && c.qAbsent[k]) || {}); c.absent = c.absent || []; c.tl = c.tl || {}; return c; }
+/* coût « équité » d'un quart complet (sans le hasard) : sert à comparer deux versions d'un même quart */
+function quartCost(night, k, q, hist, others){
+  let c = 0;
+  posts().forEach(p => { const w = q[p.id]; c += w && S.people[w] ? pairCost(S.people[w], p, k, hist, others) : 1e6; });
+  return c;
+}
+/* optimisation bornée sur toute la nuit : chaque quart non validé est recalculé en tenant compte des autres
+   (2 passes au plus) et remplacé seulement s'il est strictement meilleur ; la couverture et les protections 🔒
+   ne peuvent jamais baisser (poste vide = 1e6, cases protégées fixées par buildQuart) */
+function improveNight(night, hist, keep){
+  for (let pass = 0; pass < 2; pass++) {
+    let moved = false;
+    for (let k = 0; k < nq(night); k++) {
+      if (keep.has(k)) continue;
+      const others = otherQuarts(night, k), cur = night.q[k] || {}, cand = buildQuart(k, night, hist, cur);
+      if (quartCost(night, k, cand, hist, others) < quartCost(night, k, cur, hist, others) - 1) { night.q[k] = cand; moved = true; }
+    }
+    if (!moved) break;
+  }
+}
+/* « manual » = cases protégées en vigueur (utile à l'affichage) */
+function syncManual(night){
+  night.manual = [0, 1, 2, 3, 4].map(k => { const m = {}, lk = (night.lock && night.lock[k]) || {}; Object.keys(lk).forEach(pid => { if ((night.q[k] || {})[pid] === lk[pid]) m[pid] = true; }); return m; });
+}
 function generateAll(night){
   const hist = history(night.date);
   /* les quarts validés 🔒 sont conservés tels quels (pour tout refaire, retirer d'abord leur validation) */
-  const keep = new Set(qvKeys(night)), kq = {}, kl = {}, km = {};
-  keep.forEach(k => { kq[k] = (night.q || [])[k] || {}; kl[k] = (night.lock || [])[k] || {}; km[k] = (night.manual || [])[k] || {}; });
+  const keep = new Set(qvKeys(night)), kq = {};
+  keep.forEach(k => { kq[k] = (night.q || [])[k] || {}; });
+  night.lock = [0, 1, 2, 3, 4].map(k => (night.lock && night.lock[k]) || {}); /* les affectations protégées restent actives jusqu'à leur libération */
   night.q = [{}, {}, {}, {}, {}];
   for (let k = 0; k < nq(night); k++) night.q[k] = keep.has(k) ? kq[k] : buildQuart(k, night, hist);
-  night.lock = [{}, {}, {}, {}, {}]; /* un forçage ne vaut que pour la génération qui vient de tourner */
-  night.manual = [{}, {}, {}, {}, {}]; /* une fois régénéré, l’affectation redevient « générée » pour l’équilibre futur */
-  keep.forEach(k => { night.lock[k] = kl[k]; night.manual[k] = km[k]; });
+  improveNight(night, hist, keep);
+  syncManual(night);
   for (let k = 0; k < 5; k++) if (!keep.has(k)) dropOrphanTrainees(night, k);
   stampGen(night, allQuarts(night).filter(k => !keep.has(k)));
   night.generated = true;
 }
-function regenQuart(night, k){ night.q[k] = {}; night.q[k] = buildQuart(k, night, history(night.date)); night.lock[k] = {}; night.manual[k] = {}; dropOrphanTrainees(night, k); stampGen(night, [k]); }
+function regenQuart(night, k){ night.q[k] = {}; night.q[k] = buildQuart(k, night, history(night.date)); syncManual(night); dropOrphanTrainees(night, k); stampGen(night, [k]); }
+/* affectations protégées devenues impossibles (absence, hors ligne, restriction…) : à signaler au TL, jamais ignorées en silence */
+function lockConflicts(n){
+  const out = [];
+  for (let k = 0; k < nq(n); k++) {
+    if (qvOf(n, k) || !quartDone(n, k)) continue;
+    const lk = (n.lock && n.lock[k]) || {};
+    Object.keys(lk).forEach(pid => {
+      const who = lk[pid], per = S.people[who], p = S.posts[pid]; if (!p || (n.q[k] || {})[pid] === who) return;
+      let why;
+      if (!per) why = 'personne introuvable';
+      else if ((n.absent || []).includes(who) || ((n.qAbsent && n.qAbsent[k]) || {})[who]) why = 'absent(e)';
+      else if (isOffQ(n, who, k)) why = 'hors ligne';
+      else if (isRestricted(per, pid, n.date)) why = 'restriction sur ce poste';
+      else if (isTL(per) && !canHoldAlone(per, pid)) why = 'TL non habilité(e) sur ce poste';
+      else why = 'poste attribué autrement';
+      out.push({k, pid, who, why});
+    });
+  }
+  return out;
+}
 /* une personne en formation (H) ne reste jamais seule : si le poste n'a plus de titulaire,
    ou si elle est elle-même placée ailleurs sur ce quart, sa formation est retirée */
 function dropOrphanTrainees(night, k){
@@ -1343,12 +1410,12 @@ function unseat(n, k, postId){
   if (old) { const p = S.posts[postId]; pushLog(n, 'assign', {date:n.date, k, postCode:p ? p.code : postId, postName:p ? p.name : '', from:S.people[old] ? S.people[old].name : '?', to:'vide'}); }
   return old;
 }
-function replacementOptions(n, k, postId, banId){
+function replacementOptions(n, k, postId, banId, o){
   const post = S.posts[postId]; if (!post) return [];
   const q = n.q[k] || {}, lk = n.lock[k] || {}, where = holderMap(q);
-  const inTraining = new Set(Object.values(n.train[k] || {}));
+  const inTraining = o && o.endTrain ? new Set() : new Set(Object.values(n.train[k] || {}));
   const hist = history(n.date), others = otherQuarts(n, k);
-  const pool = activePeople().filter(per => !inTraining.has(per.id));
+  const pool = activePeople().filter(per => !inTraining.has(per.id) && !(o && o.noTL && isTL(per))); /* o.noTL : jamais un TL choisi à la place du responsable */
   const free = pool.filter(per => onQuart(n, k, per) && !where[per.id]);
   const tlPenalty = per => isTL(per) ? 800 : 0; /* un TL ne prend un poste qu'en dernier recours */
   const opts = [], seen = new Set();
@@ -1362,45 +1429,77 @@ function replacementOptions(n, k, postId, banId){
     free.forEach(C => { if (!fitFor(C, p2, n)) return; const c = pairCost(C, post2, k, hist, others) + tlPenalty(C); if (!best || c < best.c) best = {C, c}; });
     if (best) add([{post:postId, who:B.id, from:p2}, {post:p2, who:best.C.id}], pairCost(B, post, k, hist, others) + tlPenalty(B) + best.c);
   });
-  /* dernier recours : un TL présent cette nuit mais pas prévu sur ce quart */
-  if (!opts.length) pool.forEach(per => {
-    if (!isTL(per) || per.id === banId || where[per.id] || onQuart(n, k, per)) return;
-    if ((n.absent || []).includes(per.id) || (n.qAbsent[k] || {})[per.id] || !fitFor(per, postId, n)) return;
-    add([{post:postId, who:per.id, tlOn:true}], 5000 + pairCost(per, post, k, hist, others));
+  /* dernier recours : un TL présent cette nuit mais pas prévu sur ce quart — d'abord un TL habilité sur ce poste,
+     sinon un échange (le TL prend un poste où il est habilité, son titulaire passe sur le poste vide).
+     Un TL n'est JAMAIS placé sur un poste où il n'est pas habilité. */
+  if (!opts.length && !(o && o.noTL)) tlSwaps(n, k, postId, banId).forEach(x => {
+    const per = S.people[x.tl];
+    if (!x.via) add([{post:postId, who:x.tl, tlOn:true}], 5000 + pairCost(per, post, k, hist, others));
+    else add([{post:postId, who:x.holder, from:x.via}, {post:x.via, who:x.tl, tlOn:true}], 5000 + pairCost(S.people[x.holder], post, k, hist, others) + pairCost(per, S.posts[x.via], k, hist, others));
   });
   opts.sort((a, b) => a.steps.length - b.steps.length || a.cost - b.cost);
   return opts.slice(0, 6);
 }
-function applyOption(n, k, opt){
+/* TL présents et sans poste sur ce quart qui peuvent combler un poste vide : directement s'ils y sont habilités,
+   sinon par échange (le TL prend un poste où il est habilité, son titulaire — habilité sur le poste vide — y passe).
+   Jamais de TL sur un poste où il n'est pas habilité. */
+function tlSwaps(n, k, postId, banId){
+  const q = n.q[k] || {}, lk = n.lock[k] || {}, where = holderMap(q), out = [];
+  const absentQ = per => (n.absent || []).includes(per.id) || ((n.qAbsent && n.qAbsent[k]) || {})[per.id] || isOffQ(n, per.id, k);
+  activePeople().filter(per => isTL(per) && per.id !== banId && !where[per.id] && !absentQ(per)).forEach(per => {
+    if (fitFor(per, postId, n)) { out.push({tl:per.id}); return; }
+    Object.keys(q).forEach(p2 => {
+      const h = q[p2], hp = S.people[h]; if (!hp || h === banId || p2 === postId || lk[p2] === h || isTL(hp)) return;
+      if (fitFor(per, p2, n) && fitFor(hp, postId, n)) out.push({tl:per.id, via:p2, holder:h});
+    });
+  });
+  return out;
+}
+function applyOption(n, k, opt, protect){
   opt.steps.forEach(s => {
     if (s.tlOn) { const a = (n.tl[s.who] || [false, false, false, false, false]).slice(); a[k] = true; n.tl[s.who] = a; }
-    assignHolder(n, k, s.post, s.who, false);
+    assignHolder(n, k, s.post, s.who, !!protect);
   });
 }
 /* applique automatiquement la meilleure correction (utilisé quand un planning validé
    perd quelqu'un : absence, restriction…) ; renvoie un texte pour le message */
-function autoFill(n, k, postId){
-  const opt = replacementOptions(n, k, postId)[0];
-  const p = S.posts[postId];
+function autoFill(n, k, postId, o){
+  let opt = replacementOptions(n, k, postId, undefined, o)[0];
+  const p = S.posts[postId], nm = s => (S.people[s.who] || {}).name || '?', trBefore = Object.assign({}, n.train[k] || {});
+  /* départ : en dernier recours seulement, une personne en formation passe sur la ligne (la formation s'arrête, dit dans le message) */
+  if (!opt && o && o.endTrain) {
+    opt = replacementOptions(n, k, postId, undefined, Object.assign({}, o, {endTrain:true}))[0];
+  }
   if (opt) {
     applyOption(n, k, opt);
-    const nm = s => (S.people[s.who] || {}).name || '?';
+    dropOrphanTrainees(n, k);
+    const ended = Object.keys(trBefore).filter(pid => (n.train[k] || {})[pid] !== trBefore[pid]).map(pid => ((S.people[trBefore[pid]] || {}).name || '?') + ' (' + ((S.posts[pid] || {}).code || pid) + ')');
     const s2 = opt.steps[1];
-    return 'Q' + (k + 1) + ' ' + (p ? p.code : '') + ' → ' + nm(opt.steps[0]) + (s2 ? ' (' + nm(s2) + ' reprend ' + ((S.posts[s2.post] || {}).code || '') + ')' : '');
+    return 'Q' + (k + 1) + ' ' + (p ? p.code : '') + ' → ' + nm(opt.steps[0]) + (s2 ? ' (' + nm(s2) + ' reprend ' + ((S.posts[s2.post] || {}).code || '') + ')' : '')
+      + (ended.length ? ' · ⚠️ formation interrompue : ' + ended.join(', ') : '');
   }
   dropOrphanTrainees(n, k);
-  return 'Q' + (k + 1) + ' ' + (p ? p.code : '') + ' reste vide';
+  const lead = 'Q' + (k + 1) + ' ' + (p ? p.code : '') + ' reste vide';
+  if (!(o && o.noTL)) return lead;
+  /* cause précise et action possible, sans jamais décider à la place du responsable */
+  const where = holderMap(n.q[k] || {}), absentQ = per => (n.absent || []).includes(per.id) || ((n.qAbsent[k] || {})[per.id]);
+  const sw = tlSwaps(n, k, postId), pcd = pid => (S.posts[pid] || {}).code || pid, pn = id => (S.people[id] || {}).name || '?';
+  const tls = sw.filter(x => !x.via).map(x => pn(x.tl));
+  const swaps = sw.filter(x => x.via && !tls.includes(pn(x.tl))).slice(0, 3).map(x => pn(x.tl) + ' prend ' + pcd(x.via) + ', ' + pn(x.holder) + ' passe sur ' + pcd(postId));
+  const offs = activePeople().filter(per => !isTL(per) && !absentQ(per) && isOffQ(n, per.id, k) && fitFor(per, postId, n)).map(per => per.name);
+  const why = typeof whyEmpty === 'function' ? whyEmpty(n, k, postId) : '';
+  return lead + ' (' + why + ')' + (tls.length ? ' · TL habilité' + (tls.length > 1 ? 's' : '') + ' : ' + tls.join(', ') + ' — à toi de choisir (appui long sur la case → Remplacer)' : swaps.length ? ' · échange possible : ' + swaps.join(' ; ') + ' — à toi de choisir (appui long sur la case → Remplacer)' : '') + (offs.length ? ' · hors ligne (retour à confirmer par le TL) : ' + offs.join(', ') : '') + (!tls.length && !swaps.length && !offs.length ? ' · Action : ajoute un renfort, lève une restriction ou une absence' : '');
 }
 /* retire une personne des quarts donnés (et de ses formations) puis comble les trous ;
    onlyPosts limite aux postes concernés (restriction) */
-function releasePerson(n, id, ks, onlyPosts){
+function releasePerson(n, id, ks, onlyPosts, o){
   const msgs = [];
   ks.forEach(k => {
     const t = n.train[k] || {}; Object.keys(t).forEach(pid => { if (t[pid] === id && !onlyPosts) delete t[pid]; });
     const pid = holderMap(n.q[k])[id];
     if (!pid || (onlyPosts && !onlyPosts.has(pid))) return;
     unseat(n, k, pid);
-    msgs.push(autoFill(n, k, pid));
+    msgs.push(autoFill(n, k, pid, o));
   });
   return msgs;
 }
@@ -1426,11 +1525,224 @@ function shPre(s){
    quart. Les quarts déjà faits ne bougent jamais ; pour les suivants, l'appli comble seulement
    les trous (1 ou 2 changements par trou) au lieu de recalculer la nuit. Deux temps : choisir,
    puis voir exactement ce qui va changer avant de confirmer. */
+/* ---------- couverture réelle d'un quart ----------
+   Un poste peut être couvert si une personne présente, sur la ligne (ni en formation, ni hors ligne) et habilitée seule
+   (G, sans restriction) peut le tenir, en tenant compte des cases protégées 🔒. Affectation maximale (couplage) :
+   on ne se contente pas de compter les présents. */
+function whyNoCover(n, k, pid, inTr){
+  const quals = activePeople().filter(per => canHoldAlone(per, pid));
+  if (!quals.length) return 'personne n’est qualifié(e) (G) sur ce poste';
+  const c = {abs:0, rest:0, off:0, tr:0, np:0, busy:0};
+  quals.forEach(per => {
+    if ((n.absent || []).includes(per.id) || ((n.qAbsent && n.qAbsent[k]) || {})[per.id]) c.abs++;
+    else if (isRestricted(per, pid, n.date)) c.rest++;
+    else if (isOffQ(n, per.id, k)) c.off++;
+    else if (inTr && inTr.has(per.id)) c.tr++;
+    else if (!onQuart(n, k, per)) c.np++;
+    else c.busy++;
+  });
+  const parts = [];
+  if (c.abs) parts.push(c.abs + ' absent' + (c.abs > 1 ? 's' : ''));
+  if (c.rest) parts.push(c.rest + ' avec restriction');
+  if (c.off) parts.push(c.off + ' hors ligne');
+  if (c.tr) parts.push(c.tr + ' en formation');
+  if (c.np) parts.push(c.np + ' TL/renfort non prévu' + (c.np > 1 ? 's' : '') + ' sur ce quart');
+  if (c.busy) parts.push(c.busy + ' indispensable' + (c.busy > 1 ? 's' : '') + ' sur d’autres postes');
+  return quals.length + ' qualifié' + (quals.length > 1 ? 's' : '') + (parts.length ? ' : ' + parts.join(', ') : '');
+}
+function coverReport(n, k){
+  const ps = planPosts(n), lk = (n.lock && n.lock[k]) || {}, fixedP = new Set(), fixedW = new Set();
+  Object.keys(lk).forEach(pid => {
+    const w = lk[pid], wp = S.people[w];
+    if (S.posts[pid] && wp && !(n.absent || []).includes(w) && !((n.qAbsent && n.qAbsent[k]) || {})[w] && !isOffQ(n, w, k) && (isTL(wp) ? fitFor(wp, pid, n) : !isRestricted(wp, pid, n.date)) && !fixedW.has(w)) { fixedP.add(pid); fixedW.add(w); }
+  });
+  const inTr = new Set(Object.values((n.train && n.train[k]) || {}));
+  const cands = activePeople().filter(per => !fixedW.has(per.id) && !inTr.has(per.id) && onQuart(n, k, per));
+  const todo = ps.filter(p => !fixedP.has(p.id)), owner = {};
+  const adj = todo.map(p => cands.filter(c => fitFor(c, p.id, n)));
+  const aug = (i, seen) => { for (const c of adj[i]) { if (seen.has(c.id)) continue; seen.add(c.id); if (owner[c.id] === undefined || aug(owner[c.id], seen)) { owner[c.id] = i; return true; } } return false; };
+  todo.forEach((p, i) => { aug(i, new Set()); });
+  const got = new Set(Object.values(owner));
+  const missing = todo.filter((p, i) => !got.has(i)).map(p => ({post:p, why:whyNoCover(n, k, p.id, inTr)}));
+  return {total:ps.length, covered:ps.length - missing.length, missing};
+}
+/* TL choisis pour tenir un poste : protégés sur les quarts explicitement sélectionnés, jamais ailleurs */
+function applyTlChoices(n, tl, inS){
+  for (let k = 0; k < nq(n); k++) {
+    if (!inS(k) || qvOf(n, k)) continue;
+    Object.keys(n.lock[k]).forEach(pid => { const w = S.people[n.lock[k][pid]]; if (w && isTL(w) && !(tl && tl[w.id] && tl[w.id].mixed)) delete n.lock[k][pid]; });
+  }
+  Object.keys(tl || {}).forEach(id => {
+    const t = tl[id]; if (!t || !t.post) return;
+    t.ks.forEach(k => {
+      if (!inS(k) || qvOf(n, k)) return;
+      Object.keys(n.lock[k]).forEach(pid => { if (n.lock[k][pid] === id) delete n.lock[k][pid]; });
+      n.lock[k][t.post] = id;
+      const a = (n.tl[id] || [false, false, false, false, false]).slice(); a[k] = true; n.tl[id] = a;
+    });
+  });
+}
+/* la nuit telle qu'elle serait avec les choix en cours (dec = avec les décisions formation / hors ligne) */
+function preGenNight(s, dec){
+  const pl = s.plan, sel = s.sel || [], n = editable();
+  n.tl = Object.assign({}, n.tl);
+  const off = Object.assign({}, pl.offKeep);
+  if (dec) pl.list.forEach((e, i) => { const x = sel[i]; if (x && x.off.length) off[e.id] = x.off.slice(); });
+  if (Object.keys(off).length) n.tl._off = off; else delete n.tl._off;
+  n.train = n.train.map((t, k) => pl.inS(k) ? {} : t);
+  if (dec) pl.list.forEach((e, i) => { const x = sel[i]; if (x && e.post) x.ks.forEach(k => { if (pl.inS(k)) n.train[k][e.post] = e.id; }); });
+  applyTlChoices(n, s.tl, pl.inS);
+  return n;
+}
+/* proposition provisoire de la nuit avec les choix en cours : les postes sont couverts et les titulaires répartis ;
+   ceux qui restent sans affectation sont les personnes à décider (formation ou hors ligne). Tirage fixe : la proposition ne
+   change pas toute seule d'un affichage à l'autre, et les quarts déjà proposés sont gardés comme point de départ (pas de déplacement silencieux). */
+function pgProposal(s){
+  const n = preGenNight(s, true), pl = s.plan, hist = history(n.date), res = {}, prev = s.prov || {};
+  const rnd = Math.random; let seed = 20260705;
+  Math.random = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+  try {
+    for (let k = 0; k < pl.Q; k++) if (pl.inS(k) && !qvOf(n, k)) n.q[k] = {};
+    for (let k = 0; k < pl.Q; k++) {
+      if (!pl.inS(k) || qvOf(n, k)) continue;
+      const q = buildQuart(k, n, hist, prev[k]); n.q[k] = q;
+      const placed = holderMap(q), tr = new Set(Object.values((n.train && n.train[k]) || {}));
+      res[k] = activePeople().filter(per => !isTL(per) && onQuart(n, k, per) && !placed[per.id] && !tr.has(per.id)).map(per => per.id);
+    }
+  } finally { Math.random = rnd; }
+  s.prov = {}; Object.keys(res).forEach(k => { s.prov[k] = n.q[k]; });
+  return res;
+}
+/* contrôle du plan avant génération : décisions manquantes (bloquant), conflits et couverture réelle */
+function planCheck(s){
+  const pl = s.plan, nDec = preGenNight(s, true), nBase = preGenNight(s, false), P = planPosts(nDec).length;
+  const rows = [], blockers = [], conflicts = [], notes = [], tlS = s.tl || {};
+  let decConflict = false;
+  const prop = pgProposal(s);
+  const nm = id => (S.people[id] || {}).name || '?', pc = pid => (S.posts[pid] || {}).code || pid;
+  Object.keys(tlS).forEach(id => { const t = tlS[id], per = S.people[id]; if (t.post && per && !fitFor(per, t.post, nDec)) blockers.push(nm(id) + ' (TL) n’est pas habilité(e) sur ' + pc(t.post) + ' : choisis un autre poste ou remets-le/la en réserve.'); });
+  Object.keys(tlS).forEach(id => { const t = tlS[id]; if (t.post && !t.ks.length) blockers.push(nm(id) + ' : choisis au moins un quart pour ' + pc(t.post) + ', ou remets-le/la en réserve.'); });
+  const seenTl = {};
+  Object.keys(tlS).forEach(id => { const t = tlS[id]; if (!t.post) return; t.ks.forEach(k => { const key = k + '|' + t.post; if (seenTl[key]) blockers.push('Q' + (k + 1) + ' · ' + pc(t.post) + ' : choisi par ' + nm(seenTl[key]) + ' et ' + nm(id) + ' — un seul TL par poste et par quart.'); seenTl[key] = id; }); });
+  for (let k = 0; k < pl.Q; k++) {
+    if (!pl.inS(k) || qvOf(nDec, k)) continue;
+    const line = activePeople().filter(per => !isTL(per) && onQuart(nBase, k, per));
+    const tlN = Object.keys(tlS).filter(id => tlS[id].post && tlS[id].ks.includes(k)).length;
+    const need = Math.max(0, P - tlN), S_k = Math.max(0, line.length - need);
+    const decided = [], trPost = {};
+    pl.list.forEach((e, i) => {
+      const x = s.sel[i]; if (!x || !line.some(per => per.id === e.id)) return;
+      if (x.ks.includes(k) || x.off.includes(k)) decided.push(e.id);
+      if (x.ks.includes(k) && e.post) (trPost[e.post] = trPost[e.post] || []).push(e.id);
+    });
+    const D = decided.length, un = (prop[k] || []).filter(id => !decided.includes(id)), m = un.length;
+    rows.push({k, S:S_k, D, line:line.length, need, un});
+    Object.keys(trPost).forEach(pid => { if (trPost[pid].length > 1) blockers.push('Q' + (k + 1) + ' · ' + pc(pid) + ' : ' + trPost[pid].map(nm).join(' et ') + ' en formation sur le même poste — un seul stagiaire par poste, change le poste de l’un des deux.'); });
+    if (m) blockers.push('Q' + (k + 1) + ' : ' + un.slice(0, 4).map(nm).join(', ') + (m > 4 ? ' et ' + (m - 4) + ' autre' + (m - 4 > 1 ? 's' : '') : '') + ' sans affectation (' + line.length + ' personnes pour ' + need + ' poste' + (need > 1 ? 's' : '') + '). Choisis pour chacun : 🎓 formation ou hors ligne.');
+    const rep = coverReport(nDec, k), base = coverReport(nBase, k), baseSet = new Set(base.missing.map(x => x.post.id));
+    rep.missing.forEach(x => {
+      if (baseSet.has(x.post.id)) { notes.push('Q' + (k + 1) + ' · ' + x.post.code + ' : couverture impossible, ' + x.why + '. Action : ajoute un renfort ou un TL sur ce poste, ou lève une restriction ; le meilleur résultat sera affiché.'); return; }
+      decConflict = true;
+      const who = decided.map(id => S.people[id]).filter(per => per && fitFor(per, x.post.id, nBase)).slice(0, 3).map(per => per.name);
+      conflicts.push('Q' + (k + 1) + ' · ' + x.post.code + ' : plus personne pour tenir ce poste avec ces choix (' + x.why + '). Action : ' + (who.length ? 'remets sur ligne ' + who.join(' ou ') + ', ou retire une formation.' : 'retire une formation ou un « hors ligne ».'));
+    });
+  }
+  return {rows, blockers, conflicts, notes, decConflict};
+}
+/* une formation de plus sur ce quart garderait-elle la couverture ? (pour ne conseiller que ce qui est possible) */
+function trainSafe(s, i, k){
+  const e = s.plan.list[i]; if (!e || !e.post) return false;
+  const base = coverReport(preGenNight(s, true), k).missing.length;
+  const sel2 = s.sel.map((x, j) => j === i ? {ks:x.ks.includes(k) ? x.ks : x.ks.concat(k), off:x.off.filter(q => q !== k)} : x);
+  const r = coverReport(preGenNight(Object.assign({}, s, {sel:sel2}), true), k);
+  return r.missing.length <= base && !r.missing.some(x => x.post.id === e.post);
+}
+/* ---------- alertes et bilan ----------
+   Chaque alerte dit : le quart, le poste ou la personne, la cause concrète, l'action possible. */
+function alertsOf(n){
+  const out = [], nm = id => (S.people[id] || {}).name || '?';
+  allQuarts(n).forEach(k => {
+    if (!quartDone(n, k)) return;
+    planPosts(n).forEach(p => { if (!(n.q[k] || {})[p.id]) out.push({k, kind:'hole', text:'Q' + (k + 1) + ' · ' + p.code + ' : non couvert — ' + whyEmpty(n, k, p.id) + '. Action : appui long sur la case → Remplacer, ou « Sans poste ce quart ».'}); });
+    if (!isArchived(n)) lockConflicts(n).filter(c => c.k === k).forEach(c => out.push({k, kind:'lock', text:'Q' + (k + 1) + ' · ' + ((S.posts[c.pid] || {}).code || c.pid) + ' : la protection 🔒 de ' + nm(c.who) + ' ne peut plus être tenue (' + c.why + '). Action : choisir quelqu’un d’autre sur cette case, ou libérer la protection.'}));
+    freeOnQuart(n, k).filter(x => !isTL(x.per) && !x.tr && !x.off).forEach(x => out.push({k, kind:'free', text:'Q' + (k + 1) + ' · ' + x.per.name + ' est sans poste et sans décision. Action : le/la former ou le/la mettre hors ligne (« Sans poste ce quart »).'}));
+  });
+  /* répétitions : même poste deux quarts de suite, avec la raison */
+  let hist = null;
+  allQuarts(n).forEach(k => {
+    if (k === 0 || !quartDone(n, k) || !quartDone(n, k - 1)) return;
+    Object.keys(n.q[k] || {}).forEach(pid => {
+      const who = n.q[k][pid]; if (!who || n.q[k - 1][pid] !== who) return;
+      const per = S.people[who]; if (!per) return;
+      const alt = activePeople().filter(c => c.id !== who && onQuart(n, k, c) && fitFor(c, pid, n) && !isTL(c) && ((n.lock[k] || {})[pid] !== who)).length, M = masteredN(per, hist || (hist = history(n.date)));
+      out.push({k, kind:'note', text:'Q' + (k + 1) + ' · ' + ((S.posts[pid] || {}).code || pid) + ' : ' + per.name + ' reste sur ce poste (Q' + k + ' puis Q' + (k + 1) + ') — ' + (((n.lock[k] || {})[pid] === who) ? 'case protégée 🔒' : M <= 2 ? 'rotation limitée : il/elle ne tient que ' + M + ' poste' + (M > 1 ? 's' : '') : alt ? alt + ' autre' + (alt > 1 ? 's' : '') + ' personne' + (alt > 1 ? 's' : '') + ' qualifiée' + (alt > 1 ? 's' : '') + ' : « Rééquilibrer la suite » peut l’échanger' : 'aucune autre personne qualifiée disponible') + '.'});
+    });
+  });
+  return out;
+}
+function bilanOf(n){
+  const al = alertsOf(n); let total = 0, held = 0, train = 0;
+  allQuarts(n).forEach(k => { if (!quartDone(n, k)) return; planPosts(n).forEach(p => { total++; if ((n.q[k] || {})[p.id]) held++; }); train += Object.keys((n.train && n.train[k]) || {}).filter(pid => n.train[k][pid] && (n.q[k] || {})[pid]).length; });
+  const offP = Object.keys(offOf(n)).filter(id => offKs(n, id).length && !(n.absent || []).includes(id)).length;
+  const todo = al.filter(a => a.kind !== 'note');
+  return {total, held, train, off:offP, todo, notes:al.filter(a => a.kind === 'note'), text:held + '/' + total + ' postes couverts · ' + train + ' formation' + (train > 1 ? 's' : '') + ' · ' + offP + ' hors ligne · ' + todo.length + ' à résoudre'};
+}
+function shBilan(s){
+  const n = nightOf(); if (!n) return null;
+  const b = bilanOf(n);
+  let body = '<p class="note" style="font-size:15px;color:var(--ink);text-align:center"><b>' + esc(b.text) + '</b></p>';
+  if (b.todo.length) body += '<div class="provisional"><b>À résoudre</b>' + b.todo.map(a => '<div>• ' + esc(a.text) + '</div>').join('') + '</div>';
+  if (b.notes.length) body += '<div class="provisional"><b>À savoir</b>' + b.notes.map(a => '<div>• ' + esc(a.text) + '</div>').join('') + '</div>';
+  if (!b.todo.length && !b.notes.length) body += '<p class="note" style="text-align:center">✓ Rien à résoudre.</p>';
+  return {title:'📋 Bilan de la nuit', body, foot:s.validate
+    ? '<button type="button" class="btn" data-act="close">↩ Retour en préparation</button><button type="button" class="btn btn-red" data-act="validateGo">Valider quand même</button>'
+    : '<button type="button" class="btn btn-red" data-act="close">Fermer</button>'};
+}
+/* ---------- rééquilibrer le reste de la nuit après une correction ----------
+   Les cases protégées 🔒 et les quarts validés ne bougent pas ; un quart n'est refait que s'il s'améliore nettement,
+   sans perdre de formation ni de couverture. Les changements sont montrés avant d'être appliqués. */
+/* « la suite » = les quarts après la dernière correction protégée 🔒 (ou tous les quarts non validés s'il n'y en a pas) */
+function rebalFrom(n){
+  let last = -1; allQuarts(n).forEach(k => { if (!qvOf(n, k) && Object.keys((n.lock && n.lock[k]) || {}).length) last = k; });
+  const first = allQuarts(n).find(k => !qvOf(n, k) && quartDone(n, k)); if (first === undefined) return 0;
+  return last < 0 ? first : Math.min(Math.max(first, last + 1), nq(n) - 1);
+}
+function rebalancePlan(n0, from){
+  const c = clone(n0), hist = history(c.date), keep = new Set(qvKeys(c)), f = from == null ? rebalFrom(c) : from, ks = allQuarts(c).filter(k => k >= f && !keep.has(k) && quartDone(c, k));
+  const base = {}; ks.forEach(k => { base[k] = clone(c.q[k] || {}); });
+  for (let pass = 0; pass < 2; pass++) {
+    let moved = false;
+    ks.forEach(k => {
+      const others = otherQuarts(c, k), cur = c.q[k] || {}, cand = buildQuart(k, c, hist, cur);
+      if (quartCost(c, k, cand, hist, others) >= quartCost(c, k, cur, hist, others) - 150) return;
+      const t = clone(c); t.q[k] = cand; dropOrphanTrainees(t, k);
+      if (Object.keys(t.train[k] || {}).length < Object.keys(c.train[k] || {}).length) return; /* une formation serait perdue : on ne touche pas */
+      c.q[k] = cand; moved = true;
+    });
+    if (!moved) break;
+  }
+  const changes = [];
+  ks.forEach(k => { const a = base[k], b = c.q[k] || {}; new Set(Object.keys(a).concat(Object.keys(b))).forEach(pid => { if (a[pid] !== b[pid]) changes.push({k, pid, from:a[pid] || null, to:b[pid] || null}); }); });
+  return {c, base, ks, changes, from:f};
+}
+function shRebal(s){
+  const r = s.res, nm = id => id ? (S.people[id] || {}).name || '?' : 'vide';
+  const Qn = nq(nightOf() || freshNight(S.date));
+  let body = '<div class="lbl">Rééquilibrer à partir du</div><div class="opt-row">' + Array.from({length:Qn}, (z, j) => j).map(j => '<button type="button" class="qb" style="flex:1;min-height:48px" data-act="rebalFrom" data-k="' + j + '"' + (j === r.from ? ' aria-pressed="true"' : '') + '>Q' + (j + 1) + '</button>').join('') + '</div>';
+  if (!r.changes.length) body += '<p class="note" style="font-size:15px;color:var(--ink);text-align:center">Rien à rééquilibrer : la suite de la nuit est déjà bien répartie.</p>';
+  else {
+    const byK = {}; r.changes.forEach(x => { (byK[x.k] = byK[x.k] || []).push(x); });
+    body += '<p class="note" style="font-size:15px;color:var(--ink)">Les cases protégées 🔒 et les quarts validés ne bougent pas. Voici ce qui changerait (' + r.changes.length + ') :</p>'
+      + Object.keys(byK).map(k => '<div class="lbl">Q' + (Number(k) + 1) + '</div>' + byK[k].map(x => '<div class="mrow static" style="min-height:44px">' + esc(((S.posts[x.pid] || {}).code || x.pid) + ' : ' + nm(x.from) + ' → ' + nm(x.to)) + '</div>').join('')).join('')
+      + '<p class="note">Rien ne change tant que tu n’as pas appliqué.</p>';
+  }
+  return {title:'⚖️ Rééquilibrer la suite', body, foot:'<button type="button" class="btn" data-act="close">' + (r.changes.length ? 'Annuler' : 'Fermer') + '</button>' + (r.changes.length ? '<button type="button" class="btn btn-red" data-act="rebalGo">Appliquer</button>' : '')};
+}
 function leaveApply(n, id, mode, k){
   const ks = mode === 'night' ? allQuarts(n) : mode === 'only' ? [k] : allQuarts(n).filter(j => j >= k);
   if (mode === 'night') n.absent = [...new Set((n.absent || []).concat(id))];
   else ks.forEach(j => { n.qAbsent[j] = Object.assign({}, n.qAbsent[j], {[id]:true}); });
-  return generated(n) ? releasePerson(n, id, ks) : [];
+  return generated(n) ? releasePerson(n, id, ks, undefined, {noTL:true, endTrain:true}) : [];
 }
 const leaveWhat = (mode, k) => mode === 'night' ? 'absent(e) toute la nuit' : mode === 'only' ? 'absent(e) au Q' + (k + 1) : 'part à partir du Q' + (k + 1);
 function shLeave(s){
@@ -1595,8 +1907,10 @@ function shGenMenu(){
   let body = '<p class="note" style="font-size:15px;color:var(--ink)">Que veux-tu générer pour la nuit du ' + esc(fmt(S.date)) + ' ?</p>';
   body += '<button type="button" class="opt stack" data-act="genScope" data-s="q1"><b>⚡ ' + (quartDone(n, 0) ? 'Refaire le Q1' : 'Le Q1 seulement') + '</b><small>La veille, pour demain soir : tu vérifies les présents, tu génères le Q1 puis tu peux le valider. Les autres quarts se feront pendant la nuit' + esc(tag(0)) + '.</small></button>';
   body += '<button type="button" class="opt stack" data-act="genScope" data-s="all"><b>🌙 ' + (done.length ? 'Tout refaire' : 'Toute la nuit') + ' (Q1 à Q' + Q + ')</b><small>Calcule tous les quarts d’un coup' + (qv.length ? ' · ' + esc(qNames(qv)) + ' validé : tu pourras le garder' : '') + '.</small></button>';
+  const others = all.filter(k => k > 0 && !qvOf(n, k));
+  if (others.length) body += '<div class="lbl">Un autre quart seul</div><div class="opt-row">' + others.map(k => '<button type="button" class="qb" style="flex:1;min-height:48px" data-act="genScope" data-s="k" data-k="' + k + '">Q' + (k + 1) + '<small style="display:block;font-size:11px;font-weight:400">' + (quartDone(n, k) ? 'refaire' : 'à générer') + '</small></button>').join('') + '</div><p class="note" style="margin-top:4px">Un quart se génère seul, sans toucher aux autres, en tenant compte de ceux déjà faits pour garder une rotation équitable.</p>';
   if (done.length && todo.length) body += '<button type="button" class="opt stack" data-act="genScope" data-s="rest"><b>➕ Le reste (' + esc(qNames(todo)) + ')</b><small>Génère seulement les quarts encore vides ; ceux déjà faits ne bougent pas.</small></button>';
-  body += '<p class="note">Pour un seul autre quart : appui long sur son nom (Q2, Q3…).</p>';
+  if (done.some(k => !qvOf(n, k))) body += '<button type="button" class="opt stack" data-act="rebal"><b>⚖️ Rééquilibrer la suite</b><small>Après une correction : réduit les répétitions sans toucher aux cases protégées 🔒 ni aux quarts validés. Tu vois les changements avant d’appliquer.</small></button>';
   return {title:'⚡ Que veux-tu générer ?', body, foot:'<button type="button" class="btn" data-act="close">Annuler</button>'};
 }
 /* pourquoi un poste est vide sur un quart : pour expliquer au lieu de masquer */
@@ -1843,7 +2157,7 @@ function statusBar(n){
   const t = s.at ? new Date(s.at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '';
   const cov = coverage(n);
   const todo = allQuarts(n).filter(k => !quartDone(n, k)).map(k => 'Q' + (k + 1));
-  const covTxt = todo.length ? '<small style="color:var(--orange);font-weight:700">' + todo.join(', ') + ' pas encore généré' + (todo.length > 1 ? 's' : '') + '</small>' : cov.missing ? '<small style="color:var(--rouge);font-weight:700">' + cov.missing + ' case' + (cov.missing > 1 ? 's' : '') + ' non couverte' + (cov.missing > 1 ? 's' : '') + '</small>' : '<small>Tous les postes sont couverts</small>';
+  const covTxt = todo.length ? '<small style="color:var(--orange);font-weight:700">' + todo.join(', ') + ' pas encore généré' + (todo.length > 1 ? 's' : '') + '</small>' : (() => { if (isViewer()) return ''; const b = bilanOf(n); return '<small' + (b.todo.length ? ' style="color:var(--rouge);font-weight:700"' : '') + '>' + esc(b.text) + '</small>'; })();
   /* nuit générée quart par quart : un bouton pour compléter les quarts restants */
   if (isViewer()) return '<div class="status ' + st + '"><span class="pill">' + (st === 'archived' ? 'Archivé' : 'Validé') + '</span><small>Planning officiel' + (pubBy({by:s.by, role:s.role}) ? ' · validé par ' + esc(pubBy({by:s.by, role:s.role})) : '') + '</small></div>';
   const testBar = isTestNight(n) ? '<div class="status test"><span class="pill">🧪 Test</span><small>Sur cet appareil seulement · ne compte pas pour l’équipe (ni Validé, ni Archives, ni Équilibre)</small><span class="grow"></span><button type="button" class="btn btn-sm" data-act="clearTest">Effacer le test</button></div>' : '';
@@ -1856,7 +2170,7 @@ function statusCore(n, st, s, t, todo, covTxt){
     const undoQ = qvKeys(n).filter(k => k < nq(n)).map(k => '<button type="button" class="btn btn-sm" data-act="unvalidateQ" data-k="' + k + '">↩ Annuler la validation du Q' + (k + 1) + '</button>').join('');
     const q1 = quartDone(n, 0) && !qvOf(n, 0) ? '<button type="button" class="btn btn-sm btn-red" data-act="validateQ" data-k="0">✓ Valider le Q1</button>' : '';
     const restB = rest && q1 ? rest.replace(' btn-red', '') : rest;
-    return '<div class="status draft">' + covTxt + genLine(n) + chips + '<div class="stbtns">' + q1 + undoQ + restB + '<button type="button" class="btn btn-sm' + (todo.length || q1 ? '' : ' btn-red') + '" data-act="validate">✓ Valider tout le planning</button></div></div>';
+    return '<div class="status draft">' + covTxt + genLine(n) + chips + '<div class="stbtns">' + q1 + undoQ + restB + (quartDone(n, 0) || todo.length < allQuarts(n).length ? '<button type="button" class="btn btn-sm" data-act="bilan">📋 Bilan</button>' : '') + '<button type="button" class="btn btn-sm' + (todo.length || q1 ? '' : ' btn-red') + '" data-act="validate">✓ Valider tout le planning</button></div></div>';
   }
   if (st === 'validated') return '<div class="status validated"><small>Planning officiel' + (pubBy({by:s.by, role:s.role}) ? ' · validé par ' + esc(pubBy({by:s.by, role:s.role})) : '') + (t ? ' à ' + t : '') + ' · passera dans les Archives à la fin de la nuit.</small>' + covTxt + '<span class="grow"></span>' + rest + '<button type="button" class="btn btn-sm" data-act="unvalidate">↩ Annuler la validation</button></div>';
   return '<div class="status archived"><span class="pill">Archivé</span><small>Lecture seule' + (pubBy({by:s.by, role:s.role}) ? ' · validé par ' + esc(pubBy({by:s.by, role:s.role})) : '') + '</small></div>';
@@ -2042,9 +2356,10 @@ function eqData(){
   const span = S.eqSpan || 7;
   const from = addDays(S.date, -(span - 1));
   /* remise à zéro (admin) : les nuits avant S.cfg.eqFrom ne comptent plus dans le tableau */
-  const list = Object.values(S.nights).filter(n => generated(n) && !isTestNight(n) && n.date >= from && n.date >= (S.cfg.eqFrom || '') && n.date <= S.date);
+  const list = Object.values(S.nights).filter(n => generated(n) && !isTestNight(n) && n.date >= from && n.date >= (S.cfg.eqFrom || '') && n.date <= S.date && (n.q || []).some((q, k) => workedQ(n, k)));
   const count = {}, tot = {};
-  list.forEach(n => (n.q || []).forEach(q => Object.keys(q || {}).forEach(pid => { const w = q[pid]; if (!w) return; count[w + '|' + pid] = (count[w + '|' + pid] || 0) + 1; tot[w] = (tot[w] || 0) + 1; })));
+  /* mêmes règles que la génération (history) : seuls les quarts effectués comptent (validés ou nuit terminée) */
+  list.forEach(n => (n.q || []).forEach((q, k) => { if (workedQ(n, k)) Object.keys(q || {}).forEach(pid => { const w = q[pid]; if (!w) return; count[w + '|' + pid] = (count[w + '|' + pid] || 0) + 1; tot[w] = (tot[w] || 0) + 1; }); }));
   return {span, list, count, tot};
 }
 const eqSpanBtns = (span, n, long) => '<button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="7">' + (long ? '7 derniers jours' : '7 jours') + '</button>'
@@ -2156,13 +2471,14 @@ function logRow(e){
   if (e.type === 'assign') txt = '✏️ ' + who + ' — ' + esc(d.postCode || '') + (d.postName ? ' · ' + esc(d.postName) : '') + ', quart ' + (Number(d.k) + 1) + ' : ' + esc(d.from) + ' → ' + esc(d.to);
   else if (e.type === 'train') txt = '🎓 ' + who + ' a mis ' + esc(d.trainee || '') + ' en formation — ' + esc(d.postCode || '') + ', quart ' + (Number(d.k) + 1) + (d.trainer ? ' avec ' + esc(d.trainer) : '');
   else if (e.type === 'untrain') txt = '🎓 ' + who + ' a retiré ' + esc(d.trainee || '') + ' de la formation — ' + esc(d.postCode || '') + ', quart ' + (Number(d.k) + 1);
-  else if (e.type === 'leave') txt = '🚫 ' + who + ' : ' + esc(d.person || '') + ' ' + esc(leaveWhat(d.mode, Number(d.k)));
+  else if (e.type === 'leave') txt = '🚫 ' + who + ' : ' + esc(d.person || '') + ' ' + esc(leaveWhat(d.mode, Number(d.k))) + (d.held ? ' (avait tenu : ' + esc(d.held) + ')' : '');
   else if (e.type === 'remove') txt = '➖ ' + who + ' a retiré ' + esc(d.person || '') + ' du quart ' + (Number(d.k) + 1);
   else if (e.type === 'regenQuart') txt = '⚡ ' + who + ' a régénéré le quart ' + (Number(d.k) + 1);
   else if (e.type === 'validate') txt = '✓ ' + who + ' a validé le planning';
   else if (e.type === 'validateQ') txt = '🔒 ' + who + ' a validé le Q' + (Number(d.k) + 1);
   else if (e.type === 'unvalidateQ') txt = '🔓 ' + who + ' a rouvert le Q' + (Number(d.k) + 1);
   else if (e.type === 'unvalidate') txt = '↩︎ ' + who + ' a repassé le planning en préparation';
+  else if (e.type === 'rebalance') txt = '⚖️ ' + who + ' a rééquilibré la suite de la nuit (' + (Number(d.moves) || 0) + ' changement' + (Number(d.moves) > 1 ? 's' : '') + ')';
   else if (e.type === 'login') return '';
   else txt = esc(e.type);
   return '<div class="mrow static" style="align-items:flex-start;min-height:auto;padding:10px 14px;flex-direction:column;gap:2px"><div>' + txt + '</div><div class="muted" style="font-size:13px">' + esc(fmtTs(e.ts)) + '</div></div>';
@@ -2226,6 +2542,11 @@ function trainingPlan(night, scope){
   });
   list.forEach(e => { e.rec.sort((a, b) => a - b); e.recd = !!e.rec.length; });
   list.sort((a, b) => b.recd - a.recd); /* tri stable : les conseillés d'abord */
+  /* tous les autres présents (hors TL) : sans formation possible, mais hors ligne possible — en cas de surplus, chacun
+     doit avoir une décision explicite (formation ou hors ligne), rien n'est décidé en silence */
+  activePeople().filter(per => !isTL(per) && !absent.has(per.id) && !list.some(e => e.id === per.id))
+    .sort((a, b) => held(a) - held(b) || a.name.localeCompare(b.name, 'fr'))
+    .forEach(per => list.push({id:per.id, posts:[], post:null, held:held(per), keep:false, ks:[], off:offKs(night, per.id).slice(), rec:[], recd:false, plain:true}));
   /* 💡 personnes sans aucune case hachurée : suggérer un process (le moins de titulaires),
      poste difficile seulement si un formateur le tient ; 3 au plus, postes variés */
   const aimed = {}; list.forEach(e => { aimed[e.post] = (aimed[e.post] || 0) + 1; });
@@ -2240,7 +2561,8 @@ function trainingPlan(night, scope){
   /* effectif juste : ce qu'il faudrait préparer (postes peu tenus, personnes peu polyvalentes) */
   const fragile = allPosts.map(p => ({p, nb:activePeople().filter(h => !absent.has(h.id) && fitFor(h, p.id, n)).length})).filter(x => x.nb <= 2).sort((a, b) => a.nb - b.nb).slice(0, 4);
   const weak = team.filter(per => held(per) <= 2).sort((a, b) => held(a) - held(b)).slice(0, 4).map(per => ({per, nb:held(per)}));
-  return {Q, P, present, places, list, recCount:list.filter(e => e.recd).length, news, fragile, weak, canQ, canOn, inS, offKeep:Object.keys(offOf(night)).filter(id => !list.some(e => e.id === id)).reduce((o, id) => { o[id] = offKs(night, id); return o; }, {})};
+  const tls = activePeople().filter(per => isTL(per) && !absent.has(per.id)).map(per => ({id:per.id, ks:[0, 1, 2, 3, 4].filter(k => k < Q && night.tl && night.tl[per.id] && night.tl[per.id][k])}));
+  return {Q, P, present, places, list, tls, recCount:list.filter(e => e.recd).length, news, fragile, weak, canQ, canOn, inS, offKeep:Object.keys(offOf(night)).filter(id => !list.some(e => e.id === id)).reduce((o, id) => { o[id] = offKs(night, id); return o; }, {})};
 }
 const firstQ = (pl, id, pid) => { for (let k = 0; k < pl.Q; k++) if (pl.canQ(id, pid, k)) return [k]; return []; };
 function pgPostLine(e, i){
@@ -2255,49 +2577,70 @@ function pgNews(pl){
     return '<div class="r"><span>Former <b>' + esc(per.name) + '</b> sur ' + esc(p.code + ' · ' + p.name) + ' <small class="muted">(' + x.nb + ' titulaire' + (x.nb > 1 ? 's' : '') + ')</small></span><button type="button" class="btn btn-sm" data-act="pgAddNew" data-j="' + j + '">Ajouter</button></div>';
   }).join('') + '</div>';
 }
+function pgCard(s, e, i, chk){
+  const x = s.sel[i], per = S.people[e.id], pl = s.plan, Q = pl.Q; if (!per) return '';
+  const allOff = x.off.length >= Q, sub = e.plain ? '<small>tient ' + e.held + ' poste' + (e.held > 1 ? 's' : '') + ' · pas de formation prévue</small>' : '<small>tient ' + e.held + ' poste' + (e.held > 1 ? 's' : '') + '</small>';
+  return '<div class="pgc' + (x.ks.length ? ' on' : '') + '"><div class="t"><b>' + esc(per.name) + '</b>' + sub
+    + (e.isNew ? '<small style="color:var(--orange)">🆕 nouvelle formation</small>' : '') + '</div>'
+    + (e.plain ? '' : pgPostLine(e, i))
+    + '<div class="pgseg" role="group" aria-label="' + esc(per.name) + ' ce soir">'
+    + '<button type="button" class="side" data-act="pgMode" data-i="' + i + '" data-m="line" aria-pressed="' + (!x.ks.length && !x.off.length) + '" aria-label="Effacer les choix de ' + esc(per.name) + '">À décider</button>'
+    + Array.from({length:Q}, (z, k) => {
+        const tr = x.ks.includes(k), of = x.off.includes(k), sug = !tr && !of && e.rec.includes(k) && pl.inS(k) && trainSafe(s, i, k);
+        return '<button type="button" class="q' + (of ? ' hl' : '') + '" data-act="pgQ" data-i="' + i + '" data-k="' + k + '" aria-pressed="' + tr + '" aria-label="Q' + (k + 1) + ' : ' + (tr ? 'formation' : of ? 'hors ligne' : 'sur ligne') + (sug ? ' (formation conseillée)' : '') + '"' + (pl.inS(k) ? '' : ' disabled') + '>Q' + (k + 1) + '<small>' + (tr ? '🎓' : of ? 'hors l.' : sug ? '⭐' : '') + '</small></button>'; }).join('')
+    + '<button type="button" class="side off" data-act="pgMode" data-i="' + i + '" data-m="off" aria-pressed="' + allOff + '">Hors ligne</button></div></div>';
+}
 function shPreGen(s){
-  const pl = s.plan, Q = pl.Q, L = pl.list, gen = generated(nightOf());
-  const go = '<button type="button" class="btn btn-red" data-act="preGenGo">⚡ ' + (gen ? 'Régénérer' : 'Générer le planning') + '</button>';
-  let body = gen ? '<p class="note">Le planning sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>' : '';
-  if (s.step !== 2) {
-    if (!L.length) {
-      body += '<p class="note" style="text-align:center">Personne de présent n’est en formation ce soir (case hachurée dans Polyvalence).</p>' + pgNews(pl);
-      if (pl.fragile.length || pl.weak.length) body += '<div class="provisional">'
-        + (pl.fragile.length ? '<p class="note" style="margin:0 0 2px">Postes fragiles, à former en priorité :</p>' + pl.fragile.map(x => '<div>• <b>' + esc(x.p.code) + '</b> ' + esc(x.p.name) + ' : ' + x.nb + ' titulaire' + (x.nb > 1 ? 's' : '') + '</div>').join('') : '')
-        + (pl.weak.length ? '<p class="note" style="margin:6px 0 2px">Personnes peu polyvalentes :</p>' + pl.weak.map(x => '<div>• ' + esc(x.per.name) + ' : ' + x.nb + ' poste' + (x.nb > 1 ? 's' : '') + '</div>').join('') : '')
-        + '</div>';
-      return {title:'🎓 Formations de la nuit', body, foot:'<button type="button" class="btn" data-act="close">Annuler</button>' + go};
-    }
-    const pl1 = L.length > 1;
-    body += '<p class="note" style="font-size:15px;color:var(--ink);text-align:center">Ce soir, <b>' + L.length + ' personne' + (pl1 ? 's' : '') + ' présente' + (pl1 ? 's sont' : ' est') + ' en formation</b> : ' + esc(L.map(e => S.people[e.id].name).join(', ')) + '.</p>'
-      + '<p class="note" style="text-align:center;margin:2px 0">Personnes en plus des ' + pl.P + ' postes :</p>'
-      + '<div class="pg-q">' + pl.places.map((v, k) => pl.inS(k) ? '<span>Q' + (k + 1) + ' <b>+' + v + '</b></span>' : '').join('') + '</div>'
-      + '<div class="lbl" style="text-align:center">Combien en former ce soir ?</div><div class="pgcount">'
-      + Array.from({length:L.length + 1}, (z, c) => '<button type="button" data-act="pgCount" data-c="' + c + '">' + c + '</button>').join('') + '</div>'
-      + '<p class="note" style="text-align:center">Tu choisis ensuite les quarts de chacun.</p>' + pgNews(pl);
-    return {title:'🎓 Formations de la nuit', body, foot:'<button type="button" class="btn" data-act="close">Annuler</button>'};
+  const pl = s.plan, Q = pl.Q, L = pl.list, gen = generated(nightOf()), chk = planCheck(s);
+  const anySurplus = chk.rows.some(r => r.S > 0), freeCap = chk.rows.some(r => r.S - r.D > 0);
+  let body = gen ? '<p class="note">Le planning sera recalculé. Les affectations protégées 🔒 restent à leur place sur leur quart ; le reste est recalculé.</p>' : '';
+  /* TL : en réserve (renfort si besoin) ou choisi pour tenir un poste, sur les quarts cochés */
+  if (pl.tls.length) {
+    const tlOpen = pl.tls.some(t => s.tl[t.id] && s.tl[t.id].post);
+    body += '<details class="pgtl"' + (tlOpen ? ' open' : '') + '><summary><b>TL de renfort</b> · réserve ou poste choisi' + (tlOpen ? ' · ' + pl.tls.filter(t => s.tl[t.id] && s.tl[t.id].post).map(t => esc((S.people[t.id] || {}).name || '') + ' → ' + esc((S.posts[s.tl[t.id].post] || {}).code || '')).join(', ') : '') + '</summary>'
+      + pl.tls.map(t => {
+        const per = S.people[t.id]; if (!per) return '';
+        const x = s.tl[t.id] || (s.tl[t.id] = {post:'', ks:[]});
+        return '<div class="pgc' + (x.post ? ' on' : '') + '"><div class="t"><b>' + esc(per.name) + '</b><small>' + (x.post ? 'tient ' + esc((S.posts[x.post] || {}).code || '') + (x.ks.length ? ' · ' + qNames(x.ks) : ' · choisis les quarts') : x.mixed ? 'protégé(e) 🔒 sur plusieurs postes · inchangé' : 'en réserve' + (t.ks.length ? ' (dispo ' + qNames(t.ks) + ')' : '')) + '</small></div>'
+          + '<select class="pp-sel" data-chg="pgTlPost" data-id="' + esc(t.id) + '" aria-label="Poste de ' + esc(per.name) + '"><option value="">En réserve : renfort seulement si besoin</option>'
+          + posts().map(p => '<option value="' + esc(p.id) + '"' + (x.post === p.id ? ' selected' : '') + (canHoldAlone(per, p.id) && !isRestricted(per, p.id, S.date) ? '' : ' disabled') + '>' + esc(p.code + ' · ' + p.name) + (canHoldAlone(per, p.id) && !isRestricted(per, p.id, S.date) ? '' : ' (non habilité)') + '</option>').join('') + '</select>'
+          + (x.post ? '<div class="pgseg" role="group" aria-label="Quarts de ' + esc(per.name) + '">' + Array.from({length:Q}, (z, k) => '<button type="button" class="q" data-act="pgTlQ" data-id="' + esc(t.id) + '" data-k="' + k + '" aria-pressed="' + x.ks.includes(k) + '"' + (pl.inS(k) ? '' : ' disabled') + '>Q' + (k + 1) + '<small>' + (x.ks.includes(k) ? '✓' : t.ks.includes(k) ? 'dispo' : '') + '</small></button>').join('') + '</div>' : '')
+          + '</div>';
+      }).join('') + '</details>';
   }
-  const sel = s.sel;
-  const used = k => L.filter((e, i) => sel[i].ks.includes(k)).length;
-  const free = k => Math.max(0, pl.present[k] - L.filter((e, i) => sel[i].off.includes(k) && pl.canOn(e.id, k)).length - pl.P);
-  let over = false;
-  body += '<div class="pg-q">' + Array.from({length:Q}, (z, k) => { if (!pl.inS(k)) return ''; const u = used(k), f = free(k); if (u > f) over = true; return '<span' + (u > f ? ' style="border-color:var(--orange)"' : '') + '>Q' + (k + 1) + ' <b>' + u + '/' + f + '</b></span>'; }).join('') + '</div>'
-    + '<p class="note" style="text-align:center;margin:0 0 8px">Formations / places en plus des postes, par quart</p>';
-  if (over) body += '<p class="note" style="color:var(--orange);font-weight:700">⚠️ Plus de formations que de places sur un quart : les postes passent d’abord, certaines formations pourront être retirées.</p>';
-  body += L.map((e, i) => {
-    const x = sel[i], per = S.people[e.id]; if (!per) return '';
-    const allOff = x.off.length >= Q;
-    return '<div class="pgc' + (x.ks.length ? ' on' : '') + '"><div class="t"><b>' + esc(per.name) + '</b><small>tient ' + e.held + ' poste' + (e.held > 1 ? 's' : '') + '</small>'
-      + (e.isNew ? '<small style="color:var(--orange)">🆕 nouvelle formation</small>' : '') + (e.recd ? '<span class="rec">⭐ Recommandé</span>' : '') + '</div>'
-      + pgPostLine(e, i)
-      + '<div class="pgseg" role="group" aria-label="' + esc(per.name) + ' ce soir">'
-      + '<button type="button" class="side" data-act="pgMode" data-i="' + i + '" data-m="line" aria-pressed="' + (!x.ks.length && !x.off.length) + '">Sur ligne</button>'
-      + Array.from({length:Q}, (z, k) => { const tr = x.ks.includes(k), of = x.off.includes(k);
-          return '<button type="button" class="q' + (of ? ' hl' : '') + '" data-act="pgQ" data-i="' + i + '" data-k="' + k + '" aria-pressed="' + tr + '" aria-label="Q' + (k + 1) + ' : ' + (tr ? 'formation' : of ? 'hors ligne' : 'sur ligne') + '"' + (pl.inS(k) ? '' : ' disabled') + '>Q' + (k + 1) + '<small>' + (tr ? '🎓' : of ? 'hors l.' : '') + '</small></button>'; }).join('')
-      + '<button type="button" class="side off" data-act="pgMode" data-i="' + i + '" data-m="off" aria-pressed="' + allOff + '">Hors ligne</button></div></div>';
-  }).join('');
-  body += pgNews(pl) + '<p class="note">Touche un quart pour changer : sur ligne → 🎓 formation (avec un titulaire) → hors ligne (retiré(e) de la ligne). « Sur ligne » et « Hors ligne » règlent toute la nuit d’un coup.</p>';
-  return {title:'🎓 Formations de la nuit', body, foot:'<button type="button" class="btn" data-act="preGenStep" data-back="1">‹ Retour</button>' + go};
+  /* surplus : une décision explicite par personne en plus des postes, sur chaque quart */
+  if (anySurplus || L.some((e, i) => s.sel[i].ks.length || s.sel[i].off.length)) {
+    body += '<div class="pg-q">' + chk.rows.map(r => '<span' + (r.un.length ? ' style="border-color:var(--orange)"' : '') + '>Q' + (r.k + 1) + ' <b>' + (r.un.length ? r.un.length + ' à décider' : '✓') + '</b></span>').join('') + '</div>'
+      + '<p class="note" style="text-align:center;margin:0 0 8px">1. Choisis les formations (seuls les quarts cochés retirent la personne des titulaires). 2. L’appli propose une répartition ; pour chaque personne sans affectation, choisis 🎓 formation ou hors ligne.</p>';
+    body += L.map((e, i) => e.plain ? '' : pgCard(s, e, i, chk)).join('');
+    /* personnes encore sans affectation dans la proposition, quart par quart */
+    const idxOf = id => L.findIndex(e => e.id === id);
+    const unBlocks = chk.rows.filter(r => r.un.length).map(r => '<div class="pgun"><div class="lbl">Q' + (r.k + 1) + ' · sans affectation (' + r.un.length + ')</div>' + r.un.map(id => {
+      const i = idxOf(id), e = L[i], per = S.people[id]; if (!per) return '';
+      const canTr = e && !e.plain && e.post && s.plan.canQ(id, e.post, r.k) && trainSafe(s, i, r.k);
+      return '<div class="pgc"><div class="t"><b>' + esc(per.name) + '</b><small>tient ' + (e ? e.held : '?') + ' poste' + (e && e.held > 1 ? 's' : '') + '</small></div><div class="pgseg" role="group" aria-label="' + esc(per.name) + ' au Q' + (r.k + 1) + '">'
+        + (canTr ? '<button type="button" class="side" data-act="pgDec" data-i="' + i + '" data-k="' + r.k + '" data-m="train">🎓 ' + esc((S.posts[e.post] || {}).code || '') + '</button>' : '<span class="muted" style="font-size:13px;align-self:center">pas de formation possible ici</span>')
+        + '<button type="button" class="side off" data-act="pgDec" data-i="' + i + '" data-k="' + r.k + '" data-m="off">Hors ligne</button></div></div>';
+    }).join('') + '</div>').join('');
+    body += unBlocks;
+    const plain = L.map((e, i) => e.plain ? pgCard(s, e, i, chk) : '').join('');
+    body += plain ? '<details class="pgtl"><summary><b>Modifier la proposition</b> · autres personnes</summary>' + plain + '</details>' : '';
+    body += '<p class="note">Rien n’est mis hors ligne ou en formation sans ton choix. ⭐ = formation conseillée, jamais choisie à ta place.</p>';
+  } else {
+    body += '<p class="note" style="text-align:center">Pas de personne en plus des postes ce soir : pas de formation ni de mise hors ligne à décider.</p>';
+  }
+  if (freeCap && pl.news.length) body += pgNews(pl);
+  if (!anySurplus && (pl.fragile.length || pl.weak.length)) body += '<div class="provisional">'
+    + (pl.fragile.length ? '<p class="note" style="margin:0 0 2px">Postes fragiles, à former en priorité :</p>' + pl.fragile.map(x => '<div>• <b>' + esc(x.p.code) + '</b> ' + esc(x.p.name) + ' : ' + x.nb + ' titulaire' + (x.nb > 1 ? 's' : '') + '</div>').join('') : '')
+    + (pl.weak.length ? '<p class="note" style="margin:6px 0 2px">Personnes peu polyvalentes :</p>' + pl.weak.map(x => '<div>• ' + esc(x.per.name) + ' : ' + x.nb + ' poste' + (x.nb > 1 ? 's' : '') + '</div>').join('') : '') + '</div>';
+  /* bilan avant génération : ce qui bloque, ce qui est à résoudre */
+  if (chk.blockers.length) body += '<div class="provisional"><b>À décider avant de générer</b>' + chk.blockers.map(t => '<div>• ' + esc(t) + '</div>').join('') + '</div>';
+  if (chk.conflicts.length) body += '<div class="provisional"><b>⚠️ Conflit avec tes choix</b>' + chk.conflicts.map(t => '<div>• ' + esc(t) + '</div>').join('') + '</div>';
+  if (chk.notes.length) body += '<div class="provisional"><b>Couverture impossible</b>' + chk.notes.map(t => '<div>• ' + esc(t) + '</div>').join('') + '</div>';
+  const okLine = !chk.blockers.length && !chk.conflicts.length && !chk.notes.length;
+  if (okLine) body += '<p class="note" style="text-align:center;color:var(--vert,#3a9)">✓ Tous les postes peuvent être couverts avec ces choix.</p>';
+  const label = '⚡ ' + (chk.conflicts.length ? 'Générer quand même' : gen ? 'Régénérer' : 'Générer le planning');
+  return {title:'🎓 Préparation de la nuit', body, foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="preGenGo"' + (chk.blockers.length ? ' disabled' : '') + '>' + label + '</button>'};
 }
 /* ---------- roulette : appui long sur une case du planning ----------
    Le doigt reste posé : la roulette s'ouvre dessous, on glisse vers une action et on relâche.
@@ -2359,6 +2702,9 @@ function doSwap(k, pb){
 function swapPosts(k, pa, pb, force){
   if (pa === pb) return;
   const n = editable(), q = n.q[k], a = q[pa] || null, b = q[pb] || null;
+  /* un TL n'est jamais placé sur un poste où il n'est pas habilité (même en forçant) */
+  const tlBad = [[b, pa], [a, pb]].find(([w, pid]) => w && S.people[w] && isTL(S.people[w]) && !fitFor(S.people[w], pid, n));
+  if (tlBad) { toast(S.people[tlBad[0]].name + ' (TL) n’est pas habilité(e) sur ' + (S.posts[tlBad[1]] ? S.posts[tlBad[1]].code : tlBad[1]) + ' : échange impossible.'); return; }
   if (!force) {
     const pc = pid => S.posts[pid] ? S.posts[pid].code : pid;
     const warn = [];
@@ -2369,7 +2715,7 @@ function swapPosts(k, pa, pb, force){
   const before = clone(n.q);
   if (a) q[pb] = a; else delete q[pb];
   if (b) q[pa] = b; else delete q[pa];
-  [pa, pb].forEach(pid => { n.manual[k][pid] = true; delete n.lock[k][pid]; });
+  [pa, pb].forEach(pid => { n.manual[k][pid] = true; delete n.lock[k][pid]; }); /* correction du TL : protégée 🔒 seulement sur demande (fiche du poste) */
   const nm = id => (id && S.people[id]) ? S.people[id].name : 'vide', code = pid => S.posts[pid] ? S.posts[pid].code : pid;
   pushLog(n, 'assign', {date:n.date, k, postCode:code(pa), postName:'', from:nm(a), to:nm(b)});
   pushLog(n, 'assign', {date:n.date, k, postCode:code(pb), postName:'', from:nm(b), to:nm(a)});
@@ -2645,28 +2991,47 @@ function buildPdf(n){
   if (offN.length) foot.push('Hors ligne : ' + offN.join(', '));
   const tls = tlIds(n).map(id => { const per = S.people[id]; const a = n.tl[id] || []; const ks = allQuarts(n).filter(k => a[k]); return per && ks.length ? per.name + ' (' + ks.map(k => 'Q' + (k + 1)).join(', ') + ')' : ''; }).filter(Boolean);
   if (tls.length) foot.push('TL / renforts : ' + tls.join(' ; '));
-  foot.push('(F) = en formation, toujours accompagné du titulaire.  Édité le ' + new Date().toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + '.');
-  /* taille de police la plus grande qui tient sur une page (entre 11 et 7 pt) */
-  const avail = H - 2 * M - 16 - foot.length * 4.6 - 4;
-  let fs = 12;
-  while (fs > 7 && lines * (fs * 0.3528 * 1.18) + rows.length * 2.4 + 8 > avail) fs -= 0.5;
+  foot.push('(F) = en formation. Édité le ' + new Date().toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + '.');
+  /* mise en page : une seule page A4, lignes de postes de même hauteur, colonne Poste assez large, police la plus grande
+     compatible avec la largeur des noms (chaque nom sur une seule ligne, formateur et stagiaire chacun sur sa ligne) */
+  const hasTr = allQuarts(n).some(k => ps.some(p => (n.train[k] || {})[p.id] && personFor(n, n.train[k][p.id])));
+  const nZone = zoneRows.size, nPost = rows.length - nZone, perLines = hasTr ? 2 : 1;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+  let footH = 5; foot.forEach(t => { footH += doc.splitTextToSize(pdfTxt(t), W - 2 * M).length * 4 + 0.6; });
+  const headH = 9, top0 = M + 16, availH = H - M - top0 - headH - footH - 2;
+  const rowH = Math.max(6, Math.min(availH / Math.max(1, nPost + nZone * 0.8), 14)), zoneH = rowH * 0.8, pad = 1.2;
+  const widest = (col, bold, f) => {
+    doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(f);
+    let m = 0;
+    rows.forEach((r, i) => { if (zoneRows.has(i)) return; const c = r[col]; String(c).split('\n').forEach(t => { m = Math.max(m, doc.getTextWidth(t)); }); });
+    return m;
+  };
+  const total = W - 2 * M, hasNC = rows.some((r, i) => !zoneRows.has(i) && r.some((c, j) => j > 0 && c === 'NON COUVERT'));
+  let fs = 12, w0 = 0, wq = 0;
+  for (; fs >= 6; fs -= 0.5) {
+    const textH = perLines * fs * 0.3528 * 1.15 + 2 * pad;
+    w0 = widest(0, true, fs) + 2 * pad + 0.6;
+    wq = 0; for (let c = 1; c <= Q; c++) wq = Math.max(wq, widest(c, hasNC, fs) + 2 * pad + 0.6);
+    if (textH <= rowH && w0 + wq * Q <= total) break;
+  }
+  if (fs < 6) fs = 6;
+  const extra = Math.max(0, total - w0 - wq * Q), colW = w0 + extra * 0.2, qW = (total - colW) / Q;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.text(pdfTxt('PLANNING ' + (S.cfg.team || '')), M, M + 6);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5); doc.text(pdfTxt(fmt(n.date) + ' - nuit' + (n.ot ? ' (avec overtime)' : '')), M, M + 12);
   doc.setFontSize(9.5);
   doc.text(pdfTxt(st === 'validated' || st === 'archived' ? 'Planning validé' + (pubBy({by:s.by, role:s.role}) ? ' par ' + pubBy({by:s.by, role:s.role}) : '') : 'BROUILLON - non validé'), W - M, M + 6, {align:'right'});
-  const colW = Math.min(36, (W - 2 * M) * 0.22), qW = (W - 2 * M - colW) / Q;
   const colStyles = {0:{cellWidth:colW, fontStyle:'bold'}};
   for (let k = 1; k <= Q; k++) colStyles[k] = {cellWidth:qW};
   doc.autoTable({
-    startY:M + 16, margin:{left:M, right:M, top:M, bottom:M},
+    startY:top0, margin:{left:M, right:M, top:M, bottom:M}, tableWidth:total,
     head:[['Poste'].concat(allQuarts(n).map(k => 'Quart ' + (k + 1) + (k === 4 ? ' (OT)' : '')))],
     body:rows, theme:'grid',
-    styles:{font:'helvetica', fontSize:fs, textColor:0, lineColor:120, lineWidth:0.15, cellPadding:1.2, valign:'middle', overflow:'linebreak', fillColor:255},
-    headStyles:{fontStyle:'bold', fillColor:255, textColor:0, lineColor:0, lineWidth:{top:0.15, bottom:0.5, left:0.15, right:0.15}},
+    styles:{font:'helvetica', fontSize:fs, textColor:0, lineColor:120, lineWidth:0.15, cellPadding:pad, valign:'middle', overflow:'linebreak', fillColor:255, minCellHeight:rowH},
+    headStyles:{fontStyle:'bold', fillColor:255, textColor:0, lineColor:0, lineWidth:{top:0.15, bottom:0.5, left:0.15, right:0.15}, minCellHeight:headH},
     columnStyles:colStyles,
     didParseCell(d){
       if (d.section !== 'body') return;
-      if (zoneRows.has(d.row.index)) { d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = Math.max(7, fs - 1.5); d.cell.styles.cellPadding = {top:1.8, bottom:0.8, left:1.2, right:1.2}; }
+      if (zoneRows.has(d.row.index)) { d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = Math.max(6.5, fs - 1.5); d.cell.styles.cellPadding = {top:0.8, bottom:0.8, left:pad, right:pad}; d.cell.styles.minCellHeight = zoneH; }
       else if (d.cell.raw === 'NON COUVERT') d.cell.styles.fontStyle = 'bold';
     }
   });
@@ -2737,6 +3102,7 @@ function shValidated(){
   const n = nightOf(); if (!n) return null;
   const body = '<p class="note" style="font-size:15px;color:var(--ink)">Le planning de la nuit du ' + esc(fmt(n.date)) + ' est validé : c’est le planning officiel.</p>';
   const holes = uncoveredList(n);
+  body += '<p class="note" style="text-align:center">' + esc(bilanOf(n).text) + '</p>';
   return {title:'✓ Planning validé', body:body + (holes.length ? '<div class="provisional"><span>⚠️ ' + esc(holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ')) + '</span></div>' : ''), foot:(holes.length ? '<button type="button" class="btn" data-act="backToDraft">↩ Retour en préparation</button>' : '') + '<button type="button" class="btn" data-act="close">Fermer</button><button type="button" class="btn" data-act="pdfShare">📤 Partager</button><button type="button" class="btn btn-red" data-act="pdfDownload">⬇️ Télécharger</button>'};
 }
 function shConfirm(s){
@@ -2754,7 +3120,7 @@ function shWhatsNew(s){
 }
 function renderSheet(){
   const s = S.sheet; if (!s) { $('#sheet').innerHTML = ''; return; }
-  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, preGen:shPreGen, leave:shLeave, pre:shPre, wheelTrain:shWheelTrain, validated:shValidated, confirm:shConfirm, whatsnew:shWhatsNew, claim:shClaim, genMenu:shGenMenu, freeMenu:shFreeMenu, freeTrain:shFreeTrain, freeAuto:shFreeAuto, lineUp:shLineUp})[s.type](s);
+  const c = ({pick:shPick, personForm:shPersonForm, post:shPost, cellMenu:shCellMenu, quartMenu:shQuartMenu, replace:shReplace, suggest:shSuggest, messages:shMessages,nightLog:shNightLog, shareReady:shShareReady, regen:shRegen, bilan:shBilan, rebal:shRebal, trainees:shTrainees, personMenu:shPersonMenu, absPeriod:shAbsPeriod, restriction:shRestriction, accounts:shAccounts, help:shHelp, renfortPosts:shRenfortPosts, formation:shFormation, preGen:shPreGen, leave:shLeave, pre:shPre, wheelTrain:shWheelTrain, validated:shValidated, confirm:shConfirm, whatsnew:shWhatsNew, claim:shClaim, genMenu:shGenMenu, freeMenu:shFreeMenu, freeTrain:shFreeTrain, freeAuto:shFreeAuto, lineUp:shLineUp})[s.type](s);
   if (!c) { close(); return; }
   const prev = $('#sheet .sb'); const st = prev && prev.dataset.t === s.type ? prev.scrollTop : 0;
   $('#sheet').innerHTML = '<div class="back' + (c.mid ? ' mid' : '') + '"><div class="sheet' + (c.wide ? ' wide' : '') + '" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="sh"><h2 id="shT">' + c.title + '</h2>' + (c.must ? '' : '<button type="button" class="icon" data-act="close" aria-label="Fermer">×</button>') + '</div><div class="sb" data-t="' + esc(s.type) + '">' + c.body + '</div>' + (c.foot ? '<div class="sf">' + c.foot + '</div>' : '') + '</div></div>';
@@ -2771,10 +3137,11 @@ function shPick(s){
   /* sécurité : on ne propose comme titulaire seul que des personnes habilitées seules (G), jamais quelqu'un encore en formation (H) */
   const swappable = per => { const w = where[per.id]; if (!w || w === p.id || !cur) return true; return !!(curPer && canHoldAlone(curPer, w)); };
   const othersAll = pres.filter(per => !isTL(per) && onQuart(per));
-  const tls = pres.filter(per => isTL(per) && canHoldAlone(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per));
+  /* un TL ne prend un poste que s'il y est habilité (G) et sans restriction ; sinon : échange via « Remplacer » */
+  const tls = pres.filter(per => isTL(per) && canHoldAlone(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per)); /* un TL seulement sur un poste où il est habilité (règle du 09/10) */
   const others = othersAll.filter(per => canHoldAlone(per, p.id) && !isRestricted(per, p.id, n ? n.date : S.date) && swappable(per));
   const locked = !!(n && n.lock && n.lock[s.k] && n.lock[s.k][p.id]);
-  if (s.force == null) s.force = locked;
+  if (s.force == null) s.force = locked; /* protection 🔒 seulement si le TL la demande (sinon les recalculs restent libres) */
   const Q = n ? nq(n) : 4;
   const adjRepeat = per => [s.k - 1, s.k + 1].some(kk => kk >= 0 && kk < Q && n && n.q && n.q[kk] && n.q[kk][p.id] === per.id);
   const warn = per => adjRepeat(per) ? ' <small class="muted">⚠️ déjà ce poste au quart voisin</small>' : '';
@@ -2783,9 +3150,9 @@ function shPick(s){
   /* accès sans appui long aux corrections locales */
   if (generated(n) && curPer) body += '<div class="opt-row"><button type="button" class="opt" data-act="removeFromQuart"' + at + '>➖ Retirer de Q' + (s.k + 1) + '</button><button type="button" class="opt" data-act="openReplace"' + at + ' data-mode="replace" data-who="' + esc(cur) + '">🔁 Remplacer</button></div>';
   else if (generated(n)) body += '<button type="button" class="opt" data-act="openReplace"' + at + ' data-mode="fill">🔎 Proposer quelqu’un automatiquement</button>';
-  body += '<button type="button" class="force" data-act="force" aria-pressed="' + !!s.force + '"><span class="sw2" aria-hidden="true"></span>Forcer : garder cette personne ici à la prochaine génération</button>';
-  if (locked && cur) body += '<button type="button" class="opt" data-act="unlock">Retirer le forçage (' + esc((S.people[cur] || {}).name || '') + ')</button>';
-  body += '<div class="lbl">TL</div>' + (tls.length ? tls.map(per => '<button type="button" class="opt" data-act="choose" data-id="' + esc(per.id) + '"' + (cur === per.id ? ' aria-current="true"' : '') + '>' + esc(per.name) + ' <span class="tag">TL</span>' + (where[per.id] && where[per.id] !== p.id && S.posts[where[per.id]] ? '<small>sur ' + esc(S.posts[where[per.id]].code) + '</small>' : '') + warn(per) + '</button>').join('') : '<p class="note">Aucun TL habilité et présent.</p>');
+  body += '<button type="button" class="force" data-act="force" aria-pressed="' + !!s.force + '"><span class="sw2" aria-hidden="true"></span>Protéger 🔒 : garder cette personne ici aux recalculs (ce quart seulement)</button>';
+  if (locked && cur) body += '<button type="button" class="opt" data-act="unlock">Libérer la protection (' + esc((S.people[cur] || {}).name || '') + ')</button>';
+  body += '<div class="lbl">TL</div>' + (tls.length ? tls.map(per => '<button type="button" class="opt" data-act="choose" data-id="' + esc(per.id) + '"' + (cur === per.id ? ' aria-current="true"' : '') + '>' + esc(per.name) + ' <span class="tag">TL</span>' + (where[per.id] && where[per.id] !== p.id && S.posts[where[per.id]] ? '<small>sur ' + esc(S.posts[where[per.id]].code) + '</small>' : '') + warn(per) + '</button>').join('') : '<p class="note">Aucun TL présent et habilité sur ce poste.</p>');
   body += '<div class="lbl">Autres membres habilités</div><select class="pp-sel" data-chg="pickPerson" aria-label="Choisir une personne"><option value="">— choisir —</option>' + others.map(per => {
     const m = mark(per, p.id), tag = m === 'H' ? ' — en formation' : '';
     return '<option value="' + esc(per.id) + '"' + (cur === per.id ? ' selected' : '') + '>' + esc(per.name) + esc(tag) + (where[per.id] && where[per.id] !== p.id && S.posts[where[per.id]] ? ' (sur ' + esc(S.posts[where[per.id]].code) + ')' : '') + (adjRepeat(per) ? ' ⚠️ déjà ce poste au quart voisin' : '') + '</option>';
@@ -3007,7 +3374,7 @@ function viewClosed(){
     + '<h1>Maintenance en cours</h1><p class="note">' + greeting() + (profile() ? ' ' + esc(profile().name) : '') + ', l’appli est accessible de 21h à 7h30. Reviens ce soir !</p>'
     + '<button type="button" class="btn" data-act="logout">Se déconnecter</button></div></div>';
 }
-function shRegen(){ return {title:'Régénérer la nuit ?', body:'<p style="margin:0">Le planning de cette nuit sera recalculé. Les personnes forcées restent à leur place, les autres corrections à la main sont remplacées.</p>', foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="genGo">Régénérer</button>'}; }
+function shRegen(){ return {title:'Régénérer la nuit ?', body:'<p style="margin:0">Le planning de cette nuit sera recalculé. Les affectations protégées 🔒 restent à leur place sur leur quart ; le reste est recalculé.</p>', foot:'<button type="button" class="btn" data-act="close">Annuler</button><button type="button" class="btn btn-red" data-act="genGo">Régénérer</button>'}; }
 function shPost(s){
   const p = S.posts[s.id]; if (!p) return null; s.form = true;
   const body = '<label class="field" for="fCode"><span>Code</span><input type="text" id="fCode" data-chg="poCode" value="' + esc(p.code) + '"></label>'
@@ -3046,12 +3413,12 @@ const A = {
     if (nightState(nightOf()) === 'validated') { toast('Planning validé : annule d’abord la validation pour pouvoir générer.'); return; }
     open({type:'genMenu'});
   },
-  /* d.s : 'q1' (la veille), 'all' (toute la nuit) ou 'rest' (quarts encore vides) */
+  /* d.s : 'q1' (la veille), 'k' (un quart au choix, d.k), 'all' (toute la nuit) ou 'rest' (quarts encore vides) */
   genScope(d){
     close();
     if (!canEdit()) return;
     if (nightState(nightOf()) === 'validated') { toast('Planning validé : annule d’abord la validation pour pouvoir générer.'); return; }
-    const ksFn = nn => { const m = nn || freshNight(S.date); return d.s === 'q1' ? [0] : d.s === 'rest' ? allQuarts(m).filter(k => !quartDone(m, k)) : allQuarts(m); };
+    const ksFn = nn => { const m = nn || freshNight(S.date); return d.s === 'q1' ? [0] : d.s === 'k' ? [Number(d.k)] : d.s === 'rest' ? allQuarts(m).filter(k => !quartDone(m, k)) : allQuarts(m); };
     guardGen({mode:d.s === 'all' ? 'full' : d.s === 'rest' ? 'rest' : 'quart', ksFn, emptyMsg:'Tous les quarts sont déjà générés (un collègue vient peut-être de le faire).', go:ctx => { S.genCtx = Object.assign({date:S.date, scope:ksFn(nightOf())}, ctx); genFlag(true); A.genOpen(); }});
   },
   genOpen(){
@@ -3070,8 +3437,8 @@ const A = {
   validateQ(d){
     if (!canEdit()) return;
     const k = Number(d.k), n = nightOf(); if (!quartDone(n, k)) return;
-    const holes = uncoveredList(n).filter(t => t.endsWith('Q' + (k + 1)));
-    if (holes.length) { askConfirm('Q' + (k + 1) + ' : ' + holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' (' + holes.join(', ') + '). Valider quand même ?', 'validateQGo', {k}, {okLabel:'Valider quand même'}); return; }
+    const al = bilanOf(n).todo.filter(a => a.k === k);
+    if (al.length) { askConfirm(al.map(a => a.text).join(' · ') + ' Valider quand même ?', 'validateQGo', {k}, {okLabel:'Valider quand même'}); return; }
     A.validateQGo({k});
   },
   validateQGo(d){
@@ -3091,19 +3458,35 @@ const A = {
   genContinue(){
     S.genFlow = null; S.tab = 'plan'; render(); window.scrollTo(0, 0);
     if (!canEdit()) return;
-    open({type:'preGen', step:1, plan:trainingPlan(editable(), genScope())});
+    const n0 = editable(), plan = trainingPlan(n0, genScope()), tl = {};
+    plan.tls.forEach(t => { const x = {post:'', ks:[]}, seen = new Set(); for (let k = 0; k < plan.Q; k++) { if (!plan.inS(k)) continue; const lk = n0.lock[k] || {}; Object.keys(lk).forEach(pid => { if (lk[pid] === t.id) { seen.add(pid); x.post = pid; x.ks.push(k); } }); } if (seen.size > 1) { x.post = ''; x.ks = []; x.mixed = true; } tl[t.id] = x; }); /* TL protégé sur plusieurs postes : ses protections 🔒 restent telles quelles */
+    /* formations déjà posées : reprises ; les suggestions ne sont jamais sélectionnées d'office */
+    open({type:'preGen', step:2, plan, tl, sel:plan.list.map(e => ({ks:e.keep ? e.ks.slice() : [], off:e.off.slice()}))});
+  },
+  bilan(){ open({type:'bilan'}); },
+  rebal(){ if (!canEdit()) return; open({type:'rebal', res:rebalancePlan(editable())}); },
+  rebalFrom(d){ const s = S.sheet; if (!s || s.type !== 'rebal') return; s.res = rebalancePlan(editable(), Number(d.k)); renderSheet(); },
+  rebalGo(){
+    const s = S.sheet; if (!s || s.type !== 'rebal' || !canEdit()) return;
+    const n = editable(), before = clone(n.q), r = s.res;
+    if (r.ks.some(k => qvOf(n, k) || JSON.stringify(n.q[k] || {}) !== JSON.stringify(r.base[k]))) { close(); toast('La nuit a changé entre-temps : relance « Rééquilibrer la suite ».'); return; }
+    r.ks.forEach(k => { n.q[k] = clone(r.c.q[k]); dropOrphanTrainees(n, k); });
+    syncManual(n); stampGen(n, r.ks);
+    pushLog(n, 'rebalance', {date:n.date, moves:r.changes.length});
+    close(); markFresh(n, before); saveNight(n); toast('Suite rééquilibrée · ' + r.changes.length + ' changement' + (r.changes.length > 1 ? 's' : '') + '.');
   },
   genCancel(){ S.genFlow = null; genFlag(false); S.tab = 'plan'; render(); },
   preGenStep(){ const s = S.sheet; if (s) { s.step = 1; renderSheet(); } },
-  /* « combien en former ? » : les c premiers (conseillés d'abord) sont pré-remplis avec leurs quarts conseillés */
-  pgCount(d){
-    const s = S.sheet; if (!s || s.type !== 'preGen') return;
-    const pl = s.plan, c = Number(d.c);
-    s.sel = pl.list.map((e, i) => { const ks = i < c ? (e.rec.length ? e.rec.slice() : firstQ(pl, e.id, e.post)) : []; return {ks, off:e.off.filter(k => !ks.includes(k))}; });
-    if (!c) { A.preGenGo(); return; }
-    s.step = 2; renderSheet();
-  },
   /* toute la nuit d'un coup : sur ligne, ou hors ligne */
+  pgTlQ(d){ const s = S.sheet, x = s && s.tl && s.tl[d.id]; if (!x || !s.plan.inS(Number(d.k))) return; const k = Number(d.k); x.ks = x.ks.includes(k) ? x.ks.filter(j => j !== k) : x.ks.concat(k).sort((a, b) => a - b); renderSheet(); },
+  pgDec(d){
+    const s = S.sheet, x = s && s.sel && s.sel[Number(d.i)]; if (!x) return;
+    const k = Number(d.k), sort = a => a.sort((p, q) => p - q);
+    if (!s.plan.inS(k)) return;
+    if (d.m === 'train') { x.off = x.off.filter(j => j !== k); if (!x.ks.includes(k)) x.ks = sort(x.ks.concat(k)); }
+    else { x.ks = x.ks.filter(j => j !== k); if (!x.off.includes(k)) x.off = sort(x.off.concat(k)); }
+    renderSheet();
+  },
   pgMode(d){
     const s = S.sheet, x = s && s.sel && s.sel[Number(d.i)]; if (!x) return;
     const inS = Array.from({length:s.plan.Q}, (z, k) => k).filter(k => s.plan.inS(k)), out = x.off.filter(k => !inS.includes(k)); /* les quarts hors de cette génération ne bougent pas */
@@ -3116,7 +3499,7 @@ const A = {
     if (!s.plan.inS(k)) return;
     if (x.ks.includes(k)) { x.ks = x.ks.filter(j => j !== k); x.off = sort(x.off.concat(k)); }
     else if (x.off.includes(k)) x.off = x.off.filter(j => j !== k);
-    else if (s.plan.canQ(e.id, e.post, k)) x.ks = sort(x.ks.concat(k));
+    else if (e.post && s.plan.canQ(e.id, e.post, k)) x.ks = sort(x.ks.concat(k));
     else x.off = sort(x.off.concat(k));
     renderSheet();
   },
@@ -3125,14 +3508,18 @@ const A = {
     const s = S.sheet; if (!s || s.type !== 'preGen') return;
     const pl = s.plan, x = pl.news.splice(Number(d.j), 1)[0]; if (!x) return;
     if (!s.sel) s.sel = pl.list.map(e => ({ks:[], off:e.off.slice()}));
-    pl.list.push({id:x.id, posts:[{id:x.post, nb:x.nb}], post:x.post, held:x.held, isNew:true, rec:[], ks:[], off:[]});
-    const ks = firstQ(pl, x.id, x.post);
-    s.sel.push({ks, off:[]});
-    s.step = 2; renderSheet();
+    /* la suggestion remplace la ligne « autres personnes » de la même personne ; aucun quart n'est coché d'office */
+    const j = pl.list.findIndex(e => e.id === x.id);
+    if (j >= 0) { pl.list.splice(j, 1); s.sel.splice(j, 1); }
+    pl.list.unshift({id:x.id, posts:[{id:x.post, nb:x.nb}], post:x.post, held:x.held, isNew:true, rec:[], ks:[], off:[]});
+    s.sel.unshift({ks:[], off:[]});
+    renderSheet();
   },
   /* génère la nuit autour des formations choisies (elles remplacent celles déjà posées) */
   preGenGo(d){
-    const s = S.sheet; close(); if (!s || !canEdit()) return;
+    const s = S.sheet; if (!s || !canEdit()) return;
+    if (planCheck(s).blockers.length) { toast('Il reste des décisions à prendre avant de générer.'); return; }
+    close();
     const ctx0 = S.genCtx && S.genCtx.date === S.date ? S.genCtx : null;
     const dd = Object.assign({}, d), sc = genScope();
     guardGen({mode:sc ? 'quart' : 'full', final:true, sig:ctx0 && ctx0.sig, ksFn:n => sc || allQuarts(n || freshNight(S.date)), go:ctx => {
@@ -3153,6 +3540,7 @@ const A = {
     runWithAnim('Calcul de la rotation…', () => {
       const n = editable(); const before = clone(n.q);
       if (Object.keys(off).length) n.tl._off = off; else delete n.tl._off;
+      applyTlChoices(n, s.tl, k => !scope || scope.includes(k)); /* TL choisis : protégés sur les quarts sélectionnés seulement */
       if (ctx.dropQv) { const v = Object.assign({}, n.tl._qv); (scope || allQuarts(n)).forEach(k => { delete v[k]; }); n.tl._qv = v; } /* « tout régénérer » : la validation est annulée */
       const keep = new Set(qvKeys(n));
       n.train = n.train.map((t, k) => (keep.has(k) || (scope && !scope.includes(k))) ? t : {});
@@ -3297,8 +3685,7 @@ const A = {
     if (!canEdit()) return;
     const n = nightOf(); if (!generated(n)) return;
     /* confirmation seulement s'il reste des cases non couvertes ; ensuite la fiche propose le PDF */
-    const holes = uncoveredList(n);
-    if (holes.length) { askConfirm(holes.length + ' case' + (holes.length > 1 ? 's' : '') + ' non couverte' + (holes.length > 1 ? 's' : '') + ' : ' + holes.join(', ') + '. Valider quand même ?', 'validateGo', null, {okLabel:'Valider quand même', noLabel:'↩ Retour en préparation'}); return; }
+    if (bilanOf(n).todo.length) { open({type:'bilan', validate:true}); return; }
     A.validateGo();
   },
   backToDraft(){ close(); A.unvalidateReal(); },
@@ -3393,7 +3780,7 @@ const A = {
     if (!canEdit()) return;
     runWithAnim('Calcul du reste de la nuit…', () => {
       const n = editable(); const before = clone(n.q); const hist = history(n.date); const done = [];
-      allQuarts(n).forEach(k => { if (!quartDone(n, k)) { n.q[k] = buildQuart(k, n, hist); n.lock[k] = {}; n.manual[k] = {}; dropOrphanTrainees(n, k); done.push('Q' + (k + 1)); } });
+      allQuarts(n).forEach(k => { if (!quartDone(n, k)) { n.q[k] = buildQuart(k, n, hist); dropOrphanTrainees(n, k); done.push('Q' + (k + 1)); } });
       if (!done.length) return;
       n.generated = true;
       stampGen(n, done.map(q => Number(q.slice(1)) - 1));
@@ -3679,8 +4066,9 @@ const A = {
   leaveGo(){
     const s = S.sheet; if (!s || !s.mode || !canEdit()) return; close();
     const n = editable(), before = clone(n.q), name = (S.people[s.id] || {}).name || '';
+    const held = allQuarts(n).filter(j => quartDone(n, j) && holderMap(n.q[j])[s.id]).map(j => 'Q' + (j + 1) + ' ' + ((S.posts[holderMap(n.q[j])[s.id]] || {}).code || '')).join(', ');
     const msgs = leaveApply(n, s.id, s.mode, s.mk);
-    pushLog(n, 'leave', {person:name, mode:s.mode, k:s.mk});
+    pushLog(n, 'leave', {person:name, mode:s.mode, k:s.mk, held});
     markFresh(n, before); saveNight(n);
     toast(name + ' ' + leaveWhat(s.mode, s.mk) + (msgs.length ? ' · ' + msgs.join(' · ') : ''));
   },
@@ -3809,6 +4197,7 @@ const C = {
   formTrainee(el){ S.sheet.trainee = el.value; S.sheet.post = ''; S.sheet.k = null; S.sheet.trainer = ''; S.sheet.err = ''; renderSheet(); },
   formPost(el){ S.sheet.post = el.value; S.sheet.k = null; S.sheet.trainer = ''; S.sheet.err = ''; renderSheet(); },
   formTrainer(el){ S.sheet.trainer = el.value; renderSheet(); },
+  pgTlPost(el){ const s = S.sheet; if (!s || !s.tl) return; const x = s.tl[el.dataset.id] || (s.tl[el.dataset.id] = {post:'', ks:[]}); const per = S.people[el.dataset.id]; if (el.value && per && !fitFor(per, el.value, {date:S.date})) { toast('TL non habilité(e) sur ce poste.'); renderSheet(); return; } x.post = el.value; x.mixed = false; if (!x.post) x.ks = []; renderSheet(); },
   pgPost(el){ const s = S.sheet, i = Number(el.dataset.i), e = s && s.plan && s.plan.list[i]; if (!e) return; e.post = el.value; const x = s.sel && s.sel[i]; if (x) x.ks = x.ks.filter(k => s.plan.canQ(e.id, e.post, k)); renderSheet(); }
 };
 /* ---------- appui long ----------
