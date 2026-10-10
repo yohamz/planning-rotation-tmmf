@@ -1257,6 +1257,7 @@ function rotateMirrorPartners(out, k, night, hist, cands, fixed){
 /* nombre de postes que la personne tient réellement seule (habilitations G, hors restriction) : sert à ne pas
    « punir » ceux dont la rotation est limitée par leurs habilitations (répéter est alors inévitable) */
 const masteredN = (per, hist) => { const m = hist.mast || (hist.mast = {}); if (m[per.id] === undefined) m[per.id] = posts().filter(p => fitFor(per, p.id, {date:hist.date})).length; return m[per.id]; };
+const ADJ_REP = 40000;
 function pairCost(per, p, k, hist, others){
   const M = masteredN(per, hist), rf = M <= 2 ? 0.25 : M <= 4 ? 0.6 : 1;
   let c = 15 * rf * (hist.count[per.id + '|' + p.id] || 0);
@@ -1264,7 +1265,8 @@ function pairCost(per, p, k, hist, others){
   /* fait tourner un maximum de personnes sur la nuit (et l'overtime en particulier) plutôt
      que de réutiliser toujours les mêmes : pénalité pour qui tient déjà un autre quart ce soir */
   c += 30 * others.filter(o => o.m[per.id]).length;
-  others.forEach(o => { if (o.m[per.id] === p.id) c += o.pre && k === 0 ? 3600 : 600; }); /* poste du quart avant : jamais au Q1 sauf dernier recours */
+  /* poste du quart avant : jamais au Q1 sauf dernier recours ; même poste sur deux quarts de suite : très fortement évité (moins cher qu'un poste vide, plus cher que toute l'équité) */
+  others.forEach(o => { if (o.m[per.id] === p.id) c += o.pre && k === 0 ? 3600 : 600 + (Math.abs(o.j - k) === 1 ? ADJ_REP : 0); });
   /* process miroir juste avant ou juste après (gauche puis droite) : à éviter */
   const mir = mirrorMap()[p.id];
   if (mir) others.forEach(o => { if (Math.abs(o.j - k) === 1 && o.m[per.id] === mir) c += 400; });
@@ -1352,6 +1354,70 @@ function improveNight(night, hist, keep){
     if (!moved) break;
   }
 }
+/* ---------- alternance sur la nuit entière ----------
+   Même poste sur deux quarts de suite = à éviter pour tout le monde. Une personne qui ne tient que deux postes doit
+   faire A → B → A → B. Le calcul quart par quart ne suffit pas (il peut garder A → A → B → B) : on regarde la nuit
+   entière et on cherche une réorganisation des autres affectations non protégées (échange de 2 ou 3 personnes dans un
+   quart). Jamais touchés : cases 🔒, TL, cases avec stagiaire, quarts gardés ; la couverture et les habilitations sont
+   respectées par construction (on ne fait que permuter des personnes qualifiées déjà placées). */
+function repAdj(n){
+  let c = 0;
+  for (let k = 1; k < nq(n); k++) { const a = n.q[k - 1] || {}, b = n.q[k] || {}; Object.keys(b).forEach(pid => { if (b[pid] && a[pid] === b[pid]) c++; }); }
+  return c;
+}
+function repAny(n){
+  let c = 0; const N = nq(n);
+  for (let j = 0; j < N; j++) for (let k = j + 2; k < N; k++) { const a = n.q[j] || {}, b = n.q[k] || {}; Object.keys(b).forEach(pid => { if (b[pid] && a[pid] === b[pid]) c++; }); }
+  return c;
+}
+function reduceRepeats(night, hist, keep, only){
+  const N = nq(night), ok = m => !keep.has(m) && (!only || only.has(m)) && Object.keys(night.q[m] || {}).length;
+  const movable = (m, pid) => {
+    const w = (night.q[m] || {})[pid], lk = (night.lock && night.lock[m]) || {}, tr = (night.train && night.train[m]) || {};
+    return !!w && !lk[pid] && !tr[pid] && !!S.people[w] && !isTL(S.people[w]);
+  };
+  const fit = (w, pid) => fitFor(S.people[w], pid, night);
+  /* candidats d'un quart m pour libérer la personne X du poste p : échange à 2 ou rotation à 3 */
+  const cands = (m, p) => {
+    const q = night.q[m], X = q[p], out = [], ids = Object.keys(q).filter(pid => pid !== p && movable(m, pid));
+    ids.forEach(a => {
+      const Y = q[a];
+      if (fit(X, a) && fit(Y, p)) out.push({[p]:Y, [a]:X});
+      ids.forEach(b => { if (b === a) return; const Z = q[b]; if (fit(X, a) && fit(Y, b) && fit(Z, p)) out.push({[p]:Z, [a]:X, [b]:Y}); });
+    });
+    return out;
+  };
+  const stat = m => { const o = otherQuarts(night, m); return quartCost(night, m, night.q[m], hist, o); };
+  for (let phase = 1; phase <= 2; phase++) {
+    for (let it = 0; it < 30; it++) {
+      let best = null;
+      const adj0 = repAdj(night), any0 = repAny(night);
+      /* phase 1 : répétitions de quarts consécutifs ; phase 2 : même poste à distance (diversité) */
+      const reps = [];
+      for (let k = 1; k < N; k++) { const a = night.q[k - 1] || {}, b = night.q[k] || {}; Object.keys(b).forEach(pid => { if (b[pid] && a[pid] === b[pid]) reps.push({k, pid}); }); }
+      if (phase === 1 && !reps.length) break;
+      const targets = phase === 1 ? reps.flatMap(r => [{m:r.k, p:r.pid}, {m:r.k - 1, p:r.pid}])
+        : (() => { const t = []; for (let j = 0; j < N; j++) for (let k = j + 2; k < N; k++) { const a = night.q[j] || {}, b = night.q[k] || {}; Object.keys(b).forEach(pid => { if (b[pid] && a[pid] === b[pid]) { t.push({m:k, p:pid}); t.push({m:j, p:pid}); } }); } return t; })();
+      targets.forEach(({m, p}) => {
+        if (!ok(m) || !movable(m, p)) return;
+        const cur = night.q[m], c0 = stat(m);
+        cands(m, p).forEach(mv => {
+          night.q[m] = Object.assign({}, cur, mv);
+          const adj = repAdj(night), any = repAny(night);
+          let good = phase === 1 ? adj < adj0 : adj <= adj0 && any < any0;
+          if (good) {
+            const dc = stat(m) - c0;
+            if (phase === 2 && dc > 250) good = false;
+            else { const score = (adj - adj0) * 1e5 + (any - any0) * 1e3 + dc; if (!best || score < best.score) best = {m, q:night.q[m], score}; }
+          }
+          night.q[m] = cur;
+        });
+      });
+      if (!best) break;
+      night.q[best.m] = best.q;
+    }
+  }
+}
 /* « manual » = cases protégées en vigueur (utile à l'affichage) */
 function syncManual(night){
   night.manual = [0, 1, 2, 3, 4].map(k => { const m = {}, lk = (night.lock && night.lock[k]) || {}; Object.keys(lk).forEach(pid => { if ((night.q[k] || {})[pid] === lk[pid]) m[pid] = true; }); return m; });
@@ -1362,15 +1428,32 @@ function generateAll(night){
   const keep = new Set(qvKeys(night)), kq = {};
   keep.forEach(k => { kq[k] = (night.q || [])[k] || {}; });
   night.lock = [0, 1, 2, 3, 4].map(k => (night.lock && night.lock[k]) || {}); /* les affectations protégées restent actives jusqu'à leur libération */
-  night.q = [{}, {}, {}, {}, {}];
-  for (let k = 0; k < nq(night); k++) night.q[k] = keep.has(k) ? kq[k] : buildQuart(k, night, hist);
-  improveNight(night, hist, keep);
+  /* plusieurs essais (le tirage change) : on garde la nuit sans poste vide, avec le moins de répétitions consécutives, puis la plus équitable */
+  let best = null;
+  for (let t = 0; t < 8; t++) {
+    night.q = [{}, {}, {}, {}, {}];
+    for (let k = 0; k < nq(night); k++) night.q[k] = keep.has(k) ? kq[k] : buildQuart(k, night, hist);
+    improveNight(night, hist, keep);
+    reduceRepeats(night, hist, keep, null);
+    const adj = repAdj(night), cost = allQuarts(night).reduce((a, k) => a + (keep.has(k) ? 0 : quartCost(night, k, night.q[k], hist, otherQuarts(night, k))), 0), sc = adj * 1e5 + cost;
+    if (!best || sc < best.sc) best = {sc, q:night.q};
+    if (!adj && t >= 1) break;
+  }
+  night.q = best.q;
   syncManual(night);
   for (let k = 0; k < 5; k++) if (!keep.has(k)) dropOrphanTrainees(night, k);
   stampGen(night, allQuarts(night).filter(k => !keep.has(k)));
   night.generated = true;
 }
-function regenQuart(night, k){ night.q[k] = {}; night.q[k] = buildQuart(k, night, history(night.date)); syncManual(night); dropOrphanTrainees(night, k); stampGen(night, [k]); }
+function regenQuart(night, k){
+  const hist = history(night.date), fix = new Set(allQuarts(night).filter(j => j !== k)); let best = null;
+  for (let t = 0; t < 5; t++) {
+    night.q[k] = {}; night.q[k] = buildQuart(k, night, hist); reduceRepeats(night, hist, fix, null);
+    const sc = repAdj(night) * 1e5 + quartCost(night, k, night.q[k], hist, otherQuarts(night, k));
+    if (!best || sc < best.sc) best = {sc, q:night.q[k]};
+    if (sc < 1e5 && t >= 1) break;
+  }
+  night.q[k] = best.q; syncManual(night); dropOrphanTrainees(night, k); stampGen(night, [k]); }
 /* affectations protégées devenues impossibles (absence, hors ligne, restriction…) : à signaler au TL, jamais ignorées en silence */
 function lockConflicts(n){
   const out = [];
@@ -1674,8 +1757,8 @@ function alertsOf(n){
     Object.keys(n.q[k] || {}).forEach(pid => {
       const who = n.q[k][pid]; if (!who || n.q[k - 1][pid] !== who) return;
       const per = S.people[who]; if (!per) return;
-      const alt = activePeople().filter(c => c.id !== who && onQuart(n, k, c) && fitFor(c, pid, n) && !isTL(c) && ((n.lock[k] || {})[pid] !== who)).length, M = masteredN(per, hist || (hist = history(n.date)));
-      out.push({k, kind:'note', text:'Q' + (k + 1) + ' · ' + ((S.posts[pid] || {}).code || pid) + ' : ' + per.name + ' reste sur ce poste (Q' + k + ' puis Q' + (k + 1) + ') — ' + (((n.lock[k] || {})[pid] === who) ? 'case protégée 🔒' : M <= 2 ? 'rotation limitée : il/elle ne tient que ' + M + ' poste' + (M > 1 ? 's' : '') : alt ? alt + ' autre' + (alt > 1 ? 's' : '') + ' personne' + (alt > 1 ? 's' : '') + ' qualifiée' + (alt > 1 ? 's' : '') + ' : « Rééquilibrer la suite » peut l’échanger' : 'aucune autre personne qualifiée disponible') + '.'});
+      const M = masteredN(per, hist || (hist = history(n.date))), prot = ((n.lock[k] || {})[pid] === who) || ((n.lock[k - 1] || {})[pid] === who);
+      out.push({k, kind:'note', text:'Q' + (k + 1) + ' · ' + ((S.posts[pid] || {}).code || pid) + ' : ' + per.name + ' reste sur ce poste (Q' + k + ' puis Q' + (k + 1) + ') — ' + (prot ? 'case protégée 🔒 par le TL' : (M <= 2 ? 'il/elle ne tient que ' + M + ' poste' + (M > 1 ? 's' : '') + ' et ' : '') + 'aucun échange avec les autres affectations ne l’évite sans laisser un poste non couvert (habilitations, restrictions, formations ou cases protégées)') + '.'});
     });
   });
   return out;
@@ -1721,6 +1804,7 @@ function rebalancePlan(n0, from){
     });
     if (!moved) break;
   }
+  reduceRepeats(c, hist, new Set(allQuarts(c).filter(k => !ks.includes(k))), null);
   const changes = [];
   ks.forEach(k => { const a = base[k], b = c.q[k] || {}; new Set(Object.keys(a).concat(Object.keys(b))).forEach(pid => { if (a[pid] !== b[pid]) changes.push({k, pid, from:a[pid] || null, to:b[pid] || null}); }); });
   return {c, base, ks, changes, from:f};
@@ -3545,7 +3629,7 @@ const A = {
       const keep = new Set(qvKeys(n));
       n.train = n.train.map((t, k) => (keep.has(k) || (scope && !scope.includes(k))) ? t : {});
       pick.forEach(x => x.ks.forEach(k => { if (!keep.has(k)) n.train[k][x.post] = x.id; }));
-      if (scope) { scope.filter(k => !keep.has(k)).forEach(k => regenQuart(n, k)); n.generated = true; } else generateAll(n);
+      if (scope) { const sc2 = scope.filter(k => !keep.has(k)); sc2.forEach(k => regenQuart(n, k)); if (sc2.length > 1) reduceRepeats(n, history(n.date), new Set(allQuarts(n).filter(j => !sc2.includes(j))), null); n.generated = true; } else generateAll(n);
       let kept = 0, lost = 0;
       pick.forEach(x => x.ks.forEach(k => {
         if (keep.has(k)) return;
