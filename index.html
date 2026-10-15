@@ -870,6 +870,12 @@ const isFormateur = per => !!(per && per.marks && per.marks._trainer);
    (comme _restrict/_trainer ci-dessus). Sert uniquement à rendre le tableau Équilibre conscient de
    l'ancienneté : un nouvel arrivant n'a pas encore pu faire ses quarts sur toute la période choisie,
    il ne doit donc pas paraître « à la traîne » par rapport aux autres. */
+/* « nouveau formé » : passé de 🎓 à « Tient » sur ce poste il y a moins de 60 jours. La date est posée au passage
+   (marks._since[posteId], clé réservée) ; sans date (formés avant), la personne compte comme confirmée.
+   La génération évite alors de la mettre sur ce poste au Q1 (préférence, pas un blocage). */
+const FORME_JOURS = 60;
+const sinceOf = (per, pid) => (per && per.marks && per.marks._since && per.marks._since[pid]) || null;
+const freshlyFormed = (per, pid, date) => { const s = sinceOf(per, pid); if (!s || !date) return false; const d = daysBetween(s, date); return d >= 0 && d < FORME_JOURS; };
 const joinedOf = per => (per && per.marks && per.marks._joined) || null;
 const daysBetween = (a, b) => { const pa = a.split('-').map(Number), pb = b.split('-').map(Number); return Math.round((new Date(pb[0], pb[1] - 1, pb[2]) - new Date(pa[0], pa[1] - 1, pa[2])) / 86400000); };
 /* la désignation est libre (TM, TL, GLP, ASP, ou autre) : seul « TL » a un sens pour le moteur */
@@ -1261,6 +1267,7 @@ const ADJ_REP = 40000;
 function pairCost(per, p, k, hist, others){
   const M = masteredN(per, hist), rf = M <= 2 ? 0.25 : M <= 4 ? 0.6 : 1;
   let c = 15 * rf * (hist.count[per.id + '|' + p.id] || 0);
+  if (k === 0 && freshlyFormed(per, p.id, hist.date)) c += 800; /* nouveau formé : pas au Q1 sur ce poste pendant 2 mois (sauf dernier recours) */
   if (k === 0 && M > 2 && hist.last && hist.last[per.id] === p.id) c += 500; /* pas deux fois de suite le même poste d'une nuit à l'autre (sauf rotation limitée : 1-2 postes) */
   /* fait tourner un maximum de personnes sur la nuit (et l'overtime en particulier) plutôt
      que de réutiliser toujours les mêmes : pénalité pour qui tient déjà un autre quart ce soir */
@@ -2444,15 +2451,22 @@ function eqData(){
   const count = {}, tot = {};
   /* mêmes règles que la génération (history) : seuls les quarts effectués comptent (validés ou nuit terminée) */
   list.forEach(n => (n.q || []).forEach((q, k) => { if (workedQ(n, k)) Object.keys(q || {}).forEach(pid => { const w = q[pid]; if (!w) return; count[w + '|' + pid] = (count[w + '|' + pid] || 0) + 1; tot[w] = (tot[w] || 0) + 1; }); }));
-  return {span, list, count, tot};
+  /* absences : nuits comptées (validées ou terminées) où la personne était absente tout le quart ou toute la nuit */
+  const abs = {};
+  list.forEach(n => Object.keys(S.people).forEach(id => {
+    const ks = [0, 1, 2, 3, 4].filter(k => workedQ(n, k) && Object.keys((n.q && n.q[k]) || {}).length);
+    if ((n.absent || []).includes(id) || (ks.length && ks.every(k => ((n.qAbsent && n.qAbsent[k]) || {})[id]))) abs[id] = (abs[id] || 0) + 1;
+  }));
+  return {span, list, count, tot, abs};
 }
+const absTxt = c => c ? 'absent(e) ' + c + ' nuit' + (c > 1 ? 's' : '') : '';
 const eqSpanBtns = (span, n, long) => '<button type="button" class="btn btn-sm' + (span === 7 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="7">' + (long ? '7 derniers jours' : '7 jours') + '</button>'
   + '<button type="button" class="btn btn-sm' + (span === 30 ? ' btn-red' : '') + '" data-act="eqSpan" data-v="30">' + (long ? '30 derniers jours' : '30 jours') + '</button>'
   + '<span class="muted">' + n + ' nuit' + (n > 1 ? 's' : '') + '</span>'
   + '<button type="button" class="btn btn-sm" data-act="eqReset">Remettre à zéro</button>';
 function viewEquilibre(){
   if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
-  const {span, list, count, tot} = eqData();
+  const {span, list, count, tot, abs} = eqData();
   const ps = posts();
   /* équipe active + anciens membres qui ont encore des quarts sur la période ; TL seulement s'ils ont tenu un poste */
   const pp = people().filter(per => (per.active !== false || tot[per.id]) && (!isTL(per) || tot[per.id]));
@@ -2463,7 +2477,7 @@ function viewEquilibre(){
     const tenureD = joined ? Math.max(0, Math.min(span, daysBetween(joined, S.date) + 1)) : span;
     const isNew = !!(joined && tenureD < span);
     if (isNew) anyNew = true;
-    t += '<tr><th class="n" scope="row" title="' + esc(per.name) + '">' + esc(per.name) + (isNew ? ' <small class="muted" title="Arrivé(e) le ' + esc(fmt(joined)) + '">🆕</small>' : '') + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c tot">' + (tot[per.id] || 0) + (isNew ? '<br><small class="muted">' + tenureD + '/' + span + ' j dans l’équipe</small>' : '') + '</td></tr>';
+    t += '<tr><th class="n" scope="row" title="' + esc(per.name) + '">' + esc(per.name) + (isNew ? ' <small class="muted" title="Arrivé(e) le ' + esc(fmt(joined)) + '">🆕</small>' : '') + '</th>' + ps.map(p => { const v = count[per.id + '|' + p.id] || 0; return !canHold(per, p.id) && !v ? '<td class="no">·</td>' : '<td class="' + (v ? 'c' : 'z') + '">' + v + '</td>'; }).join('') + '<td class="c tot">' + (tot[per.id] || 0) + (isNew ? '<br><small class="muted">' + tenureD + '/' + span + ' j dans l’équipe</small>' : '') + (abs[per.id] ? '<br><small class="muted" title="Nuits validées où la personne était absente">' + esc(absTxt(abs[per.id])) + '</small>' : '') + '</td></tr>';
   });
   t += '</tbody></table>';
   return '<div class="bar"><h1>Équilibre · ' + esc(S.cfg.team) + '</h1><span class="grow"></span>' + eqSpanBtns(span, list.length, true) + '</div>'
@@ -2497,7 +2511,7 @@ function eqHeat(ps, pp, count, nNights){
 }
 function viewEquilibrePhone(){
   if (!isAdmin()) return '<p class="muted">Accès réservé à l’administrateur.</p>';
-  const {span, list, count, tot} = eqData();
+  const {span, list, count, tot, abs} = eqData();
   const ps = posts(), pp = activePeople().filter(per => !isTL(per) && !isTemp(per));
   if (!S.balPerson || !S.people[S.balPerson]) S.balPerson = pp.length ? pp[0].id : null;
   const per = S.people[S.balPerson];
@@ -2511,8 +2525,9 @@ function viewEquilibrePhone(){
   let html = '<h1>Équilibre</h1>'
     + '<div class="bar">' + eqSpanBtns(span, list.length, false) + '</div>'
     + eqHeat(ps, pp, count, list.length)
-    + '<select class="pp-sel" id="balSel" data-chg="balPerson" aria-label="Personne">' + pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.balPerson ? ' selected' : '') + '>' + esc(x.name) + ' · ' + (tot[x.id] || 0) + ' quarts</option>').join('') + '</select>'
+    + '<select class="pp-sel" id="balSel" data-chg="balPerson" aria-label="Personne">' + pp.map(x => '<option value="' + esc(x.id) + '"' + (x.id === S.balPerson ? ' selected' : '') + '>' + esc(x.name) + ' · ' + (tot[x.id] || 0) + ' quarts' + (abs[x.id] ? ' · ' + absTxt(abs[x.id]) : '') + '</option>').join('') + '</select>'
     + '<div class="eqsum"><span>Quarts<b>' + (tot[S.balPerson] || 0) + '</b></span><span>Postes faits<b>' + done + '/' + rows.length + '</b></span>' + (isNew ? '<span>Couverture ajustée<b>' + pctAdj + '%</b></span>' : '') + '</div>'
+    + (abs[S.balPerson] ? '<p class="note">' + esc(absTxt(abs[S.balPerson])) + ' sur la période (nuits validées) : son total plus bas vient de l’absence.</p>' : '')
     + (isNew ? '<p class="note">🆕 Arrivé(e) le ' + esc(fmt(joined)) + ' — présent(e) ' + tenureD + ' des ' + span + ' derniers jours. La « couverture ajustée » compare ses postes faits à ce qui est attendu sur sa durée réelle dans l’équipe, pas sur toute la période.</p>' : '')
     + '<div class="mlist bal">';
   rows.forEach(p => {
@@ -3487,7 +3502,10 @@ const A = {
   },
   eqPick(d){ S.balPerson = d.id; render(); const sel = $('#balSel'); if (sel) sel.scrollIntoView({behavior:'smooth', block:'start'}); },
   /* changement de polyvalence : enregistré tout de suite, sans confirmation (ce n'est pas une absence) */
-  setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const per = clone(src); per.marks = per.marks || {}; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post]; savePerson(per); const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient plus le poste'; toast(src.name + ' — ' + (post ? post.code : d.post) + ' : ' + lbl + '.'); },
+  setMark(d){ const src = S.people[d.per]; const post = S.posts[d.post]; const per = clone(src); per.marks = per.marks || {}; const prev = per.marks[d.post] || ''; if (d.m) per.marks[d.post] = d.m; else delete per.marks[d.post];
+    if (prev === 'H' && d.m === 'G') per.marks._since = Object.assign({}, per.marks._since, {[d.post]: today()});
+    else if (d.m !== 'G' && per.marks._since && per.marks._since[d.post]) { per.marks._since = Object.assign({}, per.marks._since); delete per.marks._since[d.post]; }
+    savePerson(per); const lbl = d.m === 'G' ? 'tient le poste' : d.m === 'H' ? 'en formation' : 'ne tient plus le poste'; toast(src.name + ' — ' + (post ? post.code : d.post) + ' : ' + lbl + '.'); },
   tab(d){ if (S.genFlow) genFlag(false); S.genFlow = null; S.tab = d.tab; LS.set('tab', d.tab); close(); render(); window.scrollTo(0, 0); },
   day(d){ S.date = addDays(S.date, Number(d.d)); render(); },
   close(){ close(); },
