@@ -969,7 +969,7 @@ const qNames = ks => ks.map(k => 'Q' + (k + 1)).join(', ');
 /* présence en direct : qui est sur quelle nuit, et qui prépare une génération */
 let presCh = null; const presOthers = {};
 function presenceStart(){
-  if (presCh || isViewer() || isAdmin() || !profile() || !sb.channel) return;
+  if (presCh || isViewer() || isAdmin() || isTestAccount() || !profile() || !sb.channel) return;
   try {
     presCh = sb.channel('presence:planning', {config:{presence:{key:myId()}}});
     presCh.on('presence', {event:'sync'}, () => {
