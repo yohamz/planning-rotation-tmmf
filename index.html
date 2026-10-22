@@ -820,6 +820,9 @@ const isViewer = () => { const p = profile(); return !!(p && p.role === 'tm'); }
    restent sur cet appareil (localStorage), marqués tl._test, et ne sont jamais envoyés à
    la base — ils ne comptent ni pour l'équipe, ni dans Validé, Archives ou Équilibre. */
 const isTester = () => { const p = profile(); return !!(p && (p.role === 'admin' || /test/i.test(p.name || ''))); };
+/* compte test hors Admin (nom contenant « test ») : ses changements d'équipe (personnes, postes,
+   réglages) restent sur l'écran et ne sont jamais envoyés à la base. */
+const isTestAccount = () => { const p = profile(); return !!(p && p.role !== 'admin' && /test/i.test(p.name || '')); };
 const isTestNight = n => !!(n && n.tl && n.tl._test);
 const testKey = () => 'testNights.' + ((S.authUser && S.authUser.id) || '');
 const testNights = () => LS.get(testKey(), {}) || {};
@@ -2066,11 +2069,12 @@ setInterval(() => { if (Object.keys(failed).length && navigator.onLine !== false
 function saveNight(n){ n.updatedAt = new Date().toISOString(); if (nightState(n) === 'validated') n.tl._snap = snapshot(n); S.nights[n.date] = n;
   if (isTester()) { n.tl._test = true; const t = testNights(); t[n.date] = n; LS.set(testKey(), t); render(); return; }
   render(); queued('night:' + n.date, () => sb.from('nights').upsert(nightToRow(n))); }
-function savePerson(per){ S.people[per.id] = per; render(); queued('person:' + per.id, () => sb.from('people').upsert(personToRow(per))); }
-function savePost(p){ S.posts[p.id] = p; render(); queued('post:' + p.id, () => sb.from('posts').upsert(postToRow(p))); }
-function saveCfg(){ render(); queued('cfg', () => sb.from('config').upsert({key:'main', value:S.cfg})); }
-function deletePersonRow(id){ delete S.people[id]; render(); queued('person:' + id, () => sb.from('people').delete().eq('id', id)); }
-function deletePostRow(id){ delete S.posts[id]; render(); queued('post:' + id, () => sb.from('posts').delete().eq('id', id)); }
+function testOnly(){ if (!isTestAccount()) return false; render(); if (!S._testWarned) { S._testWarned = true; setTimeout(() => toast('Compte test : ce changement n’est pas enregistré pour l’équipe.'), 0); } return true; }
+function savePerson(per){ S.people[per.id] = per; if (testOnly()) return; render(); queued('person:' + per.id, () => sb.from('people').upsert(personToRow(per))); }
+function savePost(p){ S.posts[p.id] = p; if (testOnly()) return; render(); queued('post:' + p.id, () => sb.from('posts').upsert(postToRow(p))); }
+function saveCfg(){ if (testOnly()) return; render(); queued('cfg', () => sb.from('config').upsert({key:'main', value:S.cfg})); }
+function deletePersonRow(id){ delete S.people[id]; if (testOnly()) return; render(); queued('person:' + id, () => sb.from('people').delete().eq('id', id)); }
+function deletePostRow(id){ delete S.posts[id]; if (testOnly()) return; render(); queued('post:' + id, () => sb.from('posts').delete().eq('id', id)); }
 const newId = pre => pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
 let tt = null;
